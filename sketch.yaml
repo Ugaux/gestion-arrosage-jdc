@@ -17,7 +17,7 @@ profiles:
       - ezButton (1.0.6)
       - rc-switch (2.6.4)
       - Rtc by Makuna (2.5.0)
-      - SPIFFSIniFile (1.0.0)
+      #- SPIFFSIniFile (1.0.0)
     port: COM1
     port_config:
       baudrate: 115200

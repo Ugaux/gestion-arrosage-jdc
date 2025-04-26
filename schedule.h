@@ -4,7 +4,8 @@
 
 #include <SPIFFS.h>
 #include <FS.h>
-#include <SPIFFSIniFile.h>
+
+#include "SPIFFSIniFile.h"
 
 #include "relay.h"
 #include "zone.h"
