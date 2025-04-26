@@ -7,6 +7,17 @@ profiles:
     libraries:
       - RTClib (2.1.4)
       - Adafruit BusIO (1.17.0)
+      - Effortless-SPIFFS (2.3.0)
+      - Time (1.6.1)
+      - Adafruit GFX Library (1.12.1)
+      - Adafruit SSD1306 (2.5.13)
+      - Adafruit MCP23017 Arduino Library (2.3.2)
+      - ESP Async WebServer (3.7.7)
+      - Async TCP (3.4.0)
+      - ezButton (1.0.6)
+      - rc-switch (2.6.4)
+      - Rtc by Makuna (2.5.0)
+      - SPIFFSIniFile (1.0.0)
     port: COM1
     port_config:
       baudrate: 115200
