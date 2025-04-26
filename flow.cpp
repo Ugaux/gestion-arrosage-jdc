@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 
 #include "config.h"
@@ -13,13 +12,11 @@ static unsigned long total;
 
 unsigned long oldTime;
 
-void IRAM_ATTR pulseCounter()
-{
+void IRAM_ATTR pulseCounter() {
   pulseCount++;
 }
 
-void flowInit(void)
-{
+void flowInit(void) {
   uint8_t sensor = Config::getConfig()->getFlowSensor();
   if (sensor != 0) {
     pinMode(sensor, INPUT_PULLUP);
@@ -27,9 +24,8 @@ void flowInit(void)
   }
 }
 
-float getFlow(void)
-{
-  float flowRate = 0;
+float getFlow(void) {
+  float        flowRate = 0;
   unsigned int milliLiters;
 
   if (Config::getConfig()->getFlowSensor() == 0) {
@@ -39,12 +35,12 @@ float getFlow(void)
     return 0;
   }
   noInterrupts();
-  flowRate = ((1000.0 / (millis() - oldTime)) * pulseCount) / calibrationFactor;
-  oldTime = millis();
+  flowRate    = ((1000.0 / (millis() - oldTime)) * pulseCount) / calibrationFactor;
+  oldTime     = millis();
   milliLiters = (flowRate / 60) * 1000;
   total += milliLiters;
   pulseCount = 0;
   interrupts();
-//  Serial.printf("flow: %f\n", flowRate);
+  //  Serial.printf("flow: %f\n", flowRate);
   return flowRate;
 }

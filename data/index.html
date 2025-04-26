@@ -1,101 +1,153 @@
-<!DOCTYPE html><html>
-<head><meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<meta charset="utf-8">
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <meta charset="utf-8" />
 
-<script>
-
-function manual(way)
-{
-  id = 'btn_' + way;
-  btn = document.getElementById(id);
-  id = 'lbl_' + way;
-  lbl = document.getElementById(id);
-  url = "";
-  if (btn.innerHTML == "DEMARRER") {
-    btn.innerHTML = "ARRETER";
-    url = '/manual?op=start&way=' + way + '&duration=' + document.getElementById('manual-duration').value;
-  }
-  else {
-    btn.innerHTML = "DEMARRER";
-    lbl.innerHTML = "";
-    url = '/manual?op=stop&way=' + way + '&duration=' + document.getElementById('manual-duration').value;
-  }
-  const xhr = new XMLHttpRequest();
-  console.log(url);
-  xhr.open("GET", url);
-  xhr.onreadystatechange = function() {
-    if(xhr.readyState == 4) console.log('OK');
-  }
-  xhr.send(null);
-}
-
-setInterval(function() {
-  getData();
-}, 1000);
-
-function getData() {
-  var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      if (this.responseText != "none") {
-        console.log(this.responseText);
-        ways = this.responseText.split(",");
-        console.log(ways);
-        for (let i = 0; i < ways.length; i++) {
-          words = ways[i].split("=");
-          console.log(words);
-          id = 'btn_' + words[0];
-          btn = document.getElementById(id);
-          console.log(id);
-          id = 'lbl_' + words[0];
-          console.log(id);
-          lbl = document.getElementById(id);
-          if (words[1] != "00:00") {
-            lbl.innerHTML = words[1];
-          }
-          else {
-            lbl.innerHTML = "";
-            btn.innerHTML = "DEMARRER";          }
-        }
+  <script>
+    function manual(way) {
+      id = "btn_" + way;
+      btn = document.getElementById(id);
+      id = "lbl_" + way;
+      lbl = document.getElementById(id);
+      url = "";
+      if (btn.innerHTML == "DEMARRER") {
+        btn.innerHTML = "ARRETER";
+        url =
+          "/manual?op=start&way=" +
+          way +
+          "&duration=" +
+          document.getElementById("manual-duration").value;
+      } else {
+        btn.innerHTML = "DEMARRER";
+        lbl.innerHTML = "";
+        url =
+          "/manual?op=stop&way=" +
+          way +
+          "&duration=" +
+          document.getElementById("manual-duration").value;
       }
+      const xhr = new XMLHttpRequest();
+      console.log(url);
+      xhr.open("GET", url);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) console.log("OK");
+      };
+      xhr.send(null);
     }
-  }
-  xhr.open("GET", "/manual_in_progress", true);
-  xhr.send();
-}
 
-</script>
+    setInterval(function () {
+      getData();
+    }, 1000);
 
-<style type="text/css">
-.mytable { background-color:#FFFFE0; border-collapse:collapse; color:#000; font-size:18px; }
-.mytable th { background-color:#BDB76B; color:white; width:50%%; }
-.mytable td, .mytable th { padding:5px; border:0; }
-.mytable td { border-bottom:1px solid #BDB76B; }
-</style>
+    function getData() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          if (this.responseText != "none") {
+            console.log(this.responseText);
+            ways = this.responseText.split(",");
+            console.log(ways);
+            for (let i = 0; i < ways.length; i++) {
+              words = ways[i].split("=");
+              console.log(words);
+              id = "btn_" + words[0];
+              btn = document.getElementById(id);
+              console.log(id);
+              id = "lbl_" + words[0];
+              console.log(id);
+              lbl = document.getElementById(id);
+              if (words[1] != "00:00") {
+                lbl.innerHTML = words[1];
+              } else {
+                lbl.innerHTML = "";
+                btn.innerHTML = "DEMARRER";
+              }
+            }
+          }
+        }
+      };
+      xhr.open("GET", "/manual_in_progress", true);
+      xhr.send();
+    }
+  </script>
 
-<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center; }
-.button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px; text-decoration: none; font-size: 15px; margin: 2px; cursor: pointer; }
-.button2 { background-color: #555555; }
-</style>
+  <style type="text/css">
+    .mytable {
+      background-color: #ffffe0;
+      border-collapse: collapse;
+      color: #000;
+      font-size: 18px;
+    }
+    .mytable th {
+      background-color: #bdb76b;
+      color: white;
+      width: 50%%;
+    }
+    .mytable td,
+    .mytable th {
+      padding: 5px;
+      border: 0;
+    }
+    .mytable td {
+      border-bottom: 1px solid #bdb76b;
+    }
+  </style>
 
-<body><h1>Gestion arrosage Jardin du Ciel v17</h1>
+  <style>
+    html {
+      font-family: Helvetica;
+      display: inline-block;
+      margin: 0px auto;
+      text-align: center;
+    }
+    .button {
+      background-color: #4caf50;
+      border: none;
+      color: white;
+      padding: 16px 40px;
+      text-decoration: none;
+      font-size: 15px;
+      margin: 2px;
+      cursor: pointer;
+    }
+    .button2 {
+      background-color: #555555;
+    }
+  </style>
 
-<center><table class="mytable" width="100%%">
-<tr>
-<th colspan="5">Automatique</th>
-<th style="border-left: 1px solid #FFFFFF;">Manuel <input type="text" id="manual-duration" value="%PLACEHOLDER_MANUAL_DURATION%" size="4"> minutes</th>
-</tr>
-<tr>
-<td>Voie</td>
-<td>Heure</td>
-<td>Minutes</td>
-<td>Systématique</td>
-<td>Configure</td>
-<td style="border-left: 1px solid #BDB76B;">Démarrage</td>
-</tr>
-%PLACEHOLDER_WATERINGS%
-</table></center>
-<p><a href="/maint.html"><button class="button">MAINTENANCE</button></a></p>
-</body></html>
+  <body>
+    <h1>Gestion arrosage Jardin du Ciel v17</h1>
 
+    <center>
+      <table class="mytable" width="100%%">
+        <tr>
+          <th colspan="5">Automatique</th>
+          <th style="border-left: 1px solid #ffffff">
+            Manuel
+            <input
+              type="text"
+              id="manual-duration"
+              value="%PLACEHOLDER_MANUAL_DURATION%"
+              size="4"
+            />
+            minutes
+          </th>
+        </tr>
+        <tr>
+          <td>Voie</td>
+          <td>Heure</td>
+          <td>Minutes</td>
+          <td>Systématique</td>
+          <td>Configure</td>
+          <td style="border-left: 1px solid #bdb76b">Démarrage</td>
+        </tr>
+        %PLACEHOLDER_WATERINGS%
+      </table>
+    </center>
+    <p>
+      <a href="/maint.html"><button class="button">MAINTENANCE</button></a>
+    </p>
+  </body>
+</html>

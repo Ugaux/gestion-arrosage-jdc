@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 #include <ezButton.h>
 
@@ -9,55 +8,46 @@
 #include "flow.h"
 #include "RTCModule.h"
 
-
-Hmi::Hmi() :
-  m_state(IDLE),
-  m_manualWatering(0),
-  m_time(0)
-{
+Hmi::Hmi() : m_state(IDLE),
+             m_manualWatering(0),
+             m_time(0) {
 }
 
 ezButton functionButton(FUNCTION_BUTTON);
 ezButton manualButton(MANUAL_BUTTON);
 
-void Hmi::begin(void)
-{
+void Hmi::begin(void) {
   functionButton.setDebounceTime(50);
   manualButton.setDebounceTime(50);
-//  functionButton.setCountMode(COUNT_FALLING);
-
+  //  functionButton.setCountMode(COUNT_FALLING);
 }
 
-void Hmi::displayDefaults(void)
-{
+void Hmi::displayDefaults(void) {
   display.clearLine(0);
   display.clearLine(1);
   display.clearLine(2);
   int moisture;
-  getSoilMoisture(&moisture); // just display to terminal
+  getSoilMoisture(&moisture);  // just display to terminal
   display.displayMoisture(moisture);
   float flow = getFlow();
   display.displayFlow(flow);
 }
 
-void Hmi::displayIPAndNextWatering(void)
-{
+void Hmi::displayIPAndNextWatering(void) {
   display.clearLine(1);
   display.clearLine(2);
   display.displayIP();
-  m_time = millis();
+  m_time  = millis();
   m_state = DISPLAY_IP;
 }
 
-void Hmi::displayManual(void)
-{
+void Hmi::displayManual(void) {
   display.clearLine(1);
   display.clearLine(2);
   m_time = millis();
   if (m_manualWatering == 0) {
     m_manualWatering = Way::getFirst();
-  }
-  else {
+  } else {
     m_manualWatering = Way::getNext();
     if (m_manualWatering == 0) {
       m_manualWatering = Way::getFirst();
@@ -67,11 +57,10 @@ void Hmi::displayManual(void)
   m_state = DISPLAY_MANUAL;
 }
 
-void Hmi::run(void)
-{
+void Hmi::run(void) {
   uint8_t btn;
-//  time_t t = getCurrentTime(); // t = heure actuelle
-  time_t t;
+  //  time_t t = getCurrentTime(); // t = heure actuelle
+  time_t      t;
   const char *way;
 
   functionButton.loop();
@@ -97,7 +86,7 @@ void Hmi::run(void)
           fonction();
           display.displayNextWatering(way, t);
         }
-        m_time = millis();
+        m_time  = millis();
         m_state = DISPLAY_NEXTWATERING;
       }
       break;
@@ -110,7 +99,7 @@ void Hmi::run(void)
     case DISPLAY_MANUAL:
       if (millis() - m_time > 8000) {
         displayDefaults();
-        m_state = IDLE;
+        m_state          = IDLE;
         m_manualWatering = 0;
       }
       if (manualButton.isReleased()) {
@@ -119,14 +108,13 @@ void Hmi::run(void)
       if (functionButton.isReleased()) {
         m_manualWatering->manualStart(Watering::manualDuration());
         displayDefaults();
-        m_state = IDLE;
+        m_state          = IDLE;
         m_manualWatering = 0;
       }
       break;
   }
 }
 
-bool Hmi::isBusy(void)
-{
+bool Hmi::isBusy(void) {
   return m_state != IDLE;
 }

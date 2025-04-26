@@ -1,4 +1,3 @@
-
 #ifndef _SCHEDULE_H_
 #define _SCHEDULE_H_
 
@@ -13,16 +12,15 @@
 
 #define SCHEDULE_FILE "/schedule.ini"
 
-class Schedule : public SPIFFSIniFile
-{
-  public:
-    Schedule(const char *fileName);
-    bool read(void);
-    bool write();
-    void print(void);
+class Schedule : public SPIFFSIniFile {
+public:
+  Schedule(const char *fileName);
+  bool read(void);
+  bool write();
+  void print(void);
 
-  private:
-    const char *m_fileName;
+private:
+  const char *m_fileName;
 };
 
 extern Schedule schedule;

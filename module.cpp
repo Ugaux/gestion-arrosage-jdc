@@ -1,28 +1,24 @@
-
 #include <Arduino.h>
+
 #include "module.h"
 
-int Module::m_searchIndex;
-Module Module::m_module[MAX_MODULE];
-const char *moduleName[MAX_MODULE_TYPE] = {"NOTYPE", "gpio", "mcp23008", "mcp23017"};
+int         Module::m_searchIndex;
+Module      Module::m_module[MAX_MODULE];
+const char *moduleName[MAX_MODULE_TYPE] = { "NOTYPE", "gpio", "mcp23008", "mcp23017" };
 
-Module::Module() :
-  m_type(NOTYPE),
-  m_id(0),
-  m_addr(0),
-  m_present(false)
-{
+Module::Module() : m_type(NOTYPE),
+                   m_id(0),
+                   m_addr(0),
+                   m_present(false) {
 }
 
-bool Module::begin()
-{
+bool Module::begin() {
   return create("gpio");
 }
 
 // return the type of a module
-uint8_t Module::getType(const char *name)
-{
-  for (int t = 0 ; t < MAX_MODULE_TYPE ; t++) {
+uint8_t Module::getType(const char *name) {
+  for (int t = 0; t < MAX_MODULE_TYPE; t++) {
     if (!strcasecmp(moduleName[t], name)) {
       return t;
     }
@@ -32,12 +28,11 @@ uint8_t Module::getType(const char *name)
 
 // create a module (GPIO, MCP23008 or MCP23017)
 // def : module description string (mcp23017-1(0x20) for example)
-bool Module::create(const char *def)
-{
-  char tmp[MAX_DEF];
-  Module *mod;
+bool Module::create(const char *def) {
+  char        tmp[MAX_DEF];
+  Module     *mod;
   const char *p;
-  char *s;
+  char       *s;
 
   Serial.printf("module::create %s\n", def);
   strncpy(tmp, def, MAX_DEF);
@@ -46,9 +41,9 @@ bool Module::create(const char *def)
     Serial.printf("%s: bad format, missing '-'\n", def);
     return false;
   }
-  mod = &m_module[m_searchIndex];
+  mod          = &m_module[m_searchIndex];
   mod->m_index = m_searchIndex;
-  mod->m_type = getType(p);
+  mod->m_type  = getType(p);
   if (mod->m_type == NOTYPE) {
     Serial.printf("%s: bad value\n", def);
     return false;
@@ -59,14 +54,13 @@ bool Module::create(const char *def)
     return false;
   }
   mod->m_id = atoi(p);
-  p = strtok_r(NULL, ")", &s);
+  p         = strtok_r(NULL, ")", &s);
   if (p != NULL) {
     if (*p == '0' && *(p + 1) == 'x') {
       unsigned addr;
       sscanf(p + 2, "%x", &addr);
       mod->m_addr = (uint8_t)addr;
-    }
-    else {
+    } else {
       mod->m_addr = atoi(p);
     }
   }
@@ -89,24 +83,21 @@ bool Module::create(const char *def)
 }
 
 // return the number of modules
-int Module::getCount()
-{
+int Module::getCount() {
   int n;
 
-  for (n = 0 ; n < MAX_MODULE && m_module[n].isPresent() == true ; n++);
+  for (n = 0; n < MAX_MODULE && m_module[n].isPresent() == true; n++);
   return n;
 }
 
 // return the first module
-Module *Module::getFirst(void)
-{
+Module *Module::getFirst(void) {
   m_searchIndex = 0;
   return &m_module[m_searchIndex];
 }
 
 // return the next module
-Module *Module::getNext(void)
-{
+Module *Module::getNext(void) {
   m_searchIndex++;
   if (m_searchIndex < MAX_MODULE) {
     return &m_module[m_searchIndex];
@@ -115,8 +106,7 @@ Module *Module::getNext(void)
 }
 
 // return the nth module
-Module *Module::getModule(int n)
-{
+Module *Module::getModule(int n) {
   if (n < MAX_MODULE) {
     return &m_module[n];
   }
@@ -124,12 +114,11 @@ Module *Module::getModule(int n)
 }
 
 // return a module giving its name
-Module *Module::getByName(const char *def)
-{
-  char tmp[MAX_DEF];
-  int type, id;
+Module *Module::getByName(const char *def) {
+  char        tmp[MAX_DEF];
+  int         type, id;
   const char *p;
-  char *s;
+  char       *s;
 
   Serial.printf("module::getByName %s\n", def);
   strncpy(tmp, def, MAX_DEF);
@@ -147,7 +136,7 @@ Module *Module::getByName(const char *def)
     Serial.printf("%s: bad format, missing '.'\n", def);
     return 0;
   }
-  id = atoi(p);
+  id             = atoi(p);
   Module *module = getFirst();
   while (module != 0) {
     if (module->getType() == type && module->getId() == id) {
@@ -160,15 +149,13 @@ Module *Module::getByName(const char *def)
 }
 
 // check if an I2C module is connected
-bool Module::check(void)
-{
+bool Module::check(void) {
   Wire.beginTransmission(m_addr);
   byte error = Wire.endTransmission();
-  if (error == 0)  {
+  if (error == 0) {
     Serial.printf("I2C device found at 0x%02x\n", m_addr);
     return true;
-  }
-  else if (error == 4) {
+  } else if (error == 4) {
     Serial.printf("I2C error at 0x%02x\n", m_addr);
   }
   Serial.printf("I2C device not found at 0x%02x\n", m_addr);
@@ -176,16 +163,14 @@ bool Module::check(void)
 }
 
 // return the module's name
-const char *Module::getName(void)
-{
+const char *Module::getName(void) {
   static char name[MAX_DEF];
   snprintf(name, MAX_DEF, "%s-%d", moduleName[m_type], m_id);
   return name;
 }
 
 // print the module
-void Module::print(void)
-{
+void Module::print(void) {
   if (!isPresent()) {
     Serial.printf("Not present\n");
     return;
@@ -194,8 +179,7 @@ void Module::print(void)
 }
 
 // set the module's GPIO mode
-void Module::setMode(uint8_t pin, uint8_t mode)
-{
+void Module::setMode(uint8_t pin, uint8_t mode) {
   Serial.printf("%s: pin%d=OUTPUT\n", getName(), pin);
   switch (m_type) {
     case IO:
@@ -211,8 +195,7 @@ void Module::setMode(uint8_t pin, uint8_t mode)
 }
 
 // write HIGH or LOW to the module's GPIO
-void Module::write(uint8_t pin, uint8_t value)
-{
+void Module::write(uint8_t pin, uint8_t value) {
   switch (m_type) {
     case IO:
       digitalWrite(pin, value);

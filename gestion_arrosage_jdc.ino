@@ -19,7 +19,7 @@
 #include "flow.h"
 #include "humidity.h"
 #include "html.h"
-#include <HMI.h>
+#include "hmi.h"
 #include "oled.h"
 #include "cuve.h"
 #include "RTCModule.h"
@@ -28,22 +28,20 @@
 //time_t getRtcTime();
 //time_t getCurrentTime();
 
-
-const char *ssid = "JardinDuCiel";
+const char *ssid     = "JardinDuCiel";
 const char *password = "";
 
 AsyncWebServer server(80);
 
-Config config("/config.ini");
+Config   config("/config.ini");
 Schedule schedule(SCHEDULE_FILE);
 
 const char *ntpServer = "pool.ntp.org";
 
-Hmi hmi;
+Hmi  hmi;
 Cuve cuve;
 
-void handleNotFound(AsyncWebServerRequest *request)
-{
+void handleNotFound(AsyncWebServerRequest *request) {
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += request->url();
@@ -52,19 +50,16 @@ void handleNotFound(AsyncWebServerRequest *request)
   message += "\nArguments: ";
   message += request->args();
   message += "\n";
-  for (uint8_t i = 0; i < request->args(); i++)
-  {
+  for (uint8_t i = 0; i < request->args(); i++) {
     message += " " + request->argName(i) + ": " + request->arg(i) + "\n";
   }
   request->send(404, "text/plain", message);
 }
 
-void WiFiEvent(WiFiEvent_t event)
-{
+void WiFiEvent(WiFiEvent_t event) {
   Serial.printf("[WiFi-event] event: %d\n", event);
 
-  switch (event)
-  {
+  switch (event) {
     case ARDUINO_EVENT_WIFI_READY:
       Serial.println("WiFi interface ready");
       break;
@@ -152,15 +147,13 @@ void WiFiEvent(WiFiEvent_t event)
   }
 }
 
-void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
-{
+void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(IPAddress(info.got_ip.ip_info.ip.addr));
 }
 
-void setup(void)
-{
+void setup(void) {
   Serial.begin(115200);
 
   // Initialiser le RTC
@@ -172,31 +165,25 @@ void setup(void)
   //  // Initialiser la communication I2C
   //  Wire.begin(21, 22); // SDA sur GPIO21, SCL sur GPIO22
 
-
   cuve.setup();
 
-  if (!display.begin())
-  {
+  if (!display.begin()) {
     Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ; // Don't proceed, loop forever
+    for (;;);  // Don't proceed, loop forever
   }
 
   hmi.begin();
 
-  if (!SPIFFS.begin())
-  {
+  if (!SPIFFS.begin()) {
     Serial.println("SPIFFS.begin() failed");
   }
-  if (config.read() != true)
-  {
+  if (config.read() != true) {
     Serial.println("configuration failed");
     while (1)
       sleep(1);
   }
   config.print();
-  if (schedule.read() != true)
-  {
+  if (schedule.read() != true) {
     Serial.println("schedule configuration failed");
     while (1)
       sleep(1);
@@ -274,56 +261,48 @@ void setup(void)
 
   server.on("/manual_in_progress", handleManualInProgress);
 
-  server.on("/maint.html", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/maint.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/maint.html", "text/html", false);
   });
 
-  server.on("/test_relays", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/test_relays", HTTP_GET, [](AsyncWebServerRequest *request) {
     Serial.println("Relays test");
     handleTest(request);
   });
 
-  server.on("/on", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (request->hasParam("relay")) {
       String name = request->arg("relay");
       Serial.printf("ON relay=%s\n", name.c_str());
       Relay *relay = Relay::getByName(name.c_str());
       if (relay == 0) {
         Serial.printf("%s: not found\n", name.c_str());
-      }
-      else {
+      } else {
         relay->on();
       }
     }
     handleTest(request);
   });
 
-  server.on("/off", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (request->hasParam("relay")) {
       String name = request->arg("relay");
       Serial.printf("ON relay=%s\n", name.c_str());
       Relay *relay = Relay::getByName(name.c_str());
       if (relay == 0) {
         Serial.printf("%s: not found\n", name.c_str());
-      }
-      else {
+      } else {
         relay->off();
       }
     }
     handleTest(request);
   });
 
-  server.on("/config_ini", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/config_ini", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/config.ini", "text/plain", false);
   });
 
-  server.on("/schedule_ini", HTTP_GET, [](AsyncWebServerRequest * request)
-  {
+  server.on("/schedule_ini", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/schedule.ini", "text/plain", false);
   });
 
@@ -337,10 +316,8 @@ void setup(void)
 
   Serial.println("RESET all relays");
   Relay *relay = Relay::getFirst();
-  while (relay != 0)
-  {
-    if (relay->isPresent())
-    {
+  while (relay != 0) {
+    if (relay->isPresent()) {
       relay->off();
     }
     relay = Relay::getNext();
@@ -350,20 +327,18 @@ void setup(void)
 
 bool sntp_sync;
 
-void loop(void)
-{
+void loop(void) {
 
   static time_t lastSec;
   static time_t lastMinute;
 
   time_t currentTime = getRtcTime();
 
-
   // Exécuter une tâche toutes les secondes
   if (currentTime != lastSec) {
     lastSec = currentTime;
-//    Serial.println("One second has passed.");
-//    displayTimeDate();
+    //    Serial.println("One second has passed.");
+    //    displayTimeDate();
     cuve.run();
 
     float flow = getFlow();
@@ -372,8 +347,8 @@ void loop(void)
     }
     if (flow > Config::getConfig()->getMaxFlow()) {
       Serial.printf("flow is tooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO high\n");
-            Watering::stopAllAutoWatering();
-            Way::stopAllManualWatering();
+      Watering::stopAllAutoWatering();
+      Way::stopAllManualWatering();
     }
   }
 
@@ -383,7 +358,7 @@ void loop(void)
     Serial.println("60s have passed.");
     // Ajouter ici les tâches à exécuter toutes les 5 secondes
     int moisture;
-    getSoilMoisture(&moisture); // just display to terminal
+    getSoilMoisture(&moisture);  // just display to terminal
     if (!hmi.isBusy()) {
       display.displayMoisture(moisture);
     }
@@ -395,20 +370,20 @@ void loop(void)
 }
 
 time_t getRtcTime() {
-  DateTime now = rtc.now();
+  DateTime     now = rtc.now();
   tmElements_t tm;
   tm.Second = now.second();
   tm.Minute = now.minute();
-  tm.Hour = now.hour();
-  tm.Day = now.day();
-  tm.Month = now.month();
-  tm.Year = CalendarYrToTm(now.year());
+  tm.Hour   = now.hour();
+  tm.Day    = now.day();
+  tm.Month  = now.month();
+  tm.Year   = CalendarYrToTm(now.year());
   return makeTime(tm);
 }
 
 void fonction() {
   // Exemple d'utilisation de displayNextWatering
-  time_t t = getRtcTime(); // t = heure actuelle
+  time_t t = getRtcTime();  // t = heure actuelle
   Serial.println(t);
   //  display.displayNextWatering(way, t);
 }
@@ -416,17 +391,17 @@ void fonction() {
 void displayTimeDate() {
   char timeString[MAX_BUF];
 
-  DateTime now = getCurrentTime();  // Obtenir l'heure actuelle du RTC
-  time_t currentTime = now.unixtime();  // Convertir en Unix timestamp
-  struct tm* timeinfo = localtime(&currentTime);  // Convertir en structure tm locale
+  DateTime   now         = getCurrentTime();                  // Obtenir l'heure actuelle du RTC
+  time_t     currentTime = now.unixtime();                    // Convertir en Unix timestamp
+  struct tm *timeinfo    = localtime(&currentTime);           // Convertir en structure tm locale
   strftime(timeString, MAX_BUF, "%d/%m/%Y %H:%M", timeinfo);  // Formater la chaîne de temps
 
   Serial.printf("Oled::displayTimeDate %s\n", timeString);
-  int16_t x1, y1;
+  int16_t  x1, y1;
   uint16_t w, h;
   display.getTextBounds(timeString, 0, 0, &x1, &y1, &w, &h);
   display.fillRect(0, 0, SCREEN_WIDTH, 16, SSD1306_BLACK);  // Effacer la ligne précédente
-  display.setCursor((SCREEN_WIDTH - w) / 2, 0);  // Centrer le texte
+  display.setCursor((SCREEN_WIDTH - w) / 2, 0);             // Centrer le texte
   display.print(timeString);
   display.display();
 }

@@ -2,7 +2,6 @@
 
 RTC_DS3231 rtc;
 
-
 void setupRTC() {
   if (!rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -20,6 +19,6 @@ DateTime getCurrentTime() {
 }
 
 time_t syncTimeFromRTC() {
-    DateTime now = rtc.now();
-    return now.unixtime();
+  DateTime now = rtc.now();
+  return now.unixtime();
 }

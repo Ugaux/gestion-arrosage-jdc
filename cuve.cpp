@@ -10,18 +10,21 @@
   GPIO23 CDE RADIO 433 MHZ
 
 */
-#include "Arduino.h"
+
+#include <Arduino.h>
+
 #include "cuve.h"
 
-#define DEBUG false         // Afficher une aide sur la console (débogage)
+#define DEBUG false  // Afficher une aide sur la console (débogage)
 
 #include <RCSwitch.h>
+
 RCSwitch mySwitch = RCSwitch();
 
-int captNivHaut = 19;
-int NivHaut = 0;
-int captNivBas = 5;
-int NivBas = 0;
+int captNivHaut  = 19;
+int NivHaut      = 0;
+int captNivBas   = 5;
+int NivBas       = 0;
 int Liquid_level = 0;
 Cuve::Cuve() {
 }
@@ -29,7 +32,7 @@ Cuve::Cuve() {
 // the setup function runs once when you press reset or power the board
 void Cuve::setup() {
   timer = millis();
-  pinMode(33, OUTPUT);          // sets the digital pin 33 as output LED verte "arrosage en cours"
+  pinMode(33, OUTPUT);  // sets the digital pin 33 as output LED verte "arrosage en cours"
   //  pinMode(32, OUTPUT);          // sets the digital pin 32 as output
 
   pinMode(23, OUTPUT);          // sets the digital pin 23 as output
@@ -41,19 +44,18 @@ void Cuve::setup() {
 
   pinMode(captNivHaut, INPUT_PULLUP);  // sensor pin
   pinMode(captNivBas, INPUT_PULLUP);   // sensor pin
-
 }
 
 // the loop function runs over and over again forever
 void Cuve::run() {
   NivHaut = digitalRead(captNivHaut);
-  NivBas = digitalRead(captNivBas);
+  NivBas  = digitalRead(captNivBas);
   //delay (500);
 
   if (NivBas == 0 && NivHaut == 1) {
     ArretRemplissageCuve();
-    if (DEBUG)
-    { Serial.print("PB DE CAPTEUR BAS: ");
+    if (DEBUG) {
+      Serial.print("PB DE CAPTEUR BAS: ");
       Serial.print(NivBas, DEC);
       Serial.print(" - Arrêt Remplissage Cuve ('B' télécommande) - Cuve pleine: ");
       Serial.println(NivHaut, DEC);
@@ -63,8 +65,8 @@ void Cuve::run() {
 
   if (NivBas == 1 && NivHaut == 1) {
     ArretRemplissageCuve();
-    if (DEBUG)
-    { Serial.print("NivBas: ");
+    if (DEBUG) {
+      Serial.print("NivBas: ");
       Serial.print(NivBas, DEC);
       Serial.print(" - NivHaut: ");
       Serial.print(NivHaut, DEC);
@@ -78,27 +80,27 @@ void Cuve::run() {
   if (NivBas == 0 && NivHaut == 0 && !pompeCuveEnMarche) {
     MarcheRemplissageCuve();
     pompeCuveEnMarche = true;
-    timer = millis();
+    timer             = millis();
   }
-   // Si la pompe est en marche, on vérifie si 60s se sont écoulées
+  // Si la pompe est en marche, on vérifie si 60s se sont écoulées
   if (pompeCuveEnMarche && (millis() - timer > 60000)) {
     // On relit les capteurs
-      if (NivBas == 0 && NivHaut == 0) {
-        ArretArrosage();
-            ArretRemplissageCuve();
-                pompeCuveEnMarche = false;
-      }
-    }
-    if (DEBUG)
-    { Serial.print("NivBas: ");
-      Serial.print(NivBas, DEC);
-      Serial.print(" - NivHaut: ");
-      Serial.print(NivHaut, DEC);
-      Serial.print(" - Marche Remplissage Cuve ('A' télécommande) - Cuve vide: ");
-      Serial.println(NivHaut, DEC);
-      delay(300);
+    if (NivBas == 0 && NivHaut == 0) {
+      ArretArrosage();
+      ArretRemplissageCuve();
+      pompeCuveEnMarche = false;
     }
   }
+  if (DEBUG) {
+    Serial.print("NivBas: ");
+    Serial.print(NivBas, DEC);
+    Serial.print(" - NivHaut: ");
+    Serial.print(NivHaut, DEC);
+    Serial.print(" - Marche Remplissage Cuve ('A' télécommande) - Cuve vide: ");
+    Serial.println(NivHaut, DEC);
+    delay(300);
+  }
+}
 
 void MarcheArrosage(void) {
   mySwitch.send("101000000110101010110100");  // = BOUTON "C" télécommande : Arrosage au jet
@@ -107,7 +109,6 @@ void MarcheArrosage(void) {
 void ArretArrosage(void) {
   mySwitch.send("101000000110101010110001");  // = BOUTON "D" télécommande : Arrêt arrosage au jet
 }
-
 
 void MarcheRemplissageCuve() {
   mySwitch.send("101000000110101010110010");  // = BOUTON "A" télécommande : Remplissage cuve

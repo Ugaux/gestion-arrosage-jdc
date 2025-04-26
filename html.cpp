@@ -1,10 +1,10 @@
-
 #include <Arduino.h>
+
 #include "html.h"
 #include "watering.h"
 
 String formWayName;
-int formSchedule;
+int    formSchedule;
 String formTime;
 String formDuration;
 String formAlways;
@@ -21,8 +21,7 @@ char buttonCss[] = R"(<style>html { font-family: Helvetica; display: inline-bloc
 .button2 {background-color: #555555;}</style>
 )";
 
-void addConfigButton(String &html, const char *way, int schedule)
-{
+void addConfigButton(String &html, const char *way, int schedule) {
   html += "<p><button id='config_";
   html += way;
   html += "'";
@@ -36,8 +35,7 @@ void addConfigButton(String &html, const char *way, int schedule)
   html += "</p>\n";
 }
 
-void addStartButton(String &html, const char *way, const char *title)
-{
+void addStartButton(String &html, const char *way, const char *title) {
   html += "<p><button id='btn_";
   html += way;
   html += "'";
@@ -52,8 +50,7 @@ void addStartButton(String &html, const char *way, const char *title)
   html += "</p>\n";
 }
 
-void addNewButton(String &html)
-{
+void addNewButton(String &html) {
   html += "<p><button id='new'";
   html += "onclick=\"window.location.href='/new'\">";
   html += "AJOUTER";
@@ -63,70 +60,59 @@ void addNewButton(String &html)
 
 String wateringsTable;
 
-void displayParams(AsyncWebServerRequest *request)
-{
+void displayParams(AsyncWebServerRequest *request) {
   int paramsNr = request->params();
   Serial.println(paramsNr);
-  for(int i=0;i<paramsNr;i++){
-    const AsyncWebParameter* p = request->getParam(i);
+  for (int i = 0; i < paramsNr; i++) {
+    const AsyncWebParameter *p = request->getParam(i);
     Serial.printf("%s=%s\n", p->name().c_str(), p->value().c_str());
-  }  
+  }
 }
 
-String templateProcessor(const String& var)
-{
+String templateProcessor(const String &var) {
   if (var == "PLACEHOLDER_MANUAL_DURATION") {
     return String(Watering::manualDuration());
-  }
-  else if (var == "PLACEHOLDER_WATERINGS") {
+  } else if (var == "PLACEHOLDER_WATERINGS") {
     return wateringsTable;
-  }
-  else if (var == "WAY_NAME") {
+  } else if (var == "WAY_NAME") {
     return formWayName;
-  }
-  else if (var == "WAY_SCHEDULE") {
+  } else if (var == "WAY_SCHEDULE") {
     return String(formSchedule);
-  }
-  else if (var == "WAY_TIME") {
+  } else if (var == "WAY_TIME") {
     return formTime;
-  }
-  else if (var == "WAY_DURATION") {
+  } else if (var == "WAY_DURATION") {
     return formDuration;
-  }
-  else if (var == "WAY_ALWAYS") {
+  } else if (var == "WAY_ALWAYS") {
     return formAlways;
-  }
-  else if (var == "OPTIONS") {
+  } else if (var == "OPTIONS") {
     return formOptions;
   }
   return "";
 }
 
-void handleRoot(AsyncWebServerRequest *request)
-{
+void handleRoot(AsyncWebServerRequest *request) {
   Serial.printf("### ROOT\n");
   String manualoperation;
   String manualWatering;
-  int manualDuration;
+  int    manualDuration;
   if (request->hasParam("op")) {
     manualoperation = request->arg("op");
-    manualWatering = request->arg("way");
-    Watering *w = Watering::getByName(manualWatering.c_str(), 0);
+    manualWatering  = request->arg("way");
+    Watering *w     = Watering::getByName(manualWatering.c_str(), 0);
     if (manualoperation == "start") {
       manualDuration = request->arg("duration").toInt();
       Serial.printf("manual %s %d\n", manualWatering.c_str(), manualDuration);
       w->getWay()->manualStart(manualDuration);
-    }
-    else {
+    } else {
       w->getWay()->manualStop();
     }
   }
-  String lastWay;
-  const char *trStyle[] = {"<tr>\n", "<tr style=\"background-color:#ecffb3;\">\n"};
-  int trIndex = 0;
-  wateringsTable = "";
-  int schedule = 0;
-  for (int i = 0 ; i < MAX_WATERING ; i++) {
+  String      lastWay;
+  const char *trStyle[] = { "<tr>\n", "<tr style=\"background-color:#ecffb3;\">\n" };
+  int         trIndex   = 0;
+  wateringsTable        = "";
+  int schedule          = 0;
+  for (int i = 0; i < MAX_WATERING; i++) {
     Watering *w = Watering::getWatering(i);
     if (w->getDuration() != 0) {
       if (lastWay != w->getWayName()) {
@@ -156,15 +142,13 @@ void handleRoot(AsyncWebServerRequest *request)
         if (!w->getWay()->manualStarted(NULL)) {
           Serial.printf("%s: automatic mode\n", w->getWayName());
           addStartButton(wateringsTable, w->getWayName(), "DEMARRER");
-        }
-        else {
+        } else {
           Serial.printf("%s: manual mode\n", w->getWayName());
           addStartButton(wateringsTable, w->getWayName(), "ARRETER");
         }
         wateringsTable += "</td>\n";
         lastWay = w->getWayName();
-      }
-      else {
+      } else {
         wateringsTable += "&nbsp";
         wateringsTable += "</td>\n";
       }
@@ -181,30 +165,28 @@ void handleRoot(AsyncWebServerRequest *request)
   request->send(SPIFFS, "/index.html", "text/html", false, templateProcessor);
 }
 
-void handleConfigure(AsyncWebServerRequest *request)
-{
-  formWayName = request->arg("way");
+void handleConfigure(AsyncWebServerRequest *request) {
+  formWayName  = request->arg("way");
   formSchedule = request->arg("schedule").toInt();
   Serial.printf("### CONFIGURE %s %d\n", formWayName.c_str(), formSchedule);
-  Watering *w = Watering::getByName(formWayName.c_str(), formSchedule);
-  formTime = w->getHourString();
+  Watering *w  = Watering::getByName(formWayName.c_str(), formSchedule);
+  formTime     = w->getHourString();
   formDuration = w->getDuration();
-  formAlways = w->always() ? "checked" : "";
+  formAlways   = w->always() ? "checked" : "";
   request->send(SPIFFS, "/configure.html", "text/html", false, templateProcessor);
 }
 
-void handleConfigureSubmit(AsyncWebServerRequest *request)
-{
+void handleConfigureSubmit(AsyncWebServerRequest *request) {
   String way;
-  int schedule = 0;
+  int    schedule = 0;
   String time;
   String duration;
   String always = "off";
-  
+
   if (request->hasParam("way") && request->hasParam("schedule") && request->hasParam("time") && request->hasParam("duration")) {
-    way = request->getParam("way")->value();
+    way      = request->getParam("way")->value();
     schedule = request->getParam("schedule")->value().toInt();
-    time = request->getParam("time")->value();
+    time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
     if (request->hasParam("always")) {
       always = request->getParam("always")->value();
@@ -219,46 +201,45 @@ void handleConfigureSubmit(AsyncWebServerRequest *request)
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
       w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
-    }
-    else {
+    } else {
       Serial.printf("%s NOT found\n", way.c_str());
     }
-  }
-  else {
+  } else {
     Serial.printf("MISSING ARGUMENT(S)\n");
   }
   request->redirect("/");
 }
 
-void handleNew(AsyncWebServerRequest *request)
-{
+void handleNew(AsyncWebServerRequest *request) {
   Serial.printf("### NEW\n");
-  Way *way = Way::getFirst();
+  Way *way    = Way::getFirst();
   formOptions = "";
   while (way != 0) {
     Serial.printf("way=%s\n", way->getName());
-    if(way->getName() == 0) {
+    if (way->getName() == 0) {
       break;
     }
-    formOptions += "<option value=\""; formOptions += way->getName();
-    formOptions += "\">"; formOptions += way->getName(); formOptions += "</option>";
+    formOptions += "<option value=\"";
+    formOptions += way->getName();
+    formOptions += "\">";
+    formOptions += way->getName();
+    formOptions += "</option>";
     way = Way::getNext();
   }
   request->send(SPIFFS, "/new.html", "text/html", false, templateProcessor);
 }
 
-void handleNewSubmit(AsyncWebServerRequest *request)
-{
+void handleNewSubmit(AsyncWebServerRequest *request) {
   String way;
-  int schedule = 0;
+  int    schedule = 0;
   String time;
   String duration;
   String always = "off";
-  
+
   displayParams(request);
   if (request->hasParam("way") && request->hasParam("time") && request->hasParam("duration")) {
-    way = request->getParam("way")->value();
-    time = request->getParam("time")->value();
+    way      = request->getParam("way")->value();
+    time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
     if (request->hasParam("always")) {
       always = request->getParam("always")->value();
@@ -273,19 +254,16 @@ void handleNewSubmit(AsyncWebServerRequest *request)
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
       w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
-    }
-    else {
+    } else {
       Serial.printf("FREE WATERING NOT found\n");
     }
-  }
-  else {
+  } else {
     Serial.printf("MISSING ARGUMENT(S)\n");
   }
   request->redirect("/");
 }
 
-void handleTest(AsyncWebServerRequest *request)
-{
+void handleTest(AsyncWebServerRequest *request) {
   Serial.printf("### TEST\n");
   String message = head;
   message += "<body><h1>RELAIS</h1>\n";
@@ -313,19 +291,16 @@ void handleTest(AsyncWebServerRequest *request)
   request->send(200, "text/html", message);
 }
 
-void handleManual(AsyncWebServerRequest *request)
-{
+void handleManual(AsyncWebServerRequest *request) {
   handleRoot(request);
 }
 
-void handleManualInProgress(AsyncWebServerRequest *request)
-{
+void handleManualInProgress(AsyncWebServerRequest *request) {
   String s;
   if (Way::isAnyManualWateringRunning(s)) {
     Serial.printf("handleManualInProgress found %s\n", s.c_str());
     request->send(200, "text/plain", s);
-  }
-  else {
+  } else {
     request->send(200, "text/plain", "none");
   }
 }

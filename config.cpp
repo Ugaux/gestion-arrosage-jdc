@@ -1,27 +1,24 @@
-
 #include "config.h"
 
-Config *Config::m_config;
+Config* Config::m_config;
 
-Config::Config(const char *fileName) :
-  SPIFFSIniFile(fileName)
-{
-  m_fileName = fileName;
-  m_ssid[0] = '\0';
-  m_password[0] = '\0';
+Config::Config(const char* fileName) : SPIFFSIniFile(fileName) {
+  m_fileName       = fileName;
+  m_ssid[0]        = '\0';
+  m_password[0]    = '\0';
   m_moistureSensor = 0;
-  m_maxMoisture = 0;
-  m_config = this;
+  m_maxMoisture    = 0;
+  m_config         = this;
 }
 
-bool Config::getModules(void)
-{
-  char modules[MAX_LINE];
-  const char *p;
-  char *s;
+bool Config::getModules(void) {
+  char        modules[MAX_LINE];
+  const char* p;
+  char*       s;
 
   if (getValue("relays", "modules", modules, sizeof(modules)) != true) {
-    Serial.printf("%s:relays:modules not found (error %d)\n", m_fileName, getError());
+    Serial.printf("%s:relays:modules not found (error %d)\n", m_fileName,
+                  getError());
     return false;
   }
   p = strtok_r(modules, ", ", &s);
@@ -33,22 +30,21 @@ bool Config::getModules(void)
   return true;
 }
 
-bool Config::getRelays(void)
-{
-  char buffer[MAX_LINE];
-  const char *p;
-  char *s;
-  int id;
+bool Config::getRelays(void) {
+  char        buffer[MAX_LINE];
+  const char* p;
+  char*       s;
+  int         id;
 
-  Module *mod = Module::getFirst();
+  Module* mod = Module::getFirst();
   Serial.printf("config::getRelays %p\n", mod);
   while (mod != NULL && mod->isPresent()) {
     id = 0;
     Serial.printf("config::getRelays %s\n", mod->getName());
     if (getValue("relays", mod->getName(), buffer, sizeof(buffer)) != true) {
-      Serial.printf("%s:relays: %s not found (error %d)\n", m_fileName, mod->getName(), getError());
-    }
-    else {
+      Serial.printf("%s:relays: %s not found (error %d)\n", m_fileName,
+                    mod->getName(), getError());
+    } else {
       Serial.printf("%s:relays: %s\n", m_fileName, buffer);
     }
     p = strtok_r(buffer, ", ", &s);
@@ -61,21 +57,21 @@ bool Config::getRelays(void)
       p = strtok_r(NULL, ", ", &s);
       id++;
     }
-    p = strtok_r(NULL, ", ", &s);
+    p   = strtok_r(NULL, ", ", &s);
     mod = Module::getNext();
   }
   return true;
 }
 
-bool Config::getZones(void)
-{
-  char zones[MAX_LINE];
-  const char *p;
-  char *s;
+bool Config::getZones(void) {
+  char        zones[MAX_LINE];
+  const char* p;
+  char*       s;
 
   Serial.printf("config::getZones\n");
   if (getValue("zones", "zones", zones, sizeof(zones)) != true) {
-    Serial.printf("%s:zones:zones not found (error %d)\n", m_fileName, getError());
+    Serial.printf("%s:zones:zones not found (error %d)\n", m_fileName,
+                  getError());
     return false;
   }
   p = strtok_r(zones, ", ", &s);
@@ -87,22 +83,21 @@ bool Config::getZones(void)
   return true;
 }
 
-bool Config::getWays(void)
-{
-  char buffer[MAX_LINE];
-  const char *p;
-  char *s;
-  int id;
+bool Config::getWays(void) {
+  char        buffer[MAX_LINE];
+  const char* p;
+  char*       s;
+  int         id;
 
-  Zone *z = Zone::getFirst();
+  Zone* z = Zone::getFirst();
   Serial.printf("config::getWays %p\n", z);
   while (z != NULL && strlen(z->getName()) != 0) {
     id = 0;
     Serial.printf("config::getWays %s\n", z->getName());
     if (getValue(z->getName(), "ways", buffer, sizeof(buffer)) != true) {
-      Serial.printf("%s:ways: %s not found (error %d)\n", m_fileName, "ways", getError());
-    }
-    else {
+      Serial.printf("%s:ways: %s not found (error %d)\n", m_fileName,
+                    "ways", getError());
+    } else {
       Serial.printf("%s:ways: %s\n", m_fileName, buffer);
     }
     p = strtok_r(buffer, ", ", &s);
@@ -121,18 +116,18 @@ bool Config::getWays(void)
   return true;
 }
 
-bool Config::read(void)
-{
-  char buffer[MAX_LINE];
-  const char *p;
-  char *s;
+bool Config::read(void) {
+  char        buffer[MAX_LINE];
+  const char* p;
+  char*       s;
 
   if (!open()) {
     Serial.printf("%s: not found\n", m_fileName);
     return false;
   }
   if (getValue("WIFI", "access-point", buffer, sizeof(buffer)) != true) {
-    Serial.printf("%s:WIFI:access-point not found (error %d)\n", m_fileName, getError());
+    Serial.printf("%s:WIFI:access-point not found (error %d)\n", m_fileName,
+                  getError());
     return false;
   }
   p = strtok_r(buffer, ":", &s);
@@ -161,7 +156,8 @@ bool Config::read(void)
   }
   int duration;
   if (getValue("manual", "duration", buffer, sizeof(buffer), duration) != true) {
-    Serial.printf("%s:manual:duration not found (error %d)\n", m_fileName, getError());
+    Serial.printf("%s:manual:duration not found (error %d)\n", m_fileName,
+                  getError());
     duration = 5;
   }
   Watering::manualDuration(duration);
@@ -181,7 +177,8 @@ bool Config::read(void)
 
   Serial.printf("getting main valve\n");
   if (getValue("valve", "main", buffer, sizeof(buffer)) != true) {
-    Serial.printf("%s:valve:main not found (error %d)\n", m_fileName, getError());
+    Serial.printf("%s:valve:main not found (error %d)\n", m_fileName,
+                  getError());
     return false;
   }
   if (Valve::create(buffer) != true) {
@@ -191,31 +188,30 @@ bool Config::read(void)
   return true;
 }
 
-void Config::print(void)
-{
+void Config::print(void) {
   Serial.printf("ssid: %s\n", m_ssid);
   Serial.printf("password: %s\n", m_password);
   Serial.printf("modules: %d/%d\n", Module::getCount(), MAX_MODULE);
-  Module *module = Module::getFirst();
+  Module* module = Module::getFirst();
   while (module != 0 && module->isPresent()) {
     module->print();
     module = Module::getNext();
   }
   Serial.printf("relays: %d/%d\n", Relay::getCount(), MAX_WAY);
-  Relay *relay = Relay::getFirst();
+  Relay* relay = Relay::getFirst();
   while (relay != 0 && relay->isPresent()) {
     relay->print();
     relay = Relay::getNext();
   }
   Valve::getMainValve()->print();
   Serial.printf("zones: %d/%d\n", Zone::getCount(), MAX_ZONE);
-  Zone *zone = Zone::getFirst();
+  Zone* zone = Zone::getFirst();
   while (zone != 0) {
     zone->print();
     zone = Zone::getNext();
   }
   Serial.printf("ways: %d/%d\n", Way::getCount(), MAX_WAY);
-  Way *way = Way::getFirst();
+  Way* way = Way::getFirst();
   while (way != 0) {
     way->print();
     way = Way::getNext();
