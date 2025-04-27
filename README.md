@@ -15,7 +15,7 @@ Fonctionnalitées :
 # Tâches
 
 ✔️ bug import dans SPIFFSIniFile.h avec #include <SPIFFS.h>\
-❌ copier upgrade cuve\
+✔️ copier upgrade cuve\
 ❌ RTC détection plus de pile + si déconnection du spi/5v/gnd (doit reset puis dans setup mettre msg erreur)\
 ❌ affichage erreurs sur ecran + sur interface html?\
 ❌ defilement sur ecran oled pr texte trop long\

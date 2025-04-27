@@ -1,20 +1,34 @@
 #ifndef _CUVE_H_
 #define _CUVE_H_
 
+#include <string.h>
+
 void MarcheRemplissageCuve();
 void ArretRemplissageCuve();
-void MarcheArrosage(void);
-void ArretArrosage(void);
+void MarcheArrosage();
+void ArretArrosage();
 
 class Cuve {
 public:
+  enum class Etat {
+    DEFAUT,
+    VIDE,
+    INTERMEDIAIRE,
+    PLEINE,
+  };
   Cuve();
-  void setup();
-  void run();
+  void   setup();
+  void   run();
+  String messageDefaut = "";
 
 private:
-  unsigned long timer             = 0;
-  bool          pompeCuveEnMarche = false;
+  void transitionVers(Etat etat);
+  void actionEnEntrantDansEtat(Etat etat);
+
+  unsigned long timerDelaiCapteurBas_  = 0;
+  unsigned long timerDelaiRemplissage_ = 0;
+  Etat          etat_;
+  Etat          dernierEtat_;
 };
 
 extern Cuve cuve;
