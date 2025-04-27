@@ -1,4 +1,3 @@
-#include <Effortless_SPIFFS.h>
 #include <WiFi.h>
 #include <WiFiGeneric.h>
 #include <esp_wifi.h>
@@ -6,23 +5,23 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <SPIFFS.h>
-#include <sntp.h>
+#include <esp_sntp.h>
 #include <Wire.h>
 #include <RTClib.h>
 #include <TimeLib.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#include "src/config/config.h"
-#include "src/schedule/schedule.h"
-#include "src/watering/watering.h"
-#include "src/flow/flow.h"
-#include "src/humidity/humidity.h"
-#include "src/html/html.h"
-#include "src/hmi/hmi.h"
-#include "src/oled/oled.h"
-#include "src/cuve/cuve.h"
-#include "src/RTCModule/RTCModule.h"
+#include "config/config.h"
+#include "schedule/schedule.h"
+#include "watering/watering.h"
+#include "flow/flow.h"
+#include "humidity/humidity.h"
+#include "html/html.h"
+#include "hmi/hmi.h"
+#include "oled/oled.h"
+#include "cuve/cuve.h"
+#include "RTCModule/RTCModule.h"
 
 //// Déclaration du prototype de la fonction getRtcTime()
 //time_t getRtcTime();
@@ -40,6 +39,8 @@ const char *ntpServer = "pool.ntp.org";
 
 Hmi  hmi;
 Cuve cuve;
+
+time_t getRtcTime();
 
 void handleNotFound(AsyncWebServerRequest *request) {
   String message = "File Not Found\n\n";

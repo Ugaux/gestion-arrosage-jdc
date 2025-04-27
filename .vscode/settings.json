@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/.vscode": true,
+    "**/.gitignore": true,
+    "**/.pio": true,
+    "**/.clang-format": true
+  }
+}
