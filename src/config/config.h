@@ -4,13 +4,14 @@
 #include <SPIFFS.h>
 #include <FS.h>
 
-#include "SPIFFSIniFile.h"  // Supposed to be an Arduino library but latest version was not released with a tag
+#include "../SPIFFSIniFile/SPIFFSIniFile.h"
+// Supposed to be an Arduino library but latest working version was not released with a tag
 
-#include "relay.h"
-#include "valve.h"
-#include "zone.h"
-#include "way.h"
-#include "watering.h"
+#include "../relay/relay.h"
+#include "../valve/valve.h"
+#include "../zone/zone.h"
+#include "../way/way.h"
+#include "../watering/watering.h"
 
 class Config : public SPIFFSIniFile {
 public:

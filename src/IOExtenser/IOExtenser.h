@@ -1,9 +1,10 @@
-#ifndef _MODULE_H_
-#define _MODULE_H_
+#ifndef _IOEXTENSER_H_
+#define _IOEXTENSER_H_
 
 #include <Adafruit_MCP23X08.h>
 #include <Adafruit_MCP23X17.h>
-#include "constants.h"
+
+#include "../constants.h"
 
 #define MAX_MODULE_TYPE 4
 #define MAX_MODULE      8

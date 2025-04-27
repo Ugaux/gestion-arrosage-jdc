@@ -1,14 +1,14 @@
-#ifndef _SPIFFSINIFILE_H
-#define _SPIFFSINIFILE_H
+#ifndef _SPIFFSINIFILE_H_
+#define _SPIFFSINIFILE_H_
 
-#define SPIFFSINIFILE_VERSION "1.0.0"
+#define SPIFFSINIFILE_VERSION "1.0.1"
 
 // Maximum length for filename, excluding NULL char
 #define SPIFFSINI_FILE_MAX_FILENAME_LEN 31
 
-#include "SPIFFS.h"
-#include "FS.h"
-#include "IPAddress.h"
+#include <SPIFFS.h>
+#include <FS.h>
+#include <IPAddress.h>
 
 class SPIFFSIniFileState;
 

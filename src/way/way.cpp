@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include <TimeLib.h>
 
-#include "constants.h"
-#include "way.h"
-#include "watering.h"
-#include "config.h"
-#include "RTCModule.h"
+#include "../constants.h"
+#include "../way/way.h"
+#include "../watering/watering.h"
+#include "../config/config.h"
+#include "../RTCModule/RTCModule.h"
 
 int Way::m_searchIndex;
 Way Way::m_way[MAX_WAY];

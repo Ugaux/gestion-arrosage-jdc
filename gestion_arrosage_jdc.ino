@@ -13,16 +13,16 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#include "config.h"
-#include "schedule.h"
-#include "watering.h"
-#include "flow.h"
-#include "humidity.h"
-#include "html.h"
-#include "hmi.h"
-#include "oled.h"
-#include "cuve.h"
-#include "RTCModule.h"
+#include "src/config/config.h"
+#include "src/schedule/schedule.h"
+#include "src/watering/watering.h"
+#include "src/flow/flow.h"
+#include "src/humidity/humidity.h"
+#include "src/html/html.h"
+#include "src/hmi/hmi.h"
+#include "src/oled/oled.h"
+#include "src/cuve/cuve.h"
+#include "src/RTCModule/RTCModule.h"
 
 //// Déclaration du prototype de la fonction getRtcTime()
 //time_t getRtcTime();

@@ -3,7 +3,8 @@
 
 #include <TimeLib.h>
 #include <RTClib.h>
-#include "way.h"
+
+#include "../way/way.h"
 
 class Watering {
 public:

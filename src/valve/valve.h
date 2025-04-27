@@ -1,7 +1,7 @@
 #ifndef _VALVE_H_
 #define _VALVE_H_
 
-#include "relay.h"
+#include "../relay/relay.h"
 
 #define OPEN_TIME 20
 

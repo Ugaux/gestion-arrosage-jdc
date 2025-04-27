@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <ezButton.h>
 
-#include "hmi.h"
-#include "oled.h"
-#include "watering.h"
-#include "humidity.h"
-#include "flow.h"
-#include "RTCModule.h"
+#include "../hmi/hmi.h"
+#include "../oled/oled.h"
+#include "../watering/watering.h"
+#include "../humidity/humidity.h"
+#include "../flow/flow.h"
+#include "../RTCModule/RTCModule.h"
 
 Hmi::Hmi() : m_state(IDLE),
              m_manualWatering(0),

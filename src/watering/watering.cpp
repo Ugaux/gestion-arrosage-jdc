@@ -1,15 +1,14 @@
 #include <Arduino.h>
-
-#include "watering.h"
-#include "config.h"
-#include "schedule.h"
-#include "valve.h"
-#include "humidity.h"
-#include "flow.h"
-#include "oled.h"
-#include "RTCModule.h"
-
 #include <RtcDS1302.h>
+
+#include "../watering/watering.h"
+#include "../config/config.h"
+#include "../schedule/schedule.h"
+#include "../valve/valve.h"
+#include "../humidity/humidity.h"
+#include "../flow/flow.h"
+#include "../oled/oled.h"
+#include "../RTCModule/RTCModule.h"
 
 #define DAY_DURATION (24L * 60L * 60L)
 

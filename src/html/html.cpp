@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#include "html.h"
-#include "watering.h"
+#include "../html/html.h"
+#include "../watering/watering.h"
 
 String formWayName;
 int    formSchedule;

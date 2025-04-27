@@ -4,8 +4,8 @@
 #include <Ticker.h>
 #include <TimeLib.h>
 
-#include "zone.h"
-#include "relay.h"
+#include "../zone/zone.h"
+#include "../relay/relay.h"
 
 class Watering;
 

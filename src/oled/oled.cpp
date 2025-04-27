@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include "RTCModule.h"
 
-#include "constants.h"
-#include "watering.h"
-#include "oled.h"
+#include "../RTCModule/RTCModule.h"
+#include "../constants.h"
+#include "../watering/watering.h"
+#include "../oled/oled.h"
 
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 Oled display;

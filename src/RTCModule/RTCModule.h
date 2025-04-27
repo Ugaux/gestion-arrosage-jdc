@@ -1,5 +1,5 @@
-#ifndef RTCMODULE_H
-#define RTCMODULE_H
+#ifndef _RTCMODULE_H_
+#define _RTCMODULE_H_
 
 #include <Wire.h>
 #include <RTClib.h>

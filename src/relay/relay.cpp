@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "relay.h"
-#include "cuve.h"
+#include "../cuve/cuve.h"
 
 int   Relay::m_searchIndex;
 Relay Relay::m_relay[MAX_WAY];
