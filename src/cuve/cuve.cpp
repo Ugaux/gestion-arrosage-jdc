@@ -11,10 +11,9 @@
 
 */
 
-#include <Arduino.h>
-#include <RCSwitch.h>
-
 #include "cuve.h"
+
+#include <RCSwitch.h>
 
 #define DEBUG false  // Afficher une aide sur la console (débogage)
 

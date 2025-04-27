@@ -1,10 +1,8 @@
 #ifndef _SPIFFSINIFILE_H_
 #define _SPIFFSINIFILE_H_
 
-#define SPIFFSINIFILE_VERSION "1.0.1"
-
-// Maximum length for filename, excluding NULL char
-#define SPIFFSINI_FILE_MAX_FILENAME_LEN 31
+#define SPIFFSINIFILE_VERSION          "1.0.1"
+#define SPIFFSINIFILE_MAX_FILENAME_LEN 31  // Maximum length for filename, excluding NULL char
 
 #include <SPIFFS.h>
 #include <FS.h>
@@ -104,7 +102,7 @@ protected:
   bool findKey(const char* section, const char* key, char* buffer, size_t len, char** keyptr, SPIFFSIniFileState& state) const;
 
 private:
-  char            _filename[SPIFFSINI_FILE_MAX_FILENAME_LEN];
+  char            _filename[SPIFFSINIFILE_MAX_FILENAME_LEN];
   const char*     _mode;
   mutable error_t _error;
   mutable File    _file;

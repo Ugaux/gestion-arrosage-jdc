@@ -1,11 +1,10 @@
 #ifndef _HMI_H_
 #define _HMI_H_
 
+#include <Arduino.h>
+
 #define FUNCTION_BUTTON 35
 #define MANUAL_BUTTON   34
-
-#include <RTClib.h>
-#include <TimeLib.h>
 
 enum hmiState {
   IDLE,

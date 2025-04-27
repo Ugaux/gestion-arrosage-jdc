@@ -1,7 +1,6 @@
-#include <Arduino.h>
+#include "humidity.h"
 
-#include "../humidity/humidity.h"
-#include "../config/config.h"
+#include "config/config.h"
 
 int getSoilMoisture(int *value) {
   uint8_t sensor = Config::getConfig()->getMoistureSensor();

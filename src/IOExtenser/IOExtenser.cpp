@@ -1,6 +1,6 @@
-#include <Arduino.h>
-
 #include "IOExtenser.h"
+
+#include "constants.h"
 
 int         Module::m_searchIndex;
 Module      Module::m_module[MAX_MODULE];

@@ -1,5 +1,8 @@
 #include "config.h"
 
+#include "valve/valve.h"
+#include "watering/watering.h"
+
 Config* Config::m_config;
 
 Config::Config(const char* fileName) : SPIFFSIniFile(fileName) {

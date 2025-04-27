@@ -2,15 +2,11 @@
 #define _OLED_H_
 
 #include <Adafruit_SSD1306.h>
-#include <TimeLib.h>
-#include <RTClib.h>
 
 #define OLED_RESET     4  // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C
 #define SCREEN_WIDTH   128
 #define SCREEN_HEIGHT  64
-
-#endif
 
 class Oled : public Adafruit_SSD1306 {
 public:
@@ -33,3 +29,5 @@ private:
 };
 
 extern Oled display;
+
+#endif

@@ -1,10 +1,9 @@
 #ifndef _WATERING_H_
 #define _WATERING_H_
 
-#include <TimeLib.h>
-#include <RTClib.h>
+#include "way/way.h"
 
-#include "../way/way.h"
+#define DAY_DURATION (24L * 60L * 60L)
 
 class Watering {
 public:

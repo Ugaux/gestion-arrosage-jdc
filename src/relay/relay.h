@@ -1,9 +1,8 @@
 #ifndef _RELAY_H_
 #define _RELAY_H_
 
-#include "../constants.h"
-#include "../IOExtenser/IOExtenser.h"
-#include "../cuve/cuve.h"
+#include "IOExtenser/IOExtenser.h"
+#include "constants.h"
 
 enum relayState { ON,
                   OFF };

@@ -1,7 +1,6 @@
-#include <Arduino.h>
-
-#include "../config/config.h"
 #include "flow.h"
+
+#include "config/config.h"
 
 #define SENSOR_INTERRUPT digitalPinToInterrupt(FLOW_SENSOR)
 

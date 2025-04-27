@@ -1,27 +1,15 @@
-#include <WiFi.h>
-#include <WiFiGeneric.h>
-#include <esp_wifi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <ESPmDNS.h>
-#include <SPIFFS.h>
-#include <esp_sntp.h>
-#include <Wire.h>
-#include <RTClib.h>
 #include <TimeLib.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
-#include "config/config.h"
-#include "schedule/schedule.h"
-#include "watering/watering.h"
-#include "flow/flow.h"
-#include "humidity/humidity.h"
-#include "html/html.h"
-#include "hmi/hmi.h"
-#include "oled/oled.h"
-#include "cuve/cuve.h"
 #include "RTCModule/RTCModule.h"
+#include "config/config.h"
+#include "cuve/cuve.h"
+#include "humidity/humidity.h"
+#include "flow/flow.h"
+#include "watering/watering.h"
+#include "schedule/schedule.h"
+#include "html/html.h"
+#include "oled/oled.h"
+#include "hmi/hmi.h"
 
 //// Déclaration du prototype de la fonction getRtcTime()
 //time_t getRtcTime();

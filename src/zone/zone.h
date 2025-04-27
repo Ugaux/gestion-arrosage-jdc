@@ -1,7 +1,9 @@
 #ifndef _ZONE_H_
 #define _ZONE_H_
 
-#include "../constants.h"
+#include <Arduino.h>
+
+#include "constants.h"
 
 class Zone {
 public:

@@ -1,7 +1,8 @@
-#include <Arduino.h>
+#include "html.h"
 
-#include "../html/html.h"
-#include "../watering/watering.h"
+#include <SPIFFS.h>
+
+#include "watering/watering.h"
 
 String formWayName;
 int    formSchedule;
@@ -10,16 +11,15 @@ String formDuration;
 String formAlways;
 String formOptions;
 
-char head[] = R"(<!DOCTYPE html><html>
-<head><meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<meta charset="utf-8">
-)";
+char head[] = R"(<!DOCTYPE html><html>)"
+              R"(<head><meta name="viewport" content="width=device-width, initial-scale=1"></head>)"
+              R"(<meta charset="utf-8">
+              )";
 
-char buttonCss[] = R"(<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}
-.button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px; text-decoration: none; font-size: 15px; margin: 2px; cursor: pointer;}
-.button2 {background-color: #555555;}</style>
-)";
+char buttonCss[] = R"(<style>html {font-family: Helvetica; display: inline-block; margin: 0px auto;)"
+                   R"( text-align: center;} .button {background-color: #4CAF50; border: none; color: white;)"
+                   R"( padding: 16px 40px; text-decoration: none; font-size: 15px; margin: 2px; cursor: pointer;})"
+                   R"( .button2 {background-color: #555555;}</style>)";
 
 void addConfigButton(String &html, const char *way, int schedule) {
   html += "<p><button id='config_";

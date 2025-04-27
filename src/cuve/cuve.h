@@ -1,7 +1,7 @@
 #ifndef _CUVE_H_
 #define _CUVE_H_
 
-#include <string.h>
+#include <Arduino.h>
 
 void MarcheRemplissageCuve();
 void ArretRemplissageCuve();

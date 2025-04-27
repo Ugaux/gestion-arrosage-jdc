@@ -2,10 +2,9 @@
 #define _WAY_H_
 
 #include <Ticker.h>
-#include <TimeLib.h>
 
-#include "../zone/zone.h"
-#include "../relay/relay.h"
+#include "zone/zone.h"
+#include "relay/relay.h"
 
 class Watering;
 

@@ -1,6 +1,6 @@
-#include "../schedule/schedule.h"
-#include "../way/way.h"
-#include "../watering/watering.h"
+#include "schedule.h"
+
+#include "watering/watering.h"
 
 Schedule::Schedule(const char *fileName) : SPIFFSIniFile(fileName) {
   m_fileName = fileName;

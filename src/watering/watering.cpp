@@ -1,16 +1,10 @@
-#include <Arduino.h>
-#include <RtcDS1302.h>
+#include "watering.h"
 
-#include "../watering/watering.h"
-#include "../config/config.h"
-#include "../schedule/schedule.h"
-#include "../valve/valve.h"
-#include "../humidity/humidity.h"
-#include "../flow/flow.h"
-#include "../oled/oled.h"
-#include "../RTCModule/RTCModule.h"
+#include <TimeLib.h>
 
-#define DAY_DURATION (24L * 60L * 60L)
+#include "schedule/schedule.h"
+#include "valve/valve.h"
+#include "humidity/humidity.h"
 
 int      Watering::m_searchIndex;
 int      Watering::m_manualDuration;

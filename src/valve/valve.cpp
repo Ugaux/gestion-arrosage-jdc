@@ -1,8 +1,10 @@
-#include <Arduino.h>
+#include "valve.h"
+
 #include <Ticker.h>
 
-#include "../valve/valve.h"
-#include "../oled/oled.h"
+#include "constants.h"
+#include "oled/oled.h"
+#include "cuve/cuve.h"
 
 Ticker timer;
 Valve  Valve::m_mainValve;
