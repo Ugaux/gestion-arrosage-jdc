@@ -3,7 +3,10 @@
 
 #include "way/way.h"
 
+#include <RCSwitch.h>
+
 #define DAY_DURATION (24L * 60L * 60L)
+#define DEBUG        false
 
 class Watering {
 public:
@@ -39,6 +42,7 @@ public:
   void               set(const char *wayName, int index);
   void               set(int hour, int minute, long duration, bool always);
   void               set(const char *wayName, int index, int hour, int minute, long duration, bool always);
+  static void        resetTimerAllumagePompe(RCSwitch &radioCmd);
 
 private:
   static Watering m_watering[MAX_WATERING];

@@ -25,25 +25,12 @@ Schedule schedule(SCHEDULE_FILE);
 
 const char *ntpServer = "pool.ntp.org";
 
+RCSwitch radioCmd = RCSwitch();
+
 Hmi  hmi;
-Cuve cuve;
+Cuve cuve(radioCmd);
 
 time_t getRtcTime();
-
-void handleNotFound(AsyncWebServerRequest *request) {
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += request->url();
-  message += "\nMethod: ";
-  message += request->methodToString();
-  message += "\nArguments: ";
-  message += request->args();
-  message += "\n";
-  for (uint8_t i = 0; i < request->args(); i++) {
-    message += " " + request->argName(i) + ": " + request->arg(i) + "\n";
-  }
-  request->send(404, "text/plain", message);
-}
 
 void WiFiEvent(WiFiEvent_t event) {
   Serial.printf("[WiFi-event] event: %d\n", event);
@@ -145,8 +132,23 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
 void setup(void) {
   Serial.begin(115200);
 
+  if (!display.begin()) {
+    Serial.println(F("OLED screen SSD1306 allocation failed"));
+    while (true) delay(100);
+  }
+
   // Initialiser le RTC
-  setupRTC();
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    display.displayError("Couldn't find RTC");
+    while (true) delay(100);
+  }
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, setting time to last build time");
+    display.displayError("RTC lost power");
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    while (true) delay(100);
+  }
 
   // Initialiser la synchronisation de l'heure
   setSyncProvider(syncTimeFromRTC);  // Utilise la nouvelle fonction pour synchroniser l'heure
@@ -154,28 +156,21 @@ void setup(void) {
   //  // Initialiser la communication I2C
   //  Wire.begin(21, 22); // SDA sur GPIO21, SCL sur GPIO22
 
-  cuve.setup();
-
-  if (!display.begin()) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;);  // Don't proceed, loop forever
-  }
-
-  hmi.begin();
-
   if (!SPIFFS.begin()) {
     Serial.println("SPIFFS.begin() failed");
+    display.displayError("SPIFFS.begin() failed");
+    while (true) delay(100);
   }
   if (config.read() != true) {
-    Serial.println("configuration failed");
-    while (1)
-      sleep(1);
+    Serial.println("reading configuration failed");
+    display.displayError("config read failed");
+    while (true) delay(100);
   }
   config.print();
   if (schedule.read() != true) {
     Serial.println("schedule configuration failed");
-    while (1)
-      sleep(1);
+    display.displayError("schedule read failed");
+    while (true) delay(100);
   }
   schedule.print();
   //  WiFi.onEvent(WiFiStationConnected, SYSTEM_EVENT_STA_CONNECTED);
@@ -216,6 +211,15 @@ void setup(void) {
     Serial.println();
     Serial.println("Wait for WiFi... ");
   */
+  hmi.setup();
+  cuve.setup(true);
+
+  pinMode(23, OUTPUT);          // sets the digital pin 23 as output
+  radioCmd.enableTransmit(23);  // data de l'émetteur sur broche Digital 23
+  // bien respecter l'ordre de ces 3 instructions qui suivent :
+  radioCmd.setProtocol(1);       // à remplacer par votre valeur de protocol
+  radioCmd.setPulseLength(346);  // à remplacer par votre valeur de PulseLength
+  radioCmd.setRepeatTransmit(5);
 
   Serial.println("\n");
 
@@ -295,7 +299,9 @@ void setup(void) {
     request->send(SPIFFS, "/schedule.ini", "text/plain", false);
   });
 
-  server.onNotFound(handleNotFound);
+  server.onNotFound([](AsyncWebServerRequest *request) {
+    request->send(200, "text/html", "/maint.html");
+  });
 
   server.begin();
   //  esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
@@ -317,7 +323,6 @@ void setup(void) {
 bool sntp_sync;
 
 void loop(void) {
-
   static time_t lastSec;
   static time_t lastMinute;
 
@@ -330,32 +335,54 @@ void loop(void) {
     //    displayTimeDate();
     cuve.run();
 
-    float flow = getFlow();
-    if (!hmi.isBusy()) {
-      display.displayFlow(flow);
+    if (cuve.getCurrentState() == Cuve::Etat::DEFAUT) {
+      //Watering::arretArrosage(radioCmd);
+      display.displayError(cuve.getCurrentDefault().c_str());
+      while (true) delay(100);
     }
+    display.displayCuveState(cuve.getCurrentStateStr().c_str(), cuve.getCurrentState());
+    display.displayTimeDate();
+
+    float flow = getFlow();
+    //if (!hmi.isBusy()) {
+    //  display.displayFlow(flow);
+    //}
     if (flow > Config::getConfig()->getMaxFlow()) {
-      Serial.printf("flow is tooOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO high\n");
+      Serial.printf("flow is too high\n");
       Watering::stopAllAutoWatering();
       Way::stopAllManualWatering();
     }
+
+    if (Watering::isAnyWateringRunning()) {
+      if (cuve.getCurrentState() == Cuve::Etat::INTERMEDIAIRE or cuve.getCurrentState() == Cuve::Etat::PLEINE)
+        Watering::resetTimerAllumagePompe(radioCmd);
+      display.displayMessage("ARROSAGE EN COURS");
+    } else
+      display.displayMessage("ARROSAGE A L'ARRET");
   }
 
-  // Exécuter une tâche toutes les 60 secondes
+  // Exécuter une tâche toutes les 10 secondes
   if (currentTime - lastMinute >= 10) {
     lastMinute = currentTime;
-    Serial.println("60s have passed.");
+    Serial.println("10s have passed.");
     // Ajouter ici les tâches à exécuter toutes les 5 secondes
     int moisture;
     getSoilMoisture(&moisture);  // just display to terminal
     if (!hmi.isBusy()) {
       display.displayMoisture(moisture);
     }
-    display.displayTimeDate();
-    //    Watering::run(timestamp);
     Watering::run(currentTime);
+
+    //    Watering::run(timestamp);
+    //if (cuve.getCurrentState() != lastCuveState) {
+    //  display.displayError(cuve.getCurrentStateStr().c_str());
+    //  lastCuveState = cuve.getCurrentState();
+    //}
   }
+
   hmi.run();
+
+  delay(16);
 }
 
 time_t getRtcTime() {
@@ -385,7 +412,7 @@ void displayTimeDate() {
   struct tm *timeinfo    = localtime(&currentTime);           // Convertir en structure tm locale
   strftime(timeString, MAX_BUF, "%d/%m/%Y %H:%M", timeinfo);  // Formater la chaîne de temps
 
-  Serial.printf("Oled::displayTimeDate %s\n", timeString);
+  //Serial.printf("Oled::displayTimeDate %s\n", timeString);
   int16_t  x1, y1;
   uint16_t w, h;
   display.getTextBounds(timeString, 0, 0, &x1, &y1, &w, &h);

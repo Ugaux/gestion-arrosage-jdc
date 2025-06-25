@@ -159,7 +159,7 @@ void Way::manualStart(int duration) {
 }
 
 void Way::manualStop(void) {
-  Serial.printf("way::manualStop %s\n", getName());
+  //Serial.printf("way::manualStop %s\n", getName());
   m_manualStarted  = 0;
   m_manualDuration = 0;
   close();
@@ -171,7 +171,7 @@ void Way::manualStop(void) {
 
 bool Way::manualStarted(time_t *remain) {
   if (m_manualStarted != 0) {
-    Serial.printf("way::manualStarted: %s\n", getName());
+    //Serial.printf("way::manualStarted: %s\n", getName());
     if (remain) {
       time_t elapsed = now() - m_manualStarted;
       *remain        = m_manualDuration - elapsed;

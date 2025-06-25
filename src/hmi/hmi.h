@@ -20,7 +20,7 @@ class Way;
 class Hmi {
 public:
   Hmi();
-  void    begin();
+  void    setup();
   void    displayDefaults(void);
   void    displayIPAndNextWatering(void);
   void    displayManual(void);
@@ -32,6 +32,7 @@ public:
 private:
   int           m_state;
   Way          *m_manualWatering;
+  bool          manualReleasedHandled;  // keeps its value between loop calls
   unsigned long m_time;
 };
 

@@ -1,6 +1,7 @@
 #include "watering.h"
 
 #include <TimeLib.h>
+#include <RCSwitch.h>
 
 #include "schedule/schedule.h"
 #include "valve/valve.h"
@@ -26,7 +27,8 @@ bool Watering::create(int index, Way *way, const char *def) {
   const char *p;
   char       *s;
 
-  Serial.printf("watering::create %s %s\n", way->getName(), def);
+  if (DEBUG)
+    Serial.printf("watering::create %s %s\n", way->getName(), def);
   strncpy(tmp, def, MAX_DEF);
   w = getByName(way->getName(), index);
   if (w) {
@@ -34,19 +36,22 @@ bool Watering::create(int index, Way *way, const char *def) {
     w->m_way   = way;
     p          = strtok_r(tmp, ":", &s);
     if (p == NULL) {
-      Serial.printf("%s: bad format, missing ':'\n", def);
+      if (DEBUG)
+        Serial.printf("%s: bad format, missing ':'\n", def);
       return false;
     }
     w->m_hour = atoi(p);
     p         = strtok_r(NULL, ",", &s);
     if (p == NULL) {
-      Serial.printf("%s: bad format, missing ','\n", def);
+      if (DEBUG)
+        Serial.printf("%s: bad format, missing ','\n", def);
       return false;
     }
     w->m_minute = atoi(p);
     p           = strtok_r(NULL, ",", &s);
     if (p == NULL) {
-      Serial.printf("%s: bad format, missing ','\n", def);
+      if (DEBUG)
+        Serial.printf("%s: bad format, missing ','\n", def);
       return false;
     }
     w->m_duration = atol(p);
@@ -90,14 +95,16 @@ Watering *Watering::getNext(void) {
 
 // return a watering giving its name
 Watering *Watering::getByName(const char *def, int index) {
-  Serial.printf("watering::getByName %s %d\n", def, index);
+  if (DEBUG)
+    Serial.printf("watering::getByName %s %d\n", def, index);
   for (int i = 0; i < MAX_WATERING; i++) {
     Watering *w = &m_watering[i];
     if (w->m_way == 0) {
       return 0;
     }
     if (!strcmp(w->getWayName(), def) && w->m_index == index) {
-      Serial.printf("watering::getByName found %s %d at %d\n", w->getWayName(), w->m_index, i);
+      if (DEBUG)
+        Serial.printf("watering::getByName found %s %d at %d\n", w->getWayName(), w->m_index, i);
       return w;
     }
   }
@@ -106,11 +113,13 @@ Watering *Watering::getByName(const char *def, int index) {
 
 // return the first free watering
 Watering *Watering::getFreeWatering(void) {
-  Serial.printf("watering::getFreeWatering\n");
+  if (DEBUG)
+    Serial.printf("watering::getFreeWatering\n");
   for (int i = 0; i < MAX_WATERING; i++) {
     Watering *w = &m_watering[i];
     if (w->m_way == 0) {
-      Serial.printf("watering::getFreeWatering found %d\n", i);
+      if (DEBUG)
+        Serial.printf("watering::getFreeWatering found %d\n", i);
       return w;
     }
   }
@@ -119,7 +128,8 @@ Watering *Watering::getFreeWatering(void) {
 
 // return a free watering for a way
 Watering *Watering::getFreeWatering(const char *wayName) {
-  Serial.printf("watering::getFreeWatering %s\n", wayName);
+  if (DEBUG)
+    Serial.printf("watering::getFreeWatering %s\n", wayName);
   for (int i = 0; i < MAX_WATERING; i++) {
     Watering *w = &m_watering[i];
     if (w->m_way == 0) {
@@ -127,7 +137,8 @@ Watering *Watering::getFreeWatering(const char *wayName) {
     }
     if (!strcmp(w->getWayName(), wayName)) {
       if (w->m_duration == 0) {
-        Serial.printf("watering::getFreeWatering found %d\n", i);
+        if (DEBUG)
+          Serial.printf("watering::getFreeWatering found %d\n", i);
         return w;
       }
     }
@@ -139,7 +150,8 @@ Watering *Watering::getFreeWatering(const char *wayName) {
 bool Watering::run(time_t t) {
   struct tm *pTime;
 
-  Serial.println();
+  if (DEBUG)
+    Serial.println();
   pTime     = localtime(&t);
   int toDay = pTime->tm_mday;
   for (int i = 0; i < MAX_WATERING; i++) {
@@ -149,11 +161,13 @@ bool Watering::run(time_t t) {
       time_t startTime = w->getStartTime(t);
       pTime            = localtime(&startTime);
       strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
-      Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
+      if (DEBUG)
+        Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
       time_t stopTime = w->getStopTime(t);
       pTime           = localtime(&stopTime);
       strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
-      Serial.printf("%s next stop %s\n", w->getWayName(), buffer);
+      if (DEBUG)
+        Serial.printf("%s next stop %s\n", w->getWayName(), buffer);
       if (t < startTime) {
         time_t d = startTime - t;
         int    h = d / 3600;
@@ -161,15 +175,18 @@ bool Watering::run(time_t t) {
         int m = d / 60;
         d %= 60;
         int s = d;
-        if (toDay != pTime->tm_mday) {
-          Serial.printf("%s: after time, schedule in %02d:%02d:%02d\n", w->getWayName(), h, m, s);
-          //          w->autoStop();
-        } else {
-          Serial.printf("%s: before time, schedule in %02d:%02d:%02d\n", w->getWayName(), h, m, s);
+        if (DEBUG) {
+          if (toDay != pTime->tm_mday) {
+            Serial.printf("%s: after time, schedule in %02d:%02d:%02d\n", w->getWayName(), h, m, s);
+            //          w->autoStop();
+          } else {
+            Serial.printf("%s: before time, schedule in %02d:%02d:%02d\n", w->getWayName(), h, m, s);
+          }
         }
       }
       if (toDay == pTime->tm_mday && t >= startTime && t <= stopTime) {
-        Serial.printf("In time, open relay %s\n", w->m_way->getRelay()->getName());
+        if (DEBUG)
+          Serial.printf("In time, open relay %s\n", w->m_way->getRelay()->getName());
         w->autoStart();
       }
       if (toDay == pTime->tm_mday && t > stopTime) {
@@ -200,7 +217,8 @@ const char *Watering::getNextWateringTime(time_t *t) {
       time_t startTime = w->getStartTime(timestamp);
       pTime            = localtime(&startTime);
       strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
-      Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
+      if (DEBUG)
+        Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
       if (nextWateringTime == 0) {
         nextWateringTime = startTime;
         nextWateringWay  = w->getWayName();
@@ -212,8 +230,10 @@ const char *Watering::getNextWateringTime(time_t *t) {
     }
   }
   *t = nextWateringTime;
-  Serial.printf("nextWateringTime = %ld\n", nextWateringTime);
-  Serial.printf("Watering::getNextWateringTime found %s %ld\n", nextWateringWay == 0 ? "none" : nextWateringWay, *t);
+  if (DEBUG)
+    Serial.printf("nextWateringTime = %ld\n", nextWateringTime);
+  if (DEBUG)
+    Serial.printf("Watering::getNextWateringTime found %s %ld\n", nextWateringWay == 0 ? "none" : nextWateringWay, *t);
   return nextWateringWay;
 }
 
@@ -222,7 +242,8 @@ bool Watering::isAnyWateringRunning() {
     Watering *w = &m_watering[i];
     if (w->getDuration() != 0) {
       if (w->autoStarted() || w->getWay()->manualStarted(NULL)) {
-        Serial.printf("Watering running: %s\n", w->getWayName());
+        if (DEBUG)
+          Serial.printf("Watering running: %s\n", w->getWayName());
         return true;
       }
     }
@@ -293,52 +314,62 @@ void Watering::print(void) {
 void Watering::autoStart() {
   int moisture;
 
-  Serial.printf("Watering::autoStart %s: %ld\n\n", getWayName(), m_duration);
+  if (DEBUG)
+    Serial.printf("Watering::autoStart %s: %ld\n\n", getWayName(), m_duration);
   m_autoStarted = now();
   if (m_moisture == 0) {
     m_moisture = getSoilMoisture(&moisture);
     if (m_moisture == HUMIDITY_DRY) {
-      Serial.printf("Watering::autoStart: moisture %x (DRY)\n", moisture);
+      if (DEBUG)
+        Serial.printf("Watering::autoStart: moisture %x (DRY)\n", moisture);
       m_way->open();
     }
     if (m_always == true && m_moisture == HUMIDITY_WET) {
-      Serial.printf("Watering::autoStart always: independent moisture %x (WET)\n", moisture);
+      if (DEBUG)
+        Serial.printf("Watering::autoStart always: independent moisture %x (WET)\n", moisture);
       m_way->open();
     } else {
-      Serial.printf("Watering::autoStart: moisture %x (WET)\n", moisture);
+      if (DEBUG)
+        Serial.printf("Watering::autoStart: moisture %x (WET)\n", moisture);
     }
   }
 }
 
 void Watering::autoStop() {
-  Serial.printf("Watering::autoStop %s\n\n", getWayName());
+  if (DEBUG)
+    Serial.printf("Watering::autoStop %s\n\n", getWayName());
   m_autoStarted = 0;
   m_moisture    = 0;
   if (!m_way->manualStarted(NULL)) {
-    Serial.printf("close relay %s\n", m_way->getRelay()->getName());
+    if (DEBUG)
+      Serial.printf("close relay %s\n", m_way->getRelay()->getName());
     m_way->close();
   } else {
-    Serial.printf("Relay %s remains open (manual start detected)\n", m_way->getRelay()->getName());
+    if (DEBUG)
+      Serial.printf("Relay %s remains open (manual start detected)\n", m_way->getRelay()->getName());
   }
 }
 
 bool Watering::autoStarted(void) {
   if (m_autoStarted != 0) {
-    Serial.printf("watering::autoooooooooooooooooooooooooooooStarted: %s\n", getWayName());
+    if (DEBUG)
+      Serial.printf("watering::auto_started: %s\n", getWayName());
     return true;
   }
   return false;
 }
 
 void Watering::set(const char *wayName, int index) {
-  Serial.printf("Watering::set %s[%d]\n", wayName, index);
+  if (DEBUG)
+    Serial.printf("Watering::set %s[%d]\n", wayName, index);
   Way *way = Way::getByName(wayName);
   m_way    = way;
   m_index  = index;
 }
 
 void Watering::set(int hour, int minute, long duration, bool always) {
-  Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", getWayName(), m_index, hour, minute, duration, always);
+  if (DEBUG)
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", getWayName(), m_index, hour, minute, duration, always);
   m_hour     = hour;
   m_minute   = minute;
   m_duration = duration;
@@ -347,7 +378,8 @@ void Watering::set(int hour, int minute, long duration, bool always) {
 }
 
 void Watering::set(const char *wayName, int index, int hour, int minute, long duration, bool always) {
-  Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", wayName, index, hour, minute, duration, always);
+  if (DEBUG)
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", wayName, index, hour, minute, duration, always);
   Way *way   = Way::getByName(wayName);
   m_way      = way;
   m_index    = index;
@@ -356,4 +388,17 @@ void Watering::set(const char *wayName, int index, int hour, int minute, long du
   m_duration = duration;
   m_always   = always;
   schedule.write();
+}
+
+void Watering::resetTimerAllumagePompe(RCSwitch &radioCmd) {
+  if (DEBUG)
+    Serial.println("resetTimerAllumagePompe");
+  //if (etat_ == Etat::INTERMEDIAIRE || etat_ == Etat::PLEINE) {
+  unsigned long sendTime = millis();
+  while (millis() - sendTime < 10) {
+    radioCmd.send("101000000110101010110100");  // = BOUTON "C" télécommande : Arrosage au jet
+    if (DEBUG)
+      delay(1);
+  }
+  //}
 }

@@ -58,7 +58,6 @@ Valve::Valve(void) : m_state(VALVE_UNKNOWN) {
 // open the valve
 void Valve::open(void) {
   if (m_state == VALVE_IS_CLOSED) {
-    display.displayMessage("OUVERTURE VANNE");
     if (m_closeRelay) {
       // it's a motorized valve (2 relays)
       m_openRelay->on();
@@ -69,7 +68,6 @@ void Valve::open(void) {
       m_openRelay->on();
       m_state = VALVE_IS_OPEN;
       digitalWrite(33, LOW);
-      MarcheArrosage();
     }
   }
 }
@@ -77,7 +75,6 @@ void Valve::open(void) {
 // close the valve
 void Valve::close(void) {
   if (m_state == VALVE_IS_OPEN || m_state == VALVE_UNKNOWN) {
-    display.displayMessage("FERMETURE VANNE");
     if (m_closeRelay) {
       // it's a motorized valve (2 relays)
       m_closeRelay->on();
@@ -88,7 +85,6 @@ void Valve::close(void) {
       m_openRelay->off();
       m_state = VALVE_IS_CLOSED;
       digitalWrite(33, HIGH);
-      ArretArrosage();
     }
   }
 }

@@ -18,20 +18,20 @@ bool Oled::begin(void) {
   clearDisplay();
   setTextColor(SSD1306_WHITE);
   setCursor(0, 0);
-  char     title[] = "MON IRRIGATION";
+  char     title[] = "System init...";
   int16_t  x1, y1;
   uint16_t w, h;
   getTextBounds(title, 0, 0, &x1, &y1, &w, &h);
   setCursor((SCREEN_WIDTH - w) / 2, 0);
   print(title);
   getTextBounds("pt", 0, 0, &x1, &y1, &w, &m_textHeight);
-  Serial.printf("Oled::begin %u\n", m_textHeight);
+  Serial.printf("Oled::begin with text height %u\n", m_textHeight);
   display();
   return true;
 }
 
 uint16_t Oled::getLinePos(int line) {
-  return m_textHeight * (3 + line) + (3 * line);
+  return m_textHeight * (3 + line) + (3 * line) - 2;
 }
 
 void Oled::clearLine(int line) {
@@ -42,17 +42,17 @@ void Oled::clearLine(int line) {
 void Oled::displayTimeDate() {
   char timeString[MAX_BUF];
 
-  DateTime   now         = getCurrentTime();                  // Obtenir l'heure actuelle du RTC
-  time_t     currentTime = now.unixtime();                    // Convertir en Unix timestamp
-  struct tm *timeinfo    = localtime(&currentTime);           // Convertir en structure tm locale
-  strftime(timeString, MAX_BUF, "%d/%m/%Y %H:%M", timeinfo);  // Formater la chaîne de temps
+  DateTime   now         = getCurrentTime();                     // Obtenir l'heure actuelle du RTC
+  time_t     currentTime = now.unixtime();                       // Convertir en Unix timestamp
+  struct tm *timeinfo    = localtime(&currentTime);              // Convertir en structure tm locale
+  strftime(timeString, MAX_BUF, "%d/%m/%Y %H:%M:%S", timeinfo);  // Formater la chaîne de temps
 
-  Serial.printf("Oled::displayTimeDate %s\n", timeString);
+  //Serial.printf("Oled::displayTimeDate %s\n", timeString);
   int16_t  x1, y1;
   uint16_t w, h;
   getTextBounds(timeString, 0, 0, &x1, &y1, &w, &h);
-  fillRect(0, 0, SCREEN_WIDTH, 16, SSD1306_BLACK);  // Effacer la ligne précédente
-  setCursor((SCREEN_WIDTH - w) / 2, 0);             // Centrer le texte
+  fillRect(0, 0, SCREEN_WIDTH, m_textHeight, SSD1306_BLACK);  // Effacer la ligne précédente
+  setCursor((SCREEN_WIDTH - w) / 2, 0);                       // Centrer le texte
   print(timeString);
   display();
 }
@@ -85,6 +85,53 @@ void Oled::displayMessage(const char *msg) {
   display();
 }
 
+void Oled::displayCuveState(const char *msg, Cuve::Etat etat) {
+  uint16_t y = m_textHeight + 3;
+
+  int16_t  x1, y1;
+  uint16_t txt_w, h;
+  fillRect(0, y, SCREEN_WIDTH, m_textHeight, SSD1306_BLACK);
+  getTextBounds("CUVE ", 0, 0, &x1, &y1, &txt_w, &h);
+
+  uint16_t cuve_fill_w = 30;
+  uint16_t cursor_x    = (SCREEN_WIDTH - txt_w - cuve_fill_w) / 2;
+  setCursor(cursor_x, y);
+  print("CUVE ");
+
+  drawRect(cursor_x + txt_w, y, cuve_fill_w, m_textHeight - 1, WHITE);  // Main battery body
+  // fill (based on level)
+  if (etat == Cuve::Etat::INTERMEDIAIRE)
+    fillRect(cursor_x + txt_w + 2, y + 2, cuve_fill_w / 2 - 1, m_textHeight - 1 - 4, WHITE);  // 2nd bar
+  else if (etat == Cuve::Etat::PLEINE)
+    fillRect(cursor_x + txt_w + 2, y + 2, cuve_fill_w - 4, m_textHeight - 1 - 4, WHITE);  // 3rd bar
+
+  display();
+}
+
+void Oled::displayError(const char *msg) {
+  fillRect(0, m_textHeight + 3, SCREEN_WIDTH, m_textHeight, SSD1306_BLACK);  // efface létat de la cuve
+  clearLine(0);
+  clearLine(1);
+  clearLine(2);
+  clearMessage();
+
+  uint16_t y = getLinePos(0);
+  setCursor(0, y);
+  print("ERROR: ");
+  y = getLinePos(1);
+  setCursor(0, y);
+  int16_t  x1, y1;
+  uint16_t w, h;
+  String   s(msg);
+  s = s.substring(0, 21);
+  getTextBounds(s, 0, 0, &x1, &y1, &w, &h);
+  fillRect(0, y, SCREEN_WIDTH, m_textHeight, SSD1306_BLACK);
+  //setCursor((SCREEN_WIDTH - w) / 2, y);
+  print(s);
+  //print(s);
+  display();
+}
+
 void Oled::clearMessage(void) {
   uint16_t y = SCREEN_HEIGHT - m_textHeight;
   fillRect(0, y, SCREEN_WIDTH, m_textHeight, SSD1306_BLACK);
@@ -110,7 +157,8 @@ void Oled::displayNextWatering(const char *way, time_t t) {
   y = getLinePos(1);
   clearLine(1);
   setCursor(0, y);
-  print(way);
+  String s(way);
+  print(s.substring(0, 21));
   y = getLinePos(2);
   clearLine(2);
   setCursor(0, y);
@@ -120,7 +168,7 @@ void Oled::displayNextWatering(const char *way, time_t t) {
   display();
 }
 
-void Oled::displayManualWatering(const char *way) {
+void Oled::displayManualWatering(const char *way, bool isActive) {
   char buffer[MAX_BUF];
 
   uint16_t y = getLinePos(0);
@@ -130,11 +178,15 @@ void Oled::displayManualWatering(const char *way) {
   y = getLinePos(1);
   clearLine(1);
   setCursor(0, y);
-  print(way);
+  String s(way);
+  print(s.substring(0, 21));
   y = getLinePos(2);
   clearLine(2);
   setCursor(0, y);
-  sprintf(buffer, "%d minutes", Watering::manualDuration());
+  if (isActive)
+    sprintf(buffer, "ARRETER", Watering::manualDuration());
+  else
+    sprintf(buffer, "ALLUMER %d MINUTES", Watering::manualDuration());
   print(buffer);
   display();
 }

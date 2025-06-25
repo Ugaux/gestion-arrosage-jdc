@@ -2,6 +2,7 @@
 #define _OLED_H_
 
 #include <Adafruit_SSD1306.h>
+#include "cuve/cuve.h"
 
 #define OLED_RESET     4  // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C
@@ -16,10 +17,12 @@ public:
   void     displayMoisture(int moisture);
   void     displayFlow(float flow);
   void     displayMessage(const char *msg);
+  void     displayCuveState(const char *msg, Cuve::Etat etat);
+  void     displayError(const char *msg);
   void     clearMessage(void);
   void     displayIP(void);
   void     displayNextWatering(const char *way, time_t t);
-  void     displayManualWatering(const char *way);
+  void     displayManualWatering(const char *way, bool isActive);
   uint16_t getTextHeight(void) { return m_textHeight; }
   uint16_t getLinePos(int line);
   void     clearLine(int line);
