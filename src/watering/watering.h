@@ -33,15 +33,15 @@ public:
   const char        *getHourString(void);
   time_t             getStartTime(time_t now);
   time_t             getStopTime(time_t now);
-  bool               always(void) { return m_always; };
+  bool               forceWateringWithWetSoil(void) { return m_forceWateringWithWetSoil; };
   bool               unJourSurDeux(void) { return m_unJourSurDeux; };
   void               print(void);
   void               autoStart(void);
   void               autoStop(void);
   bool               autoStarted(void);
   void               set(const char *wayName, int index);
-  void               set(int hour, int minute, long duration, bool always, bool unJourSurDeux);
-  void               set(const char *wayName, int index, int hour, int minute, long duration, bool always, bool unJourSurDeux);
+  void               set(int hour, int minute, long duration, bool forceWateringWithWetSoilforceWateringWithWetSoil, bool unJourSurDeux);
+  void               set(const char *wayName, int index, int hour, int minute, long duration, bool forceWateringWithWetSoil, bool unJourSurDeux);
   static void        resetTimerAllumagePompe(RCSwitch &radioCmd);
 
 private:
@@ -53,7 +53,7 @@ private:
   int             m_hour;
   int             m_minute;
   long            m_duration;
-  bool            m_always;
+  bool            m_forceWateringWithWetSoil;
   bool            m_unJourSurDeux;
   time_t          m_autoStarted;
   uint8_t         m_moisture;

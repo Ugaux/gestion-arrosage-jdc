@@ -49,7 +49,7 @@ bool Schedule::write(void) {
     for (int i = 0; i < MAX_SCHEDULE; i++) {
       Watering *w = Watering::getByName(way->getName(), i);
       if (w != 0 && w->getDuration() != 0)
-        file.printf("schedule%d=%02d:%02d,%ld,%d,%d\n", i + 1, w->getHour(), w->getMinute(), w->getDuration(), w->always(), w->unJourSurDeux());
+        file.printf("schedule%d=%02d:%02d,%ld,%d,%d\n", i + 1, w->getHour(), w->getMinute(), w->getDuration(), w->forceWateringWithWetSoil(), w->unJourSurDeux());
     }
     way = Way::getNext();
   }

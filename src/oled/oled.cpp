@@ -85,8 +85,8 @@ void Oled::displayMessage(const char *msg) {
   display();
 }
 
-void Oled::displayCuveState(const char *msg, Cuve::Etat etat) {
-  uint16_t y = m_textHeight + 3;
+void Oled::displayCuveState(Cuve::Etat etat) {
+  uint16_t y = getLinePos(1);
 
   int16_t  x1, y1;
   uint16_t txt_w, h;
@@ -94,7 +94,7 @@ void Oled::displayCuveState(const char *msg, Cuve::Etat etat) {
   getTextBounds("CUVE ", 0, 0, &x1, &y1, &txt_w, &h);
 
   uint16_t cuve_fill_w = 30;
-  uint16_t cursor_x    = (SCREEN_WIDTH - txt_w - cuve_fill_w) / 2;
+  uint16_t cursor_x    = 0;
   setCursor(cursor_x, y);
   print("CUVE ");
 

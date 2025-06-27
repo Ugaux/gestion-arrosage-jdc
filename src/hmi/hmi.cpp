@@ -68,11 +68,11 @@ void Hmi::run(void) {
   switch (m_state) {
     case IDLE:
       if (manualButton.isReleased()) {
-        Serial.printf("# MANUAL\n");
+        Serial.printf("# MANUAL BTN PRESSED\n");
         displayManual();
       }
       if (functionButton.isReleased()) {
-        Serial.printf("# FUNCTION\n");
+        Serial.printf("# FUNCTION BTN PRESSED\n");
         displayIPAndNextWatering();
       }
       break;
@@ -83,7 +83,6 @@ void Hmi::run(void) {
         display.clearLine(2);
         way = Watering::getNextWateringTime(&t);
         if (way) {
-          fonction();
           display.displayNextWatering(way, t);
         }
         m_time  = millis();
