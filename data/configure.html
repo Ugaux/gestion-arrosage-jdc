@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
   </head>
   <meta charset="utf-8" />
-
+  
   <style>
     html {
       font-family: Helvetica;
@@ -26,7 +26,7 @@
       background-color: #555555;
     }
   </style>
-
+  
   <body>
     <h1>%WAY_NAME%</h1>
     <form action="configure_submit">
@@ -34,7 +34,8 @@
       <input hidden name="schedule" value="%WAY_SCHEDULE%" />
       <p>Heure: <input name="time" value="%WAY_TIME%" /></p>
       <p>Durée: <input name="duration" value="%WAY_DURATION%" /></p>
-      <p>Systématique: <input type="checkbox" name="always" %WAY_ALWAYS% /></p>
+      <p>1 jour sur 2: <input type="checkbox" name="unJourSurDeux" %WAY_UN_JOUR_SUR_DEUX% /></p>
+      <p>Arroser même s'il a plu: <input type="checkbox" name="always" %WAY_ALWAYS% /></p>
       <p>
         <input type="submit" value="OK" />
       </p>

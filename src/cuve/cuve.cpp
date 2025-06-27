@@ -13,7 +13,7 @@
 
 #include "cuve.h"
 
-#define DEBUG true  // Afficher une aide sur la console (débogage)
+#define DEBUG false  // Afficher une aide sur la console (débogage)
 
 Cuve::Cuve(RCSwitch &radioCmd) : radioCmdRef(radioCmd) {}
 

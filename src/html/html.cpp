@@ -10,6 +10,7 @@ String formTime;
 String formDuration;
 String formAlways;
 String formOptions;
+String formUnJourSurdeux;
 
 char head[] = R"(<!DOCTYPE html><html>)"
               R"(<head><meta name="viewport" content="width=device-width, initial-scale=1"></head>)"
@@ -82,6 +83,8 @@ String templateProcessor(const String &var) {
     return formTime;
   } else if (var == "WAY_DURATION") {
     return formDuration;
+  } else if (var == "WAY_UN_JOUR_SUR_DEUX") {
+    return formUnJourSurdeux;
   } else if (var == "WAY_ALWAYS") {
     return formAlways;
   } else if (var == "OPTIONS") {
@@ -129,6 +132,9 @@ void handleRoot(AsyncWebServerRequest *request) {
       wateringsTable += w->getDuration();
       wateringsTable += "</td>\n";
       wateringsTable += "<td>";
+      wateringsTable += w->unJourSurDeux() ? "OUI" : "NON";
+      wateringsTable += "</td>\n";
+      wateringsTable += "<td>";
       wateringsTable += w->always() ? "OUI" : "NON";
       wateringsTable += "</td>\n";
       wateringsTable += "<td>";
@@ -169,10 +175,11 @@ void handleConfigure(AsyncWebServerRequest *request) {
   formWayName  = request->arg("way");
   formSchedule = request->arg("schedule").toInt();
   Serial.printf("### CONFIGURE %s %d\n", formWayName.c_str(), formSchedule);
-  Watering *w  = Watering::getByName(formWayName.c_str(), formSchedule);
-  formTime     = w->getHourString();
-  formDuration = w->getDuration();
-  formAlways   = w->always() ? "checked" : "";
+  Watering *w       = Watering::getByName(formWayName.c_str(), formSchedule);
+  formTime          = w->getHourString();
+  formDuration      = w->getDuration();
+  formUnJourSurdeux = w->unJourSurDeux() ? "checked" : "";
+  formAlways        = w->always() ? "checked" : "";
   request->send(SPIFFS, "/configure.html", "text/html", false, templateProcessor);
 }
 
@@ -181,13 +188,17 @@ void handleConfigureSubmit(AsyncWebServerRequest *request) {
   int    schedule = 0;
   String time;
   String duration;
-  String always = "off";
+  String unJourSurDeux = "off";
+  String always        = "off";
 
   if (request->hasParam("way") && request->hasParam("schedule") && request->hasParam("time") && request->hasParam("duration")) {
     way      = request->getParam("way")->value();
     schedule = request->getParam("schedule")->value().toInt();
     time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
+    if (request->hasParam("unJourSurDeux")) {
+      unJourSurDeux = request->getParam("unJourSurDeux")->value();
+    }
     if (request->hasParam("always")) {
       always = request->getParam("always")->value();
     }
@@ -195,12 +206,13 @@ void handleConfigureSubmit(AsyncWebServerRequest *request) {
     Serial.printf("way=%s\n", way.c_str());
     Serial.printf("time=%s\n", time.c_str());
     Serial.printf("duration=%s\n", duration.c_str());
+    Serial.printf("unJourSurDeux=%s\n", unJourSurDeux.c_str());
     Serial.printf("always=%s\n", always.c_str());
     Watering *w = Watering::getByName(way.c_str(), schedule);
     if (w != 0) {
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
-      w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
+      w->set(hour, minute, duration.toInt(), always == "on" ? true : false, unJourSurDeux == "on" ? true : false);
     } else {
       Serial.printf("%s NOT found\n", way.c_str());
     }
@@ -234,13 +246,17 @@ void handleNewSubmit(AsyncWebServerRequest *request) {
   int    schedule = 0;
   String time;
   String duration;
-  String always = "off";
+  String unJourSurDeux = "off";
+  String always        = "off";
 
   displayParams(request);
   if (request->hasParam("way") && request->hasParam("time") && request->hasParam("duration")) {
     way      = request->getParam("way")->value();
     time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
+    if (request->hasParam("unJourSurDeux")) {
+      unJourSurDeux = request->getParam("unJourSurDeux")->value();
+    }
     if (request->hasParam("always")) {
       always = request->getParam("always")->value();
     }
@@ -248,12 +264,13 @@ void handleNewSubmit(AsyncWebServerRequest *request) {
     Serial.printf("way=%s\n", way.c_str());
     Serial.printf("time=%s\n", time.c_str());
     Serial.printf("duration=%s\n", duration.c_str());
+    Serial.printf("unJourSurDeux=%s\n", unJourSurDeux.c_str());
     Serial.printf("always=%s\n", always.c_str());
     Watering *w = Watering::getFreeWatering(way.c_str());
     if (w != 0) {
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
-      w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
+      w->set(hour, minute, duration.toInt(), always == "on" ? true : false, unJourSurDeux == "on" ? true : false);
     } else {
       Serial.printf("FREE WATERING NOT found\n");
     }

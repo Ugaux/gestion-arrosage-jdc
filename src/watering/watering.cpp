@@ -7,6 +7,8 @@
 #include "valve/valve.h"
 #include "humidity/humidity.h"
 
+#define DEBUG false
+
 int      Watering::m_searchIndex;
 int      Watering::m_manualDuration;
 Watering Watering::m_watering[MAX_WATERING];
@@ -15,6 +17,7 @@ Watering::Watering() : m_way(0),
                        m_hour(0), m_minute(0),
                        m_duration(0),
                        m_always(false),
+                       m_unJourSurDeux(false),
                        m_autoStarted(0),
                        m_moisture(0) {
 }
@@ -33,33 +36,45 @@ bool Watering::create(int index, Way *way, const char *def) {
   w = getByName(way->getName(), index);
   if (w) {
     w->m_index = index;
-    w->m_way   = way;
-    p          = strtok_r(tmp, ":", &s);
+
+    w->m_way = way;
+
+    p = strtok_r(tmp, ":", &s);
     if (p == NULL) {
       if (DEBUG)
         Serial.printf("%s: bad format, missing ':'\n", def);
       return false;
     }
     w->m_hour = atoi(p);
-    p         = strtok_r(NULL, ",", &s);
+
+    p = strtok_r(NULL, ",", &s);
     if (p == NULL) {
       if (DEBUG)
         Serial.printf("%s: bad format, missing ','\n", def);
       return false;
     }
     w->m_minute = atoi(p);
-    p           = strtok_r(NULL, ",", &s);
+
+    p = strtok_r(NULL, ",", &s);
     if (p == NULL) {
       if (DEBUG)
         Serial.printf("%s: bad format, missing ','\n", def);
       return false;
     }
     w->m_duration = atol(p);
-    p             = strtok_r(NULL, ",", &s);
-    w->m_always   = false;
-    if (p != NULL && *p == '*') {
+
+    p           = strtok_r(NULL, ",", &s);
+    w->m_always = false;
+    if (p != NULL && *p == '1') {
       // watering is independant of moisture
       w->m_always = true;
+    }
+
+    p                  = strtok_r(NULL, ",", &s);
+    w->m_unJourSurDeux = false;
+    if (p != NULL && *p == '1') {
+      // arrose 1 jour sur 2
+      w->m_unJourSurDeux = true;
     }
   }
   return true;
@@ -283,7 +298,10 @@ time_t Watering::getStartTime(time_t now) {
   pTime->tm_sec  = 0;
   time_t at      = mktime(pTime);
   if (at + (m_duration * 60) < now) {
-    at += DAY_DURATION;
+    if (m_unJourSurDeux == true)
+      at += DAY_DURATION * 2;
+    else
+      at += DAY_DURATION;
   }
   //  Serial.printf("Start time: %ld\n", at);
   return at;
@@ -299,7 +317,10 @@ time_t Watering::getStopTime(time_t now) {
   pTime->tm_sec  = 0;
   time_t at      = mktime(pTime);
   if (at + 10 < now) {
-    at += DAY_DURATION;
+    if (m_unJourSurDeux == true)
+      at += DAY_DURATION * 2;
+    else
+      at += DAY_DURATION;
   }
   //  Serial.printf("Stop time: %ld\n", at);
   return at;
@@ -307,7 +328,7 @@ time_t Watering::getStopTime(time_t now) {
 
 // print the watering
 void Watering::print(void) {
-  Serial.printf("%d %s %02d:%02d %ld minutes (%s)\n", m_searchIndex, m_way->getName(), m_hour, m_minute, m_duration, m_always == true ? "ALWAYS" : "IF DRY");
+  Serial.printf("%d %s %02d:%02d %ld minutes (%s, %s)\n", m_searchIndex, m_way->getName(), m_hour, m_minute, m_duration, m_always == true ? "ALWAYS" : "IF DRY", m_unJourSurDeux == true ? "1/2" : "1/1");
 }
 
 // Exemple de fonction autoStart avec des journaux de débogage
@@ -353,7 +374,7 @@ void Watering::autoStop() {
 bool Watering::autoStarted(void) {
   if (m_autoStarted != 0) {
     if (DEBUG)
-      Serial.printf("watering::auto_started: %s\n", getWayName());
+      Serial.printf("watering::autoStarted: %s\n", getWayName());
     return true;
   }
   return false;
@@ -367,26 +388,28 @@ void Watering::set(const char *wayName, int index) {
   m_index  = index;
 }
 
-void Watering::set(int hour, int minute, long duration, bool always) {
+void Watering::set(int hour, int minute, long duration, bool always, bool unJourSurDeux) {
   if (DEBUG)
-    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", getWayName(), m_index, hour, minute, duration, always);
-  m_hour     = hour;
-  m_minute   = minute;
-  m_duration = duration;
-  m_always   = always;
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d %d\n", getWayName(), m_index, hour, minute, duration, always, unJourSurDeux);
+  m_hour          = hour;
+  m_minute        = minute;
+  m_duration      = duration;
+  m_unJourSurDeux = unJourSurDeux;
+  m_always        = always;
   schedule.write();
 }
 
-void Watering::set(const char *wayName, int index, int hour, int minute, long duration, bool always) {
+void Watering::set(const char *wayName, int index, int hour, int minute, long duration, bool always, bool unJourSurDeux) {
   if (DEBUG)
-    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", wayName, index, hour, minute, duration, always);
-  Way *way   = Way::getByName(wayName);
-  m_way      = way;
-  m_index    = index;
-  m_hour     = hour;
-  m_minute   = minute;
-  m_duration = duration;
-  m_always   = always;
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d %d\n", wayName, index, hour, minute, duration, always, unJourSurDeux);
+  Way *way        = Way::getByName(wayName);
+  m_way           = way;
+  m_index         = index;
+  m_hour          = hour;
+  m_minute        = minute;
+  m_duration      = duration;
+  m_unJourSurDeux = unJourSurDeux;
+  m_always        = always;
   schedule.write();
 }
 
