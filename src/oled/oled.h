@@ -17,7 +17,7 @@ public:
   void     displayMoisture(int moisture);
   void     displayFlow(float flow);
   void     displayMessage(const char *msg);
-  void     displayCuveState(const char *msg, Cuve::Etat etat);
+  void     displayCuveState(Cuve::Etat etat);
   void     displayError(const char *msg);
   void     clearMessage(void);
   void     displayIP(void);

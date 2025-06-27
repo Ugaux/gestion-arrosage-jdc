@@ -340,13 +340,15 @@ void loop(void) {
       display.displayError(cuve.getCurrentDefault().c_str());
       while (true) delay(100);
     }
-    display.displayCuveState(cuve.getCurrentStateStr().c_str(), cuve.getCurrentState());
+
     display.displayTimeDate();
 
+    if (!hmi.isBusy())
+      display.displayCuveState(cuve.getCurrentState());
+
     float flow = getFlow();
-    //if (!hmi.isBusy()) {
-    //  display.displayFlow(flow);
-    //}
+    // if (!hmi.isBusy())
+    //   display.displayFlow(flow);
     if (flow > Config::getConfig()->getMaxFlow()) {
       Serial.printf("flow is too high\n");
       Watering::stopAllAutoWatering();
@@ -364,20 +366,14 @@ void loop(void) {
   // Exécuter une tâche toutes les 10 secondes
   if (currentTime - lastMinute >= 10) {
     lastMinute = currentTime;
-    Serial.println("10s have passed.");
-    // Ajouter ici les tâches à exécuter toutes les 5 secondes
+    Serial.println("\n10s have passed.");
+
     int moisture;
     getSoilMoisture(&moisture);  // just display to terminal
-    if (!hmi.isBusy()) {
+    if (!hmi.isBusy())
       display.displayMoisture(moisture);
-    }
-    Watering::run(currentTime);
 
-    //    Watering::run(timestamp);
-    //if (cuve.getCurrentState() != lastCuveState) {
-    //  display.displayError(cuve.getCurrentStateStr().c_str());
-    //  lastCuveState = cuve.getCurrentState();
-    //}
+    Watering::run(currentTime);
   }
 
   hmi.run();
