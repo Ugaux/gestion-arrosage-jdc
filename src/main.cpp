@@ -1,4 +1,5 @@
 #include <TimeLib.h>
+#include <WiFi.h>
 
 #include "RTCModule/RTCModule.h"
 #include "config/config.h"
