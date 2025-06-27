@@ -18,8 +18,8 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
 # Tâches
 
 Essentielles :\
-✔️ copier upgrade cuve\
-❌ Renommage wifi en "Arrosage Jardin du Ciel"\
+✔️ Copier upgrade cuve\
+✔️ Renommage wifi en "Arrosage Jardin du Ciel"\
 ❌ Faire en sorte dans le planificateur web de ne pas pouvoir mettre 2 créneaux en même temps\
 ❌ Ajout possibilité d'arrêter arrosage manuel et choix\
 ❌ Changement timing arrosage manual 10-20-30-40-50-60-10-...\

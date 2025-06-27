@@ -12,7 +12,7 @@
 #include "oled/oled.h"
 #include "hmi/hmi.h"
 
-const char *ssid     = "JardinDuCiel";
+const char *ssid     = "JardinDuCiel-Arrosage";
 const char *password = "";
 
 AsyncWebServer server(80);
