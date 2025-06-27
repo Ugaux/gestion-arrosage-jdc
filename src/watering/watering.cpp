@@ -14,7 +14,7 @@ Watering Watering::m_watering[MAX_WATERING];
 Watering::Watering() : m_way(0),
                        m_hour(0), m_minute(0),
                        m_duration(0),
-                       m_always(false),
+                       m_forceWateringWithWetSoil(false),
                        m_autoStarted(0),
                        m_moisture(0) {
 }
@@ -54,12 +54,12 @@ bool Watering::create(int index, Way *way, const char *def) {
         Serial.printf("%s: bad format, missing ','\n", def);
       return false;
     }
-    w->m_duration = atol(p);
-    p             = strtok_r(NULL, ",", &s);
-    w->m_always   = false;
+    w->m_duration                 = atol(p);
+    p                             = strtok_r(NULL, ",", &s);
+    w->m_forceWateringWithWetSoil = false;
     if (p != NULL && *p == '*') {
       // watering is independant of moisture
-      w->m_always = true;
+      w->m_forceWateringWithWetSoil = true;
     }
   }
   return true;
@@ -307,7 +307,7 @@ time_t Watering::getStopTime(time_t now) {
 
 // print the watering
 void Watering::print(void) {
-  Serial.printf("%d %s %02d:%02d %ld minutes (%s)\n", m_searchIndex, m_way->getName(), m_hour, m_minute, m_duration, m_always == true ? "ALWAYS" : "IF DRY");
+  Serial.printf("%d %s %02d:%02d %ld minutes (%s)\n", m_searchIndex, m_way->getName(), m_hour, m_minute, m_duration, m_forceWateringWithWetSoil == true ? "force if wet" : "skip if wet");
 }
 
 // Exemple de fonction autoStart avec des journaux de débogage
@@ -317,20 +317,19 @@ void Watering::autoStart() {
   if (DEBUG)
     Serial.printf("Watering::autoStart %s: %ld\n\n", getWayName(), m_duration);
   m_autoStarted = now();
-  if (m_moisture == 0) {
-    m_moisture = getSoilMoisture(&moisture);
-    if (m_moisture == HUMIDITY_DRY) {
-      if (DEBUG)
-        Serial.printf("Watering::autoStart: moisture %x (DRY)\n", moisture);
+  m_moisture    = getSoilMoisture(&moisture);
+  if (m_moisture == HUMIDITY_DRY) {
+    if (DEBUG)
+      Serial.printf("Watering::autoStart: DRY soil (moisture %x%%)\n", moisture);
+    m_way->open();
+  } else if (m_moisture == HUMIDITY_WET) {
+    if (m_forceWateringWithWetSoil) {
       m_way->open();
-    }
-    if (m_always == true && m_moisture == HUMIDITY_WET) {
       if (DEBUG)
-        Serial.printf("Watering::autoStart always: independent moisture %x (WET)\n", moisture);
-      m_way->open();
+        Serial.printf("Watering::autoStart: forced with WET soil (moisture %x%%)\n", moisture);
     } else {
       if (DEBUG)
-        Serial.printf("Watering::autoStart: moisture %x (WET)\n", moisture);
+        Serial.printf("Watering::autoStart: skipped with WET soil (moisture %x%%)\n", moisture);
     }
   }
 }
@@ -339,7 +338,6 @@ void Watering::autoStop() {
   if (DEBUG)
     Serial.printf("Watering::autoStop %s\n\n", getWayName());
   m_autoStarted = 0;
-  m_moisture    = 0;
   if (!m_way->manualStarted(NULL)) {
     if (DEBUG)
       Serial.printf("close relay %s\n", m_way->getRelay()->getName());
@@ -367,38 +365,36 @@ void Watering::set(const char *wayName, int index) {
   m_index  = index;
 }
 
-void Watering::set(int hour, int minute, long duration, bool always) {
+void Watering::set(int hour, int minute, long duration, bool forceWateringWithWetSoil) {
   if (DEBUG)
-    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", getWayName(), m_index, hour, minute, duration, always);
-  m_hour     = hour;
-  m_minute   = minute;
-  m_duration = duration;
-  m_always   = always;
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", getWayName(), m_index, hour, minute, duration, forceWateringWithWetSoil);
+  m_hour                     = hour;
+  m_minute                   = minute;
+  m_duration                 = duration;
+  m_forceWateringWithWetSoil = forceWateringWithWetSoil;
   schedule.write();
 }
 
-void Watering::set(const char *wayName, int index, int hour, int minute, long duration, bool always) {
+void Watering::set(const char *wayName, int index, int hour, int minute, long duration, bool forceWateringWithWetSoil) {
   if (DEBUG)
-    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", wayName, index, hour, minute, duration, always);
-  Way *way   = Way::getByName(wayName);
-  m_way      = way;
-  m_index    = index;
-  m_hour     = hour;
-  m_minute   = minute;
-  m_duration = duration;
-  m_always   = always;
+    Serial.printf("Watering::set %s[%d] %dÂ %d %ld %d\n", wayName, index, hour, minute, duration, forceWateringWithWetSoil);
+  Way *way                   = Way::getByName(wayName);
+  m_way                      = way;
+  m_index                    = index;
+  m_hour                     = hour;
+  m_minute                   = minute;
+  m_duration                 = duration;
+  m_forceWateringWithWetSoil = forceWateringWithWetSoil;
   schedule.write();
 }
 
 void Watering::resetTimerAllumagePompe(RCSwitch &radioCmd) {
   if (DEBUG)
     Serial.println("resetTimerAllumagePompe");
-  //if (etat_ == Etat::INTERMEDIAIRE || etat_ == Etat::PLEINE) {
   unsigned long sendTime = millis();
   while (millis() - sendTime < 10) {
     radioCmd.send("101000000110101010110100");  // = BOUTON "C" télécommande : Arrosage au jet
     if (DEBUG)
       delay(1);
   }
-  //}
 }

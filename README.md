@@ -19,15 +19,17 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
 
 Essentielles :\
 ✔️ copier upgrade cuve\
-❌ Faire en sorte dans le planificateur web de ne pas pouvoir mettre 2 créneaux en même temps\
 ❌ Renommage wifi en "Arrosage Jardin du Ciel"\
+❌ Faire en sorte dans le planificateur web de ne pas pouvoir mettre 2 créneaux en même temps\
 ❌ Ajout possibilité d'arrêter arrosage manuel et choix\
 ❌ Changement timing arrosage manual 10-20-30-40-50-60-10-...\
 ❌ Abri en bois pour pompe et passage des câbles/tuyaux propre + supresseur\
 ❌ Couvercle en bois pour boîtier électronique avec instructions\
 ❌ Défilement sur ecran oled pr texte trop long\
+❌ Pb de reactivité lors d'un appui sur bouton avec arrosage en cours\
+❌ Loop main par rapport à 0 de chaque minute et non random\
 ❌ Pb vanne si pas de planning de fait\
-❌ Pb capteur humidité\
+✔️ Pb capteur humidité\
 ❌ Affichage erreurs sur ecran + sur interface html?\
 ❌ RTC détection plus de pile + si déconnection du spi/5v/gnd (doit reset puis dans setup mettre msg erreur)\
 ❌ Vérif dans watering.cpp : "if (at + (m_duration \* 60)"\

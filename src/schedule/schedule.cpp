@@ -50,7 +50,7 @@ bool Schedule::write(void) {
       Watering *w = Watering::getByName(way->getName(), i);
       if (w != 0) {
         if (w->getDuration() != 0) {
-          if (w->always()) {
+          if (w->forceWateringWithWetSoil()) {
             file.printf("schedule%d=%02d:%02d,%ld,*\n", i + 1, w->getHour(), w->getMinute(), w->getDuration());
           } else {
             file.printf("schedule%d=%02d:%02d,%ld\n", i + 1, w->getHour(), w->getMinute(), w->getDuration());

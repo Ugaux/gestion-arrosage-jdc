@@ -34,7 +34,14 @@
       <input hidden name="schedule" value="%WAY_SCHEDULE%" />
       <p>Heure: <input name="time" value="%WAY_TIME%" /></p>
       <p>Durée: <input name="duration" value="%WAY_DURATION%" /></p>
-      <p>Systématique: <input type="checkbox" name="always" %WAY_ALWAYS% /></p>
+      <p>
+        Systématique:
+        <input
+          type="checkbox"
+          name="forceWateringWithWetSoil"
+          %WAY_FORCE_WATERING_IF_WET%
+        />
+      </p>
       <p>
         <input type="submit" value="OK" />
       </p>

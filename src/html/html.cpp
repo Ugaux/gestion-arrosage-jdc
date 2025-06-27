@@ -8,7 +8,7 @@ String formWayName;
 int    formSchedule;
 String formTime;
 String formDuration;
-String formAlways;
+String formForceWateringWithWetSoil;
 String formOptions;
 
 char head[] = R"(<!DOCTYPE html><html>)"
@@ -82,8 +82,8 @@ String templateProcessor(const String &var) {
     return formTime;
   } else if (var == "WAY_DURATION") {
     return formDuration;
-  } else if (var == "WAY_ALWAYS") {
-    return formAlways;
+  } else if (var == "WAY_FORCE_WATERING_IF_WET") {
+    return formForceWateringWithWetSoil;
   } else if (var == "OPTIONS") {
     return formOptions;
   }
@@ -129,7 +129,7 @@ void handleRoot(AsyncWebServerRequest *request) {
       wateringsTable += w->getDuration();
       wateringsTable += "</td>\n";
       wateringsTable += "<td>";
-      wateringsTable += w->always() ? "OUI" : "NON";
+      wateringsTable += w->forceWateringWithWetSoil() ? "OUI" : "NON";
       wateringsTable += "</td>\n";
       wateringsTable += "<td>";
       if (lastWay != w->getWayName()) {
@@ -169,10 +169,10 @@ void handleConfigure(AsyncWebServerRequest *request) {
   formWayName  = request->arg("way");
   formSchedule = request->arg("schedule").toInt();
   Serial.printf("### CONFIGURE %s %d\n", formWayName.c_str(), formSchedule);
-  Watering *w  = Watering::getByName(formWayName.c_str(), formSchedule);
-  formTime     = w->getHourString();
-  formDuration = w->getDuration();
-  formAlways   = w->always() ? "checked" : "";
+  Watering *w                  = Watering::getByName(formWayName.c_str(), formSchedule);
+  formTime                     = w->getHourString();
+  formDuration                 = w->getDuration();
+  formForceWateringWithWetSoil = w->forceWateringWithWetSoil() ? "checked" : "";
   request->send(SPIFFS, "/configure.html", "text/html", false, templateProcessor);
 }
 
@@ -181,26 +181,26 @@ void handleConfigureSubmit(AsyncWebServerRequest *request) {
   int    schedule = 0;
   String time;
   String duration;
-  String always = "off";
+  String forceWateringWithWetSoil = "off";
 
   if (request->hasParam("way") && request->hasParam("schedule") && request->hasParam("time") && request->hasParam("duration")) {
     way      = request->getParam("way")->value();
     schedule = request->getParam("schedule")->value().toInt();
     time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
-    if (request->hasParam("always")) {
-      always = request->getParam("always")->value();
+    if (request->hasParam("forceWateringWithWetSoil")) {
+      forceWateringWithWetSoil = request->getParam("forceWateringWithWetSoil")->value();
     }
     Serial.printf("### CONFIGURE SUBMIT %s %d\n", way.c_str(), schedule);
     Serial.printf("way=%s\n", way.c_str());
     Serial.printf("time=%s\n", time.c_str());
     Serial.printf("duration=%s\n", duration.c_str());
-    Serial.printf("always=%s\n", always.c_str());
+    Serial.printf("forceWateringWithWetSoil=%s\n", forceWateringWithWetSoil.c_str());
     Watering *w = Watering::getByName(way.c_str(), schedule);
     if (w != 0) {
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
-      w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
+      w->set(hour, minute, duration.toInt(), forceWateringWithWetSoil == "on" ? true : false);
     } else {
       Serial.printf("%s NOT found\n", way.c_str());
     }
@@ -234,26 +234,26 @@ void handleNewSubmit(AsyncWebServerRequest *request) {
   int    schedule = 0;
   String time;
   String duration;
-  String always = "off";
+  String forceWateringWithWetSoil = "off";
 
   displayParams(request);
   if (request->hasParam("way") && request->hasParam("time") && request->hasParam("duration")) {
     way      = request->getParam("way")->value();
     time     = request->getParam("time")->value();
     duration = request->getParam("duration")->value();
-    if (request->hasParam("always")) {
-      always = request->getParam("always")->value();
+    if (request->hasParam("forceWateringWithWetSoil")) {
+      forceWateringWithWetSoil = request->getParam("forceWateringWithWetSoil")->value();
     }
     Serial.printf("### NEW SUBMIT %s %d\n", way.c_str(), schedule);
     Serial.printf("way=%s\n", way.c_str());
     Serial.printf("time=%s\n", time.c_str());
     Serial.printf("duration=%s\n", duration.c_str());
-    Serial.printf("always=%s\n", always.c_str());
+    Serial.printf("forceWateringWithWetSoil=%s\n", forceWateringWithWetSoil.c_str());
     Watering *w = Watering::getFreeWatering(way.c_str());
     if (w != 0) {
       int hour, minute;
       sscanf(time.c_str(), "%d:%d", &hour, &minute);
-      w->set(hour, minute, duration.toInt(), always == "on" ? true : false);
+      w->set(hour, minute, duration.toInt(), forceWateringWithWetSoil == "on" ? true : false);
     } else {
       Serial.printf("FREE WATERING NOT found\n");
     }
