@@ -40,7 +40,7 @@ public:
   void               autoStop(void);
   bool               autoStarted(void);
   void               set(const char *wayName, int index);
-  void               set(int hour, int minute, long duration, bool forceWateringWithWetSoilforceWateringWithWetSoil, bool unJourSurDeux);
+  void               set(int hour, int minute, long duration, bool forceWateringWithWetSoil, bool unJourSurDeux);
   void               set(const char *wayName, int index, int hour, int minute, long duration, bool forceWateringWithWetSoil, bool unJourSurDeux);
   static void        resetTimerAllumagePompe(RCSwitch &radioCmd);
 
