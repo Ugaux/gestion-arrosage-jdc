@@ -1,9 +1,11 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "SPIFFSIniFile/SPIFFSIniFile.h"
-// Supposed to be an Arduino library but latest working version was not released with a tag
+#include <SPIFFSIniFile.h>
+
 #include "constants.h"
+
+#define CONFIG_FILE "/config/config.ini"
 
 class Config : public SPIFFSIniFile {
 public:
@@ -11,7 +13,7 @@ public:
   bool           read(void);
   void           print(void);
   static Config *getConfig(void) { return m_config; }  // get the config instance
-  char          *getSsid(void) { return m_ssid; }
+  char          *getSSID(void) { return m_ssid; }
   char          *getPassword(void) { return m_password; }
   uint8_t        getMoistureSensor(void) { return m_moistureSensor; }
   uint8_t        getMaxMoisture(void) { return m_maxMoisture; }

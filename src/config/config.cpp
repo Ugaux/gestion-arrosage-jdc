@@ -163,7 +163,7 @@ bool Config::read(void) {
                   getError());
     duration = 5;
   }
-  Watering::manualDuration(duration);
+  Watering::setManualDuration(duration);
 
   if (getValue("moisture", "sensor", buffer, sizeof(buffer)) == true) {
     m_moistureSensor = atoi(buffer);

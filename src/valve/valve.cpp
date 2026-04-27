@@ -9,6 +9,8 @@
 Ticker timer;
 Valve  Valve::m_mainValve;
 
+Valve::Valve(void) : m_state(VALVE_UNKNOWN) {}
+
 // timer callback
 void changeState(Valve *v) {
   if (v->getState() == VALVE_IS_OPENING) {
@@ -50,9 +52,6 @@ bool Valve::create(const char *def) {
     return false;
   }
   return true;
-}
-
-Valve::Valve(void) : m_state(VALVE_UNKNOWN) {
 }
 
 // open the valve

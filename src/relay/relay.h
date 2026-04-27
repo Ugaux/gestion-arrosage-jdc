@@ -1,7 +1,7 @@
 #ifndef _RELAY_H_
 #define _RELAY_H_
 
-#include "IOExtenser/IOExtenser.h"
+#include "io_expander/io_expander.h"
 #include "constants.h"
 
 enum relayState { ON,
@@ -9,20 +9,20 @@ enum relayState { ON,
 
 class Relay {
 public:
+  Relay();
   static bool   create(Module *mod, int id, const char *def);
   static int    getCount();
   static Relay *getByName(const char *name);
   static Relay *getFirst(void);
   static Relay *getNext(void);
   static Relay *getRelay(int n);
-  Relay();
-  bool        isPresent(void);
-  bool        isLatch(void);
-  void        print(const char *message = NULL);
-  const char *getName(void);
-  void        on(void);
-  void        off(void);
-  relayState  getState(void) { return m_state; }
+  bool          isPresent(void);
+  bool          isLatch(void);
+  void          print(const char *message = NULL);
+  const char   *getName(void);
+  void          on(void);
+  void          off(void);
+  relayState    getState(void) { return m_state; }
 
 private:
   static Relay m_relay[MAX_WAY];

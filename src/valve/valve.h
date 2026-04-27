@@ -10,7 +10,6 @@ enum valveState { VALVE_UNKNOWN,
                   VALVE_IS_OPENING,
                   VALVE_IS_OPEN,
                   VALVE_IS_CLOSING };
-extern const char *valveStateName[];
 
 class Valve {
 public:

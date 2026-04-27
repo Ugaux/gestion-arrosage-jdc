@@ -1,10 +1,12 @@
 #ifndef _SCHEDULE_H_
 #define _SCHEDULE_H_
 
-#include "SPIFFSIniFile/SPIFFSIniFile.h"
+#include <SPIFFSIniFile.h>
 // Supposed to be an Arduino library but latest working version was not released with a tag
 
-#define SCHEDULE_FILE "/schedule.ini"
+#include <watering/watering.h>
+
+#define SCHEDULE_FILE "/schedule/schedule.ini"
 
 class Schedule : public SPIFFSIniFile {
 public:
@@ -14,6 +16,7 @@ public:
   void print(void);
 
 private:
+  String      formatFrequency(Watering *w);
   const char *m_fileName;
 };
 

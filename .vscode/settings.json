@@ -5,5 +5,7 @@
     "**/.gitignore": true,
     "**/.pio": true,
     "**/.clang-format": true
-  }
+  },
+  "liveServer.settings.multiRootWorkspaceName": "gestion_arrosage_jdc",
+  "liveServer.settings.root": "/data"
 }

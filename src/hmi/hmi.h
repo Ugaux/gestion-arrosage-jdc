@@ -13,21 +13,17 @@ enum hmiState {
   DISPLAY_MANUAL
 };
 
-void fonction();
-
 class Way;
 
 class Hmi {
 public:
   Hmi();
-  void    setup();
-  void    displayDefaults(void);
-  void    displayIPAndNextWatering(void);
-  void    displayManual(void);
-  void    run(void);
-  bool    isBusy(void);
-  uint8_t getButton(void);
-  uint8_t m_pressed;
+  void setup();
+  void displayDefaults(void);
+  void displayIPAndNextWatering(void);
+  void displayManual(void);
+  void run(void);
+  bool isBusy(void);
 
 private:
   int           m_state;

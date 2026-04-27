@@ -7,9 +7,9 @@
 
 class Zone {
 public:
-  static bool create(const char *def);
-  static int  getCount();
   Zone(void) { m_name = ""; };
+  static bool  create(const char *def);
+  static int   getCount();
   static Zone *getFirst(void);
   static Zone *getNext(void);
   const char  *getName(void) { return m_name.c_str(); }

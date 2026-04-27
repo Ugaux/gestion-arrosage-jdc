@@ -3,9 +3,8 @@
 #include <ezButton.h>
 
 #include "oled/oled.h"
-#include "flow/flow.h"
 #include "watering/watering.h"
-#include "humidity/humidity.h"
+#include "sensors/sensors.h"
 
 Hmi::Hmi() : m_state(IDLE),
              m_manualWatering(0),
@@ -16,8 +15,8 @@ ezButton functionButton(FUNCTION_BUTTON);
 ezButton manualButton(MANUAL_BUTTON);
 
 void Hmi::setup(void) {
-  functionButton.setDebounceTime(50);
-  manualButton.setDebounceTime(50);
+  functionButton.setDebounceTime(20);
+  manualButton.setDebounceTime(20);
   manualReleasedHandled = false;
   //  functionButton.setCountMode(COUNT_FALLING);
 }
@@ -29,7 +28,8 @@ void Hmi::displayDefaults(void) {
   int moisture;
   getSoilMoisture(&moisture);  // just display to terminal
   display.displayMoisture(moisture);
-  float flow = getFlow();
+  //display.displayCuveState();
+  //float flow = getFlow();
   // display.displayFlow(flow);
 }
 
@@ -58,13 +58,9 @@ void Hmi::displayManual(void) {
 }
 
 void Hmi::run(void) {
-  uint8_t btn;
-  //  time_t t = getCurrentTime(); // t = heure actuelle
-  time_t      t;
-  const char *way;
-
   functionButton.loop();
   manualButton.loop();
+
   switch (m_state) {
     case IDLE:
       if (manualButton.isReleased()) {
@@ -81,7 +77,10 @@ void Hmi::run(void) {
         display.clearLine(0);
         display.clearLine(1);
         display.clearLine(2);
-        way = Watering::getNextWateringTime(&t);
+        time_t      t;
+        const char *way;
+        Watering   *w;
+        way = Watering::getNextWateringTime(&w, &t);
         if (way) {
           display.displayNextWatering(way, t);
         }
@@ -117,7 +116,7 @@ void Hmi::run(void) {
           m_manualWatering->manualStop();
         } else {
           Serial.println("START");
-          m_manualWatering->manualStart(Watering::manualDuration());
+          m_manualWatering->manualStart(Watering::getManualDuration());
         }
         displayDefaults();
         m_state          = IDLE;

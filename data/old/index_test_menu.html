@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="icon" type="image/x-icon" href="/icons/logo.ico">
+  <title>Arrosage JDC</title>
+
+  <link rel="stylesheet" type="text/css" href="css/reset.css" />
+  <link rel="stylesheet" type="text/css" href="css/framework/w3.css" />
+  <link rel="stylesheet" type="text/css" id="theme-link">
+  <link rel="stylesheet" type="text/css" href="css/index.css" />
+
+  <script src="index.js"></script>
+</head>
+
+<body class="w3-theme">
+
+  <noscript>
+    <div class="w3-panel w3-red w3-xlarge" style="height: 100vh;">
+      This app requires JavaScript to function properly. Please enable it in your browser.
+    </div>
+  </noscript>
+
+  <header>
+    <div class="w3-top w3-display-container w3-theme">
+      <div class="w3-display-middle w3-medium"><b>Home</b></div>
+      <div class="w3-display-right w3-padding"><span id="mainTime"></span></div>
+    </div>
+  </header>
+
+  <main class="w3-theme-light">
+    <div id="home" class="content-section">
+      <div class="w3-row w3-container" style="margin-top: 7px">
+        <!-- Next irrigation -->
+        <div class="w3-half">
+          <div class="w3-card w3-border w3-round w3-margin-right-4" style="height: 120px">
+            <header class="w3-container w3-center w3-theme w3-border-bottom" style="border-radius: 3px 3px 0px 0px">
+              <h6 style="margin: 2px"><b id="wateringStatus">&nbsp;</b></h6>
+            </header>
+            <div class="w3-container w3-center">
+              <p><b id="wateringLine1"></b></p>
+              <p id="wateringLine2"></p>
+              <p id="wateringLine3"></p>
+            </div>
+          </div>
+        </div>
+        <div style="height: 1500px;"></div>
+        <!-- Sensors -->
+        <div class="w3-half">
+          <div class="w3-card w3-border w3-round w3-margin-left-4" style="height: 120px">
+            <header class="w3-container w3-center w3-border-bottom w3-theme" style="border-radius: 3px 3px 0px 0px">
+              <h6 style="margin: 2px"><b>Infos</b></h6>
+            </header>
+
+            <div class="w3-container">
+              <p>
+                <i class="w3-spin fa-solid fa-rotate fa" style="width: 15px"></i><span id="flowSensor"></span>
+              </p>
+              <p>
+                <i class="fa-solid fa-droplet fa" style="width: 15px"></i><span id="moistureSensor"></span>
+              </p>
+              <p>
+                <i class="fa-solid fa-sliders fa" style="width: 15px"></i><span id="seasonAdjustment"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="w3-container w3-blue" style="margin-top: 170px; margin-bottom: 50px">
+        <!-- Waterings table -->
+        %PLACEHOLDER_WATERINGS%
+      </div>
+    </div>
+
+    <div id="settings" class="content-section">
+      <button class="w3-button w3-blue" onclick="switchTheme()">Switch Theme</button>
+      <button onclick="setTheme('dark-gray')">Dark gray</button>
+      <button onclick="setTheme('teal')">Teal</button>
+      <button onclick="setTheme('brown')">Brown</button>
+      <button onclick="setTheme('blue')">Blue</button>
+
+      <div class="w3-container">
+        <h6 class="w3-text-theme hr-lines">
+          <span><b>Wifi</b></span>
+        </h6>
+        <div class="w3-text-theme w3-row">%PLACEHOLDER_WIFI_INFO%</div>
+
+        <h6 class="w3-text-theme hr-lines">
+          <span><b>Valves</b></span>
+        </h6>
+        <div class="w3-text-theme w3-row">%PLACEHOLDER_VALVE_INFO%</div>
+
+        <h6 class="w3-text-theme hr-lines">
+          <span><b>Relays</b></span>
+        </h6>
+        <div class="w3-text-theme w3-row w3-center">%PLACEHOLDER_RELAYS%</div>
+      </div>
+
+    </div>
+
+    <div id="settings" class="content-section">
+      <h6>HISTORY BOYS</h6>
+    </div>
+
+  </main>
+
+  <footer>
+    <nav class="w3-bottom w3-bar w3-theme w3-xlarge">
+      <a class="w3-bar-item w3-button nav-item" data-icon-default="home-thin" data-icon-active="home-full"
+        data-section="home">
+        <svg>
+          <use href="/icons/sprite.svg#home-thin" />
+        </svg>
+        <div class="w3-tiny">Dashboard</div>
+      </a>
+      <a class="w3-bar-item w3-button nav-item" data-icon-default="cog-thin" data-icon-active="cog-full"
+        data-section="settings">
+        <svg>
+          <use href="/icons/sprite.svg#cog-thin" />
+        </svg>
+        <div class="w3-tiny">Schedule</div>
+      </a>
+      <a class="w3-bar-item w3-button nav-item" data-icon-default="cog-thin" data-icon-active="cog-full"
+        data-section="history">
+        <svg>
+          <use href="/icons/sprite.svg#cog-thin" />
+        </svg>
+        <div class="w3-tiny">History</div>
+      </a>
+    </nav>
+  </footer>
+
+
+</body>
+
+</html>

@@ -1,8 +1,8 @@
 #include "oled.h"
 
 #include <WiFi.h>
+#include <TimeLib.h>
 
-#include "RTCModule/RTCModule.h"
 #include "watering/watering.h"
 
 // Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -42,8 +42,7 @@ void Oled::clearLine(int line) {
 void Oled::displayTimeDate() {
   char timeString[MAX_BUF];
 
-  DateTime   now         = getCurrentTime();                     // Obtenir l'heure actuelle du RTC
-  time_t     currentTime = now.unixtime();                       // Convertir en Unix timestamp
+  time_t     currentTime = now();                                // Convertir en Unix timestamp
   struct tm *timeinfo    = localtime(&currentTime);              // Convertir en structure tm locale
   strftime(timeString, MAX_BUF, "%d/%m/%Y %H:%M:%S", timeinfo);  // Formater la chaîne de temps
 
@@ -184,9 +183,9 @@ void Oled::displayManualWatering(const char *way, bool isActive) {
   clearLine(2);
   setCursor(0, y);
   if (isActive)
-    sprintf(buffer, "ARRETER", Watering::manualDuration());
+    sprintf(buffer, "ARRETER", Watering::getManualDuration());
   else
-    sprintf(buffer, "ALLUMER %d MINUTES", Watering::manualDuration());
+    sprintf(buffer, "ALLUMER %d MINUTES", Watering::getManualDuration());
   print(buffer);
   display();
 }

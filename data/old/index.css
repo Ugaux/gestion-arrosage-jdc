@@ -1,0 +1,210 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+main {
+  background-color: #f6f6f6;
+  height: 100vh;
+  overflow-y: auto;
+  /* Space for top bar */
+  padding-top: 65px;
+  /* Space for bottom nav */
+  padding-bottom: 80px;
+}
+
+/* nav */
+.content-section {
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.content-section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.w3-top {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  height: 45px;
+}
+
+.w3-bottom {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  padding: 0px 10px;
+  align-items: center;
+  height: 60px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
+  /* Fix for Android gesture navigation */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+
+.w3-bar-item:active {
+  background-color: #616161 !important;
+}
+
+.w3-bar-item .active {
+  background-color: transparent !important;
+}
+
+.w3-bar-item {
+  flex: 1 1 80px;
+  min-width: 60px;
+  max-width: 100px;
+}
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+  overflow: hidden;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 1.5rem;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.125rem;
+  width: 1.125rem;
+  left: 0.1875rem;
+  bottom: 0.1875rem;
+  background-color: #fff;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 1.125rem;
+}
+
+input:checked+.slider {
+  background-color: #28a745;
+}
+
+input:focus+.slide {
+  box-shadow: 0 0 1px #28a745;
+}
+
+input:checked+.slider::before {
+  -webkit-transform: translateX(1.5rem);
+  -ms-transform: translateX(1.5rem);
+  transform: translateX(1.5rem);
+}
+
+/* HR Lines */
+
+.hr-lines {
+  position: relative;
+  margin: 0px auto;
+  text-align: center;
+}
+
+.hr-lines:before {
+  content: "";
+  height: 2px;
+  width: 100%;
+  background: rgb(64, 64, 64);
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 0;
+}
+
+.hr-lines span {
+  background: #f6f6f6;
+  padding: 0 20px;
+  position: relative;
+  z-index: 0;
+}
+
+/* Input with icons */
+.input-icons {
+  width: 100%;
+}
+
+.input-icons i {
+  height: 33px;
+  position: absolute;
+}
+
+.icon {
+  padding: 10px;
+  color: white;
+  min-width: 35px;
+  text-align: center;
+  background-color: #28a745;
+  border-radius: 4px 0px 0px 4px;
+}
+
+.input-field {
+  height: 33px;
+  width: 100%;
+  text-align: left;
+  padding-left: 50px;
+}
+
+.input-field:focus {
+  outline: none;
+}
+
+/* Remove underline to <a> tag */
+a {
+  text-decoration: none;
+}
+
+svg {
+  width: 1em;
+  /* Makes it scale with font-size like Font Awesome */
+  height: 1em;
+  fill: currentColor;
+  /* Inherits text color */
+  vertical-align: -0.125em;
+}
+
+/* Days width */
+.col-7 {
+  width: 14.29%;
+}
+
+/* Custom checkboxes */
+.custom-checkbox input[type="checkbox"],
+.custom-checkbox .checked {
+  display: none;
+}
+
+.custom-checkbox input[type="checkbox"]:checked~.checked {
+  display: inline-block;
+}
+
+.custom-checkbox input[type="checkbox"]:checked~.unchecked {
+  display: none;
+}

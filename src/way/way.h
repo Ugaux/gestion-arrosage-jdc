@@ -28,6 +28,10 @@ public:
   bool        manualStarted(time_t *remain);
   Ticker     *getTimer(void) { return &m_timer; }
 
+  // Ajout
+  String getShortName(void) { return m_name; }  // Example -> Flowers
+  Zone  *getZone(void) { return m_zone; }       // Example -> Dripline
+
 private:
   static Way m_way[MAX_WAY];
   static int m_searchIndex;

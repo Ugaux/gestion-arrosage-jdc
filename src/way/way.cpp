@@ -11,9 +11,7 @@ Way Way::m_way[MAX_WAY];
 Way::Way() : m_zone(0),
              m_relay(0),
              m_manualStarted(0),
-             m_manualDuration(0)
-
-{
+             m_manualDuration(0) {
   memset(watering, 0, MAX_SCHEDULE * sizeof(Watering *));
 };
 
@@ -23,8 +21,7 @@ void changeState(Way *w) {
   w->getTimer()->detach();
 }
 
-// create a way in a zone
-// def : way description string, "way1(mcp23017-1.0)" for example:
+// create a way in a zone, def : way description string, "way1(mcp23017-1.0)" for example:
 bool Way::create(Zone *z, const char *def) {
   char        tmp[MAX_DEF];
   Way        *w;
@@ -44,6 +41,7 @@ bool Way::create(Zone *z, const char *def) {
   w->m_def  = z->getName();
   w->m_def += '.';
   w->m_def += p;
+
   p = strtok_r(NULL, ")", &s);
   if (p == NULL) {
     Serial.printf("%s: bad format, missing parenthesis\n", def);
