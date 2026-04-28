@@ -5,7 +5,7 @@
   <title>ESP Web Server</title>
   <meta name="viewport" content="width=device-width, initial-scale=0.95">
   <script src="scripts.js"></script>
-  <script src="fontawesome.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="fa-all.min.css">
   <link rel="stylesheet" type="text/css" href="w3.css">
   <link rel="stylesheet" type="text/css" href="w3-theme.css">
   <link rel="stylesheet" type="text/css" href="style.css">
@@ -29,21 +29,13 @@
       <!-- Content -->
       <div class="w3-container" style="margin-top: 50px;">
         <h6 class="hr-lines"><span><b>Wifi</b></span></h6>
-        <div class="w3-row">`PLACEHOLDER_WIFI_INFO`</div>
+        <div class="w3-row">%PLACEHOLDER_WIFI_INFO%</div>
 
         <h6 class="hr-lines"><span><b>Valves</b></span></h6>
-        <div class="w3-row">`PLACEHOLDER_VALVE_INFO`</div>
+        <div class="w3-row">%PLACEHOLDER_VALVE_INFO%</div>
 
         <h6 class="hr-lines"><span><b>Relays</b></span></h6>
-        <div class="w3-row w3-center">`PLACEHOLDER_RELAYS`</div>
-      </div>
-
-      <!-- Navbar BOTTOM -->
-      <div class="w3-bottom">
-        <div class="w3-display-container w3-theme w3-large">
-          <a class="w3-half w3-button w3-hover-theme" href="#home"><i class="fa fa-house fa-lg"></i></a>
-          <a class="w3-half w3-button w3-hover-theme" href="/weather"><i class="fa fa-cloud-sun-rain fa-lg"></i></a>
-        </div>
+        <div class="w3-row w3-center">%PLACEHOLDER_RELAYS%</div>
       </div>
 
     </section>
@@ -95,7 +87,7 @@
       <!-- Content -->
       <div class="w3-container" style="margin-top: 170px; margin-bottom: 50px;">
         <!-- Waterings table -->
-        `PLACEHOLDER_WATERINGS`
+        %PLACEHOLDER_WATERINGS%
       </div>
 
       <!-- Navbar BOTTOM -->

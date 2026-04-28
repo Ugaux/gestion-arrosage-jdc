@@ -236,6 +236,7 @@ bool Watering::run(time_t t) {
 const char *Watering::getNextWateringTime(Watering **watering, time_t *t) {
   struct tm *pTime;
   time_t     timestamp = now();
+  pTime                = localtime(&timestamp);
 
   int toDay = pTime->tm_wday;  // Today week day 0->6 (sunday = 0)
 

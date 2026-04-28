@@ -4,8 +4,8 @@
 <head>
   <title>ESP Web Server</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="fontawesome.min.js"></script>
   <script src="edit.js"></script>
+  <link rel="stylesheet" type="text/css" href="fa-all.min.css">
   <link rel="stylesheet" type="text/css" href="w3.css">
   <link rel="stylesheet" type="text/css" href="w3-theme.css">
   <link rel="stylesheet" type="text/css" href="style.css">
@@ -27,13 +27,13 @@
   <div class="w3-container" style="margin-top: 50px;">
     <form id="update_form" action="edit_submit" method="get">
       <!-- Hidden inputs -->
-      <input hidden id="way" name="way" value=`WAY`>
-      <input hidden id="schedule" name="schedule" value=`SCHEDULE`>
+      <input hidden id="way" name="way" value=%WAY%>
+      <input hidden id="schedule" name="schedule" value=%SCHEDULE%>
 
       <!-- Way name -->
       <h6 class="hr-lines"><span><b>Ways</b></span></h6>
       <h6 class="w3-border w3-border-theme w3-round w3-center w3-text-theme w3-padding w3-margin-top w3-margin-bottom">
-        `WAY_NAME`</h6>
+        %WAY_NAME%</h6>
 
       <!-- Frequency -->
       <h6 class="hr-lines"><span><b>Frequency</b></span></h6>
@@ -81,7 +81,7 @@
         </div>
 
         <div class="w3-cell-row w3-center w3-margin-bottom" style='height: 40px;'>
-          `CUSTOM_DAYS`
+          %CUSTOM_DAYS%
         </div>
       </div>
 
@@ -89,11 +89,11 @@
       <!-- Seasonal Adjustment -->
       <h6 class="hr-lines"><span><b>Seasonal Adjustment&nbsp;&nbsp;<span id="slider_value"
               class="w3-tag w3-theme w3-round-large"
-              style="padding: 5px 10px 5px 10px;">`SEASONAL_ADJUSTMENT`%</span></b></span></h6>
+              style="padding: 5px 10px 5px 10px;">%SEASONAL_ADJUSTMENT%%</span></b></span></h6>
       <div class="range w3-margin-top w3-margin-bottom">
         <div class="field">
           <div class="value left">25</div>
-          <input name='adjustment' id="slider" type="range" min="25" max="200" value=`SEASONAL_ADJUSTMENT` step="5"
+          <input name='adjustment' id="slider" type="range" min="25" max="200" value=%SEASONAL_ADJUSTMENT% step="5"
             oninput="slider_value.innerText = this.value + '%'">
           <div class="value right">200</div>
         </div>
@@ -102,7 +102,7 @@
       <!-- Watering start time -->
       <h6 class="hr-lines"><span><b>Start Time</b></span></h6>
       <div class="w3-row w3-margin-top">
-        `START_TIME`
+        %START_TIME%
       </div>
 
     </form>
