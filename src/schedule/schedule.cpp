@@ -1,5 +1,7 @@
 #include "schedule.h"
 
+#include <LittleFS.h>
+
 #include "watering/watering.h"
 
 Schedule::Schedule(const char *fileName) : SPIFFSIniFile(fileName) {
@@ -37,7 +39,7 @@ bool Schedule::write(void) {
     return false;
   }
   close();
-  File file = SPIFFS.open(SCHEDULE_FILE, FILE_WRITE);
+  File file = LittleFS.open(SCHEDULE_FILE, FILE_WRITE);
   if (!file) {
     Serial.println("ERROR opening the file for writing");
     return false;

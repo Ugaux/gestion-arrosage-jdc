@@ -6,9 +6,10 @@
 // Maximum length for filename, excluding NULL char
 #define SPIFFSINI_FILE_MAX_FILENAME_LEN 31
 
-#include "SPIFFS.h"
-#include "FS.h"
-#include "IPAddress.h"
+#include <LittleFS.h>
+#include <FS.h>
+#include <IPAddress.h>
+
 
 class SPIFFSIniFileState;
 
@@ -128,7 +129,7 @@ bool SPIFFSIniFile::open(void)
 {
 	if (_file)
 		_file.close();
-	_file = SPIFFS.open(_filename, _mode);
+	_file = LittleFS.open(_filename, _mode);
 	if (isOpen()) {
 		_error = errorNoError;
 		return true;

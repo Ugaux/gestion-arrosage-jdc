@@ -203,10 +203,10 @@ bool Watering::run(time_t t) {
       if (DEBUG) {
         char buffer[MAX_BUF];
         pTime = localtime(&startTime);
-      strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
+        strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
         Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
         pTime = localtime(&stopTime);
-      strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
+        strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
         Serial.printf("%s next stop %s\n", w->getWayName(), buffer);
       }
 
@@ -215,10 +215,10 @@ bool Watering::run(time_t t) {
       if (w->getEnable() and shouldWaterToday and (startTime <= t and t <= stopTime)) {
         // Start watering
         if (!w->autoStarted()) {
-        if (DEBUG)
-          Serial.printf("In time, open relay %s\n", w->m_way->getRelay()->getName());
-        w->autoStart();
-      }
+          if (DEBUG)
+            Serial.printf("In time, open relay %s\n", w->m_way->getRelay()->getName());
+          w->autoStart();
+        }
 
       } else {
         if (w->autoStarted()) w->autoStop();
@@ -244,7 +244,6 @@ const char *Watering::getNextWateringTime(Watering **watering, time_t *t) {
   const char *nextWateringWay  = 0;
   Watering   *w                = 0;
 
-  pTime = localtime(&timestamp);
   for (int i = 0; i < MAX_WATERING; i++) {
     w = &m_watering[i];
     if (w->getDuration() != 0 && w->getEnable()) {
@@ -252,7 +251,7 @@ const char *Watering::getNextWateringTime(Watering **watering, time_t *t) {
       pTime            = localtime(&startTime);
       if (DEBUG) {
         char buffer[MAX_BUF];
-      strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
+        strftime(buffer, MAX_BUF, "%d/%m/%Y %H:%M:%S", pTime);
         Serial.printf("%s: next start %s\n", w->getWayName(), buffer);
       }
       int startDay     = pTime->tm_mday;  // Start day 1->31
@@ -556,8 +555,9 @@ time_t Watering::getStartTime(time_t now) {
   pTime->tm_min  = m_minute;
   pTime->tm_sec  = 0;
   time_t at      = mktime(pTime);
-  if (at + (m_duration * 60) < now) {  // SANS LE + (m_duration * 60)
-      at += DAY_DURATION;
+  // SANS LE + (m_duration * 60)
+  if (at + (m_duration * 60) < now) {
+    at += DAY_DURATION;
   }
   //  Serial.printf("Start time: %ld\n", at);
   return at;
@@ -579,7 +579,9 @@ time_t Watering::getStopTime(time_t now) {
   pTime->tm_sec  = adjusted_duration_secs;
 
   time_t at = mktime(pTime);
-      at += DAY_DURATION;
+  // SANS LE + 10
+  if (at + 10 < now) {
+    at += DAY_DURATION;
   }
   return at;
 }
@@ -605,8 +607,8 @@ void Watering::autoStart() {
 
   if (m_onlyIfDrySoil) {
     m_moisture = getSoilMoisture(&moisture);
-  if (m_moisture == HUMIDITY_DRY) {
-    if (DEBUG)
+    if (m_moisture == HUMIDITY_DRY) {
+      if (DEBUG)
         Serial.printf("Watering::autoStart way opened with DRY soil (moisture %x%%)\n", moisture);
       m_way->open();
     } else if (m_moisture == HUMIDITY_WET) {

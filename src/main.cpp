@@ -1,5 +1,7 @@
 #include <TimeLib.h>
 #include <WiFi.h>
+#include <LittleFS.h>
+#include <esp_system.h>
 
 #include "rtc_module/rtc_module.h"
 #include "config/config.h"
@@ -12,6 +14,32 @@
 #include "hmi/hmi.h"
 #include "preferences/preferences.h"
 
+const char *reset_reason_to_str(esp_reset_reason_t reason) {
+  switch (reason) {
+    case ESP_RST_UNKNOWN: return "Unknown";
+    case ESP_RST_POWERON: return "Power-on";
+    case ESP_RST_EXT: return "External reset";
+    case ESP_RST_SW: return "Software reset";
+    case ESP_RST_PANIC: return "Panic (exception)";
+    case ESP_RST_INT_WDT: return "Interrupt watchdog";
+    case ESP_RST_TASK_WDT: return "Task watchdog";
+    case ESP_RST_WDT: return "Other watchdog";
+    case ESP_RST_DEEPSLEEP: return "Wake from deep sleep";
+    case ESP_RST_BROWNOUT: return "Brownout reset";
+    case ESP_RST_SDIO: return "SDIO reset";
+    default: return "Invalid";
+  }
+}
+
+void printMemory() {
+  Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
+  Serial.printf("Min free heap: %d\n", ESP.getMinFreeHeap());
+}
+void printResetReason() {
+  Serial.print("Reset reason: ");
+  Serial.println(reset_reason_to_str(esp_reset_reason()));
+}
+
 Config   config(CONFIG_FILE);
 Schedule schedule(SCHEDULE_FILE);
 
@@ -22,32 +50,18 @@ Cuve cuve(radioCmd);
 
 void setup(void) {
   Serial.begin(115200);
+  delay(2000);  // gives time to open monitor
+
+  printResetReason();
 
   if (!display.begin()) {
     Serial.println(F("OLED screen SSD1306 allocation failed"));
     while (true) delay(100);
   }
 
-  // Initialiser le RTC
-  if (!rtc.begin()) {
-    Serial.println("Couldn't find RTC");
-    display.displayError("Couldn't find RTC");
-    while (true) delay(100);
-  }
-  if (rtc.lostPower()) {
-    Serial.println("RTC lost power, setting time to last build time");
-    display.displayError("RTC lost power");
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    while (true) delay(100);
-  }
-
-  // sync esp32 clock every 300s from RTC
-  setSyncProvider(syncTimeFromRTC);
-  setSyncInterval(300);
-
-  if (!SPIFFS.begin()) {
-    Serial.println("SPIFFS.begin() failed");
-    display.displayError("SPIFFS.begin() failed");
+  if (!LittleFS.begin(true)) {
+    Serial.println("LittleFS Mount Failed");
+    display.displayError("LittleFS.begin() failed");
     while (true) delay(100);
   }
 

@@ -6,7 +6,7 @@
 
 #include <watering/watering.h>
 
-#define SCHEDULE_FILE "/schedule/schedule.ini"
+#define SCHEDULE_FILE "/config/schedule.ini"
 
 class Schedule : public SPIFFSIniFile {
 public:
