@@ -2,17 +2,18 @@
 #include <WiFi.h>
 #include <LittleFS.h>
 #include <esp_system.h>
+#include "hardware/RTCModule.h"
+#include "hardware/Cuve.h"
+#include "hardware/Sensors.h"
+#include "config/IniConfig.h"
+#include "config/IniSchedule.h"
+#include "config/PreferencesManager.h"
+#include "ui/HMI.h"
+#include "ui/OledScreen.h"
+#include "ui/WebServer.h"
+#include "core/Watering.h"
 
-#include "rtc_module/rtc_module.h"
-#include "config/config.h"
-#include "cuve/cuve.h"
-#include "sensors/sensors.h"
-#include "watering/watering.h"
-#include "schedule/schedule.h"
-#include "web_server/web_server.h"
-#include "oled/oled.h"
-#include "hmi/hmi.h"
-#include "preferences/preferences.h"
+#define DEV_MODE true
 
 const char *reset_reason_to_str(esp_reset_reason_t reason) {
   switch (reason) {
@@ -40,8 +41,8 @@ void printResetReason() {
   Serial.println(reset_reason_to_str(esp_reset_reason()));
 }
 
-Config   config(CONFIG_FILE);
-Schedule schedule(SCHEDULE_FILE);
+IniConfig   iniConfig(CONFIG_FILE);
+IniSchedule iniSchedule(SCHEDULE_FILE);
 
 RCSwitch radioCmd = RCSwitch();
 
@@ -66,22 +67,22 @@ void setup(void) {
   }
 
   Serial.print("\nCONFIG READ:\n");
-  if (config.read() != true) {
-    Serial.println("reading configuration failed");
-    display.displayError("config read failed");
+  if (iniConfig.read() != true) {
+    Serial.println("reading iniConfiguration failed");
+    display.displayError("iniConfig read failed");
     while (true) delay(100);
   }
   Serial.print("\nCONFIG PRINT:\n");
-  config.print();
+  iniConfig.print();
 
   Serial.print("\nSCHEDULE READ:\n");
-  if (schedule.read() != true) {
-    Serial.println("schedule configuration failed");
-    display.displayError("schedule read failed");
+  if (iniSchedule.read() != true) {
+    Serial.println("iniSchedule configuration failed");
+    display.displayError("iniSchedule read failed");
     while (true) delay(100);
   }
   Serial.print("\nSCHEDULE PRINT:\n");
-  schedule.print();
+  iniSchedule.print();
 
   Serial.println("\nRESET all relays");
   Relay *relay = Relay::getFirst();
@@ -145,7 +146,7 @@ void loop(void) {
     float flow = getFlow();
     // if (!hmi.isBusy())
     //   display.displayFlow(flow);
-    if (flow > Config::getConfig()->getMaxFlow()) {
+    if (flow > IniConfig::getConfig()->getMaxFlow()) {
       Serial.printf("flow is too high\n");
       Watering::stopAllAutoWatering();
       Way::stopAllManualWatering();
