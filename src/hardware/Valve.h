@@ -3,6 +3,7 @@
 
 #define OPEN_TIME 20
 
+#include "core/interfaces/IValve.h"
 #include "hardware/Relay.h"
 
 enum valveState { VALVE_UNKNOWN,
@@ -11,7 +12,7 @@ enum valveState { VALVE_UNKNOWN,
                   VALVE_IS_OPEN,
                   VALVE_IS_CLOSING };
 
-class Valve {
+class Valve : public IValve {
 public:
   Valve();
   static bool   create(const char *def);
