@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+
+<body>
+
+    <div x-data="app()" x-init="fetchData()">
+
+        <h3>WiFi ZOZO SALUT</h3>
+        <div x-text="wifi"></div>
+
+        <h2>Relays</h2>
+        <template x-for="r in relays" :key="r.id">
+            <div>
+                Relay <span x-text="r.id"></span>:
+                <span x-text="r.name"></span> -
+                <strong x-text="r.state"></strong>
+            </div>
+        </template>
+
+    </div>
+
+    <script>
+        function app() {
+            return {
+                wifi: '',
+                relays: [],
+
+                async fetchData() {
+                    try {
+                        const res = await fetch('http://192.168.1.174/api/state');
+                        const data = await res.json();
+                        console.log(data);
+                        this.wifi = data.wifi;
+                        this.relays = data.relays;
+                    } catch (e) {
+                        console.error('Error loading data:', e);
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
