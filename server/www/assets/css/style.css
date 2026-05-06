@@ -1,8 +1,18 @@
-/* Navigation SPA */
-.app>* {display: none;}
-.app>*:last-child {display: block;}
-.app>*:target {display: block;animation: fade 300ms linear 1;}
-.app>*:target~* {display: none;}
+#sidebar a.active:hover {
+  color: white !important;
+}
+
+#sidebar {
+  width: 250px;           /* starting width */
+  transition: width 0.3s ease, transform 0.3s ease;
+  overflow: hidden;       /* hide content while shrinking */
+}
+
+/* hidden state */
+#sidebar.closed {
+  width: 0;               /* shrink to zero */
+  transform: translateX(-250px); /* optional slide effect */
+}
 
 /* Toggle switch */
 .switch {position: relative;display: inline-block;width: 3rem;height: 1.5rem;overflow: hidden;}

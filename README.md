@@ -59,7 +59,85 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
 
 \*permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe
 
-# Features d'un contrôleur intelligent souhaitées
+# Fast web dev
+
+Quick setup for developing and testing the web interface locally.
+
+## Prerequisites
+
+Create the virtual environment and install all python dependencies:
+
+```bash
+cd server
+uv sync
+```
+
+## 1. Start the server
+
+```bash
+cd server
+uv run start_server.py [--dev_mode] [--mock_esp_api]
+```
+
+### Options
+
+- `--mock_esp_api`  
+  Use a fake API for frontend-only development. requests are sent to the ESP32 API using the URL defined in `/server/mock/config.py`.
+- `--dev_mode`  
+  Enables development features (see below).
+
+---
+
+## 2. Development mode
+
+When using `--dev_mode`, start the file watcher beforehand in a separate terminal with:
+
+```bash
+cd server
+uv run live_refresh.py
+```
+
+This enables:
+
+- Automatic browser opening
+- Automatic browser refresh on file changes
+- FastAPI auto-reload (backend)
+- LiveReload injection (frontend)
+
+---
+
+## 3. Development workflow
+
+Edit the following files:
+
+```
+/server/www/*
+/server/start_server.py
+```
+
+### Tips
+
+- Keep the Python web architecture consistent with the ESP32 implementation (`WebServer.h/cpp`)
+- Use the API docs for debugging at http://127.0.0.1:8000/docs
+
+---
+
+## 4. Export for production
+
+Once everything works:
+
+```bash
+uv run export_gzip
+```
+
+---
+
+## 5. Deploy to ESP32
+
+- Build the filesystem image
+- Upload it to ESP32 using PlatformIO
+
+# Features souhaitées d'un contrôleur intelligent
 
 - sécurité :
   - détection du débit (comme ça message erreur au cas où pompe arrosage ne s'allume pas, tuyau est pincé/débranché, vanne est bloqué, plusieurs vannes sont ouvertes, ...)
@@ -81,7 +159,7 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
   - arrosage à la main avec tuyau souple et pistolet (utilise une vanne 12v en plus)
   - intégration dans Home Assistant par msgs MQTT (pour voir état des capteurs dont niveau cuve et avoir des notifs en cas d’erreur, d'inactivité, ...)
 
-# Pinout
+# ESP32 pinout
 
 interrupteur général pour couper alim
 

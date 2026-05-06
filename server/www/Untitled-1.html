@@ -1,0 +1,28 @@
+<div class='w3-container w3-border-top'>
+  <a href='/edit?way=${way.name}&schedule=${watering.index}'>
+    <p class='w3-small w3-left' style='margin-bottom: 0px;'>
+      <i class='fa-solid fa-clock'></i>
+      <b>&nbsp;Schedule&nbsp;${schedule}</b>
+    </p>
+  </a>
+
+  <label class='switch w3-right w3-margin-top-6'>
+    <input name='checkbox_enable' type='checkbox' id='btn_enable_${way.name}_${watering.index}' ${watering.enabled
+      ? "checked" : "" }>
+    <span class='slider'></slider>
+  </label>
+
+  <div class='w3-row'>
+    <div class='w3-col' style='width:80px'>
+      <p class='w3-margin-4 w3-text-gray'><span class='w3-small'>Start time :</span></p>
+      <p class='w3-margin-4 w3-text-gray'><span class='w3-small'>Duration :</span></p>
+      <p class='w3-margin-4 w3-text-gray'><span class='w3-small'>Frequency :</span></p>
+    </div>
+
+    <div class='w3-rest'>
+      <p class='w3-margin-4'>${watering.time}</p>
+      <p class='w3-margin-4'>${watering.duration}"&nbsp;min</p>
+      <p class='w3-margin-4'>${watering.freq}</p>
+    </div>
+  </div>
+</div>
