@@ -1,0 +1,665 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="/assets/css/app.css">
+  <script type="module" src="/assets/js/app.js"></script>
+  <script defer src="/assets/js/core/alpine.min.js"></script>
+</head>
+
+<body x-data x-cloak>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar" x-bind:class="{ open: $store.ui.sidebar.isOpen }">
+
+    <!-- HEADER -->
+    <div>
+      <button id="close-btn" @click="$store.ui.sidebar.close()" class="w3-button"><i
+          class="w3-small fa-solid fa-xmark"></i></button>
+      <!-- BRANDING -->
+      <div class="w3-panel" id="branding">
+        <img src="/assets/img/logo_bwbg.png" class="w3-circle">
+        <div id="brand">
+          <div class="w3-xlarge w3-bold">Arrosage</div>
+          <div class="w3-opacity w3-small">Jardin du Ciel</div>
+        </div>
+      </div>
+
+      <!--NAVIGATION -->
+      <div class="w3-panel">
+        <div id="nav-menu">
+          <a href="#home" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+            <i class="fa-regular fa-house fa-lg"></i>Home
+          </a>
+          <a href="#schedule" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+            <i class="fa-regular fa-calendar fa-lg"></i>Schedule
+          </a>
+          <a href="#manual" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+            <i class="fa-regular fa-calendar fa-lg"></i>Manual
+          </a>
+          <a href="#history" @click="$store.ui.sidebar.close()" class="w3-button nav-link" style="display: none;">
+            <i class="fa-regular fa-clock fa-lg"></i>History
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div>
+      <div class="w3-panel" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <div class="status-dot pulse-animation" :class="$store.ws.connected ? 'online' : 'offline'"></div>
+        <strong style="line-height:1;" x-text="$store.ws.connected ? 'Connected' : 'Disconnected'"></strong>
+      </div>
+      <hr class="card-separator">
+      <div id="settings-nav-link" class="w3-panel w3-center">
+        <a href="#settings" @click="$store.ui.sidebar.close()" class="w3-button">
+          <i class="fa-solid fa-cog fa-lg"></i>&nbsp;&nbsp;Settings
+        </a>
+      </div>
+      <div class="w3-panel" id="dark-mode-div">
+        <div @click="$store.theme.toggle()" style="cursor:pointer; padding-right: 6px;" class="align-center">
+          <i class="fa-solid fa-lg" :class="$store.theme.dark ? 'fa-moon' : 'fa-sun'"></i>
+          <span x-text="$store.theme.dark ? 'Dark mode' : 'Light mode'"></span>
+        </div>
+        <label class='switch'>
+          <input type='checkbox' x-model="$store.theme.dark" x-on:change="$store.theme.apply()">
+          <span class='slider round'></span>
+        </label>
+      </div>
+      <div class="w3-panel w3-center">
+        <div class="w3-tiny w3-monospace">Made with ♥️ by Hugo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WRAPPER -->
+  <div id="wrapper">
+
+    <!-- OVERLAY (small screens only) -->
+    <div id="overlay" x-show="$store.ui.sidebar.isOpen" @click="$store.ui.sidebar.close()"
+      x-transition.opacity.duration.300ms>
+    </div>
+    <!--x-cloak -->
+
+    <!-- TOP NAVBAR -->
+    <div id="navbar" class="w3-padding">
+      <div class="left-side">
+        <!-- Hamburger (small screens only) -->
+        <button id="hamburger-btn" class="w3-button"
+          @click="$store.router.overlayPage ? $store.router.closeSettings() : $store.ui.sidebar.open()">
+          <i x-show="!$store.router.overlayPage" class="fa-solid fa-bars"></i>
+          <i x-show="$store.router.overlayPage" class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <!-- Current page title -->
+        <span class="w3-large w3-bold" x-text="$store.router.pageTitle()">Loading...</span>
+      </div>
+      <!-- Far right: meta-level actions -->
+      <div>
+        <button class="w3-button" style="visibility: hidden;">
+          <i class="fa-solid fa-bell"></i>
+          <span class="badge">3</span>
+        </button>
+        <button id="setting-btn" class="w3-button" x-show="!$store.router.overlayPage"
+          @click="$store.router.openSettings()">
+          <i class="fa-solid fa-cog"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+      <div x-show="!$store.router.overlayPage">
+
+        <!-- HOME PAGE -->
+        <section x-show="$store.router.currentPage === 'home'">
+          <div class="w3-content">
+
+            <!-- System -->
+            <div class="w3-panel">
+              <div class="w3-card w3-round-large">
+                <header class="w3-container w3-center">
+                  <h5 class="card-title"><b>System</b></h5>
+                </header>
+                <hr class="card-separator">
+                <div class="w3-panel">
+                  <div class="card-list">
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-clock"></i>&nbsp;Time</div>
+                      <span id="systemTime" class="w3-bold">???</span>
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-heart-pulse"></i>&nbsp;State</div>
+                      <span id="systemState" class="w3-bold">???</span>
+                    </div>
+                    <!-- RUNNING/FAULT (avec fault en rouge et message d'erreur) -->
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-signal"></i>&nbsp;WiFi Signal</div>
+                      <div><span id="wifiStrength" class="w3-bold">???</span>&nbsp;dBm</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Watering -->
+            <div class="w3-panel">
+              <div class="w3-card w3-round-large">
+                <header class="w3-container w3-center">
+                  <h5 class="card-title"><b>Watering</b></h5>
+                </header>
+                <hr class="card-separator">
+                <div class="w3-panel">
+                  <div class="card-list">
+                    <div>
+                      <div class="card-list-el">
+                        <div><i class="fa-solid fa-bars-progress"></i>&nbsp;Status</div>
+                        <span id="wateringStatus" class="w3-bold">???</span>
+                      </div>
+                      <div class="w3-right">
+                        <div><b id="wateringLine1">???</b></div>
+                        <div id="wateringLine2">???</div>
+                        <div id="wateringLine3">???</div>
+                      </div>
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-sliders"></i>&nbsp;Seasonal Adj.&nbsp</div>
+                      <div><span id="seasonAdjustment" class="w3-bold">???</span>%</div>
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-shower"></i>&nbsp;Hand Watering&nbsp</div>
+                      <div><span id="handWatering" class="w3-bold">???</span></div> <!-- ON/OFF, si ON timer restant-->
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-bolt-lightning"></i>&nbsp;Pump&nbsp</div>
+                      <div><span id="pumpState" class="w3-bold">???</span></div><!-- ON/OFF -->
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-fan"></i>&nbsp;Water Flow&nbsp</div>
+                      <div><span id="flowSensor" class="w3-bold">???</span>&nbsp;l/min</div>
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-droplet"></i>&nbsp;Soil Moisture&nbsp</div>
+                      <div><span id="moistureSensor" class="w3-bold">???</span>%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Water tank -->
+            <div class="w3-panel">
+              <div class="w3-card w3-round-large">
+                <header class="w3-container w3-center">
+                  <h5 class="card-title"><b>Water Tank</b></h5>
+                </header>
+                <hr class="card-separator">
+                <div class="w3-panel">
+                  <div class="card-list">
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-water"></i>&nbsp;Level</div>
+                      <span id="waterTankLevel" class="w3-bold">???</span> <!-- EMPTY/FULL -->
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-fill-drip"></i>&nbsp;State</div>
+                      <span id="waterTankState" class="w3-bold">???</span> <!-- FILLING/EMPTYING -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHEDULE PAGE -->
+        <section x-show="$store.router.currentPage === 'schedule'">
+          <div class="w3-content">
+
+            <template x-for="zone in $store.zones.items" :key="zone.id">
+
+              <div class="w3-panel">
+                <div class="w3-card w3-round-large">
+
+                  <header class="w3-container w3-center">
+                    <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
+                  </header>
+                  <hr class="card-separator">
+                  <div class="w3-panel">
+
+                    <template x-for="way in zone.ways" :key="way.id">
+                      <div>
+                        <hr class="schedule-separator" x-show="way.id > 1">
+                        <div
+                          style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                          <div style="display: flex; align-items: center; gap: 10px;">
+                            <b x-text="way.shortName"></b>
+                            <a :href="'/#schedule/new?way=' + way.name" class="w3-button way-btn-small">
+                              <i class="fa-solid fa-plus fa-xs"></i>
+                            </a>
+                          </div>
+                          <div class="w3-small">
+                            <b> <i :id="'lbl_next_'+way.name">&nbsp;Next run scheduled on ???</i> </b>
+                          </div>
+                        </div>
+
+                        <div style=" display: flex; flex-direction: column; gap: 10px;">
+                          <template x-for="schedule in way.schedules" :key="schedule.index">
+                            <div class="schedule">
+
+                              <div style=" display: flex; align-items: center; gap: 10px;">
+                                <b class="w3-small">Schedule&nbsp;<span x-text="schedule.index"></span></b>
+                                <a :href="'/#schedule/edit?way=' + way.name + '&schedule=' + schedule.index"
+                                  class="w3-button way-btn-small">
+                                  <i class="fa-solid fa-pen-to-square fa-sm"></i>
+                                </a>
+                                <label class="switch">
+                                  <input name="checkbox_enable" type="checkbox"
+                                    :id="'btn_enable_' + way.name + '_' + schedule.index" :checked="schedule.enabled">
+                                  <span class="slider round"></span>
+                                </label>
+                              </div>
+
+                              <span class="w3-small">Starts&nbsp;at&nbsp;<b x-text="schedule.time"></b>&nbsp;for&nbsp;<b
+                                  x-text="schedule.duration"></b>&nbsp;<b>min</b>&nbsp;on&nbsp;<b
+                                  x-text="schedule.freq"></b><span />
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+
+                  </div>
+            </template>
+
+          </div>
+        </section>
+
+        <!-- MANUAL PAGE -->
+        <section x-show="$store.router.currentPage === 'manual'">
+
+          <div class="w3-content">
+
+            <template x-for="zone in $store.zones.items" :key="zone.id">
+
+              <div class="w3-panel">
+                <div class="w3-card w3-round-large">
+
+                  <header class="w3-container w3-center">
+                    <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
+                  </header>
+                  <hr class="card-separator">
+                  <div class="w3-panel">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                      <template x-for="way in zone.ways" :key="way.id">
+                        <div style="display: flex; align-items: center; justify-content: space-between">
+                          <b x-text="way.shortName"></b>
+
+                          <div style="display: flex; align-items: center; gap:15px" x-data="durationControl(way)">
+                            <b x-show="way.manual.started" :id="'lbl_' + way.name">??:??</b>
+                            <div x-show="!way.manual.started" style="display: flex; align-items: center">
+                              <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease"><i
+                                  class="fa-solid fa-minus fa-xs"></i></button>
+                              <div class="input-wrapper">
+                                <input :id="'m_duration_' + way.name" class="input-field" type="number"
+                                  :value="duration" @change="setDuration()" @focus="$event.target.select()">
+                                <span class=" unit">min</span>
+                              </div>
+                              <button :disabled="duration >= max" class="w3-button way-btn" @click="increase"><i
+                                  class="fa-solid fa-plus fa-xs"></i></button>
+                            </div>
+
+                            <button name="manual_mode" :id="'btn_' + way.name" type="button" class="w3-button way-btn">
+                              <i :class="way.manual.started ? 'fa-solid fa-stop' : 'fa-solid fa-play'"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+
+                  </div>
+            </template>
+
+          </div>
+
+        </section>
+
+        <!-- HISTORY PAGE -->
+        <section x-show="$store.router.currentPage === 'history'">
+          <!-- LIST -->
+          <h2>History</h2>
+          <!-- Waterings table -->
+        </section>
+
+        <!-- INVALID PAGE -->
+        <section x-show="$store.router.currentPage === 'invalid'">
+          <div class="w3-content w3-panel">
+            Page&nbsp;#<span x-text="$store.router.invalidPageHash"></span>&nbsp;does not exist.</p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- SETTING PAGE (META-LEVEL) -->
+      <section x-show="$store.router.overlayPage === 'settings'">
+
+        <!-- Content -->
+        <div class="w3-content settings-page-content">
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><i class="fa-solid fa-faucet"></i>&nbsp;<b>Valves</b></h5>
+              </header>
+              <hr class="card-separator">
+              <div class="w3-panel">
+                <div class="card-list">
+                  <template x-for="relay in $store.relays.items" :key="relay.id">
+                    <div style="display: flex; justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 20px;">
+                        <b>Valve&nbsp;#<span x-text="relay.id"></span></b>
+                        <span x-text="relay.name"></span>
+                      </div>
+                      <label class='switch'>
+                        <input name='checkbox_test' type='checkbox' :id="'btn_' + relay.id"
+                          x-model="relay.is_checked"><span class='slider round'></span>
+                      </label>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><i class="fa-solid fa-microchip"></i>&nbsp;<b>Device</b></h5>
+              </header>
+              <hr class="card-separator">
+              <div class="w3-panel">
+                <div class="card-list">
+                  <div class="card-list-el">ID&nbsp;<span id="deviceID" class="w3-bold">???</span></div>
+                  <!-- esp32-a1b2c3 -->
+                  <div class="card-list-el">Runtime&nbsp;<span id="firmwareVersion" class="w3-bold">???</span></div>
+                  <!--1.0.0-->
+                  <div class="card-list-el">Reset(s)&nbsp;<span id="apiVersion" class="w3-bold">???</span></div>
+                  <!--v1-->
+                  <div class="card-list-el">Last Reset Reason&nbsp;<span id="hardwareVersion" class="w3-bold">???</span>
+                  </div>
+                  <!--rev_a-->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><i class="fa-solid fa-wrench"></i>&nbsp;<b>Config</b></h5>
+              </header>
+              <hr class="card-separator">
+              <div class="w3-panel">
+                <div class="card-list">
+                  <div class="card-list-el">Manual Duration Range
+                    <div><span id="wateringManualDuration" class="w3-bold">???-???</span>&nbsp;min</div>
+                  </div>
+                  <div class="card-list-el">Soil Moisture Threshold
+                    <div><span id="deviceID" class="w3-bold">???</span>%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><i class="fa-solid fa-code-branch"></i>&nbsp;<b>Versions</b></h5>
+              </header>
+              <hr class="card-separator">
+              <div class="w3-panel">
+                <div class="card-list">
+                  <div class="card-list-el">Web UI&nbsp;<span id="webUIVersion" class="w3-bold">???</span></div>
+                  <!--1.0.0-->
+                  <div class="card-list-el">Firmware&nbsp;<span id="firmwareVersion" class="w3-bold">???</span></div>
+                  <!--1.0.0-->
+                  <div class="card-list-el">API&nbsp;<span id="apiVersion" class="w3-bold">???</span></div> <!--v1-->
+                  <div class="card-list-el">Hardware&nbsp;<span id="hardwareVersion" class="w3-bold">???</span></div>
+                  <!--rev_a-->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section x-show="$store.router.overlayPage === 'new-schedule'">
+
+        <div class="w3-content settings-page-content">
+          <!-- Navbar TOP -->
+          <div class="w3-top" style="display: none;">
+            <div class="w3-display-container w3-theme" style="height:43px;">
+              <a class="w3-display-left w3-button w3-hover-theme w3-padding" href="/"><i
+                  class="fa fa-chevron-left"></i>&nbsp;Back</a>
+              <div class="w3-display-middle w3-medium"><b>Add Schedule</b></div>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="w3-container" style="margin-top: 50px; display: none;">
+            <form id="update_form" action="edit_submit" method="get">
+              <!-- Hidden inputs -->
+              <input hidden id="way" name="way" value=%WAY%>
+              <input hidden id="schedule" name="schedule" value=%SCHEDULE%>
+
+              <!-- Way name -->
+              <h6 class="hr-lines"><span><b>Ways</b></span></h6>
+              <h6
+                class="w3-border w3-border-theme w3-round w3-center w3-text-theme w3-padding w3-margin-top w3-margin-bottom">
+                %WAY_NAME%</h6>
+
+              <!-- Frequency -->
+              <h6 class="hr-lines"><span><b>Frequency</b></span></h6>
+
+              <div class="w3-margin-top w3-margin-bottom">
+                <div class="toggle-radio">
+                  <input type="radio" name="mode" id="always" value="*" checked>
+                  <label for="always">Always</label>
+
+                  <input type="radio" name="mode" id="even" value="e">
+                  <label for="even">Even</label>
+
+                  <input type="radio" name="mode" id="odd" value="o">
+                  <label for="odd">Odd</label>
+
+                  <input type="radio" name="mode" id="custom" value="c">
+                  <label for="custom">Custom</label>
+                </div>
+              </div>
+
+              <div id="custom_days" hidden>
+
+                <div class="w3-cell-row w3-center">
+                  <div class="w3-cell col-7">
+                    <p>Sun</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Mon</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Tue</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Wed</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Thu</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Fri</p>
+                  </div>
+                  <div class="w3-cell col-7">
+                    <p>Sat</p>
+                  </div>
+                </div>
+
+                <div class="w3-cell-row w3-center w3-margin-bottom" style='height: 40px;'>
+                  %CUSTOM_DAYS%
+                </div>
+              </div>
+
+
+              <!-- Seasonal Adjustment -->
+              <h6 class="hr-lines"><span><b>Seasonal Adjustment&nbsp;&nbsp;<span id="slider_value"
+                      class="w3-tag w3-theme w3-round-large"
+                      style="padding: 5px 10px 5px 10px;">%SEASONAL_ADJUSTMENT%%</span></b></span></h6>
+              <div class="range w3-margin-top w3-margin-bottom">
+                <div class="field">
+                  <div class="value left">25</div>
+                  <input name='adjustment' id="slider" type="range" min="25" max="200" value=%SEASONAL_ADJUSTMENT%
+                    step="5" oninput="slider_value.innerText = this.value + '%'">
+                  <div class="value right">200</div>
+                </div>
+              </div>
+
+              <!-- Watering start time -->
+              <h6 class="hr-lines"><span><b>Start Time</b></span></h6>
+              <div class="w3-row w3-margin-top">
+                %START_TIME%
+              </div>
+
+            </form>
+          </div>
+
+          <!-- Navbar BOTTOM -->
+          <div class="w3-bottom" style="display: none;">
+            <div class="w3-display-container w3-theme w3-large">
+              <a id='btn_done' class="w3-half w3-button w3-hover-theme" href="#" onclick="submit()"><i
+                  class="fa fa-circle-check fa-lg"></i>&nbsp;Add</a>
+              <a class="w3-half w3-button w3-hover-theme" href="/"><i
+                  class="fa fa-circle-xmark fa-lg"></i>&nbsp;Cancel</a>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section x-show="$store.router.overlayPage === 'edit-schedule'">
+
+        <!-- Navbar TOP -->
+        <div class="w3-top">
+          <div class="w3-display-container w3-theme" style="height:43px;">
+            <a class="w3-display-left w3-button w3-hover-theme w3-padding" href="/"><i
+                class="fa fa-chevron-left"></i>&nbsp;Back</a>
+            <div class="w3-display-middle w3-medium"><b>Edit Schedule</b></div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="w3-container" style="margin-top: 50px;">
+          <form id="update_form" action="edit_submit" method="get">
+            <!-- Hidden inputs -->
+            <input hidden id="way" name="way" value=%WAY%>
+            <input hidden id="schedule" name="schedule" value=%SCHEDULE%>
+
+            <!-- Way name -->
+            <h6 class="hr-lines"><span><b>Ways</b></span></h6>
+            <h6
+              class="w3-border w3-border-theme w3-round w3-center w3-text-theme w3-padding w3-margin-top w3-margin-bottom">
+              %WAY_NAME%</h6>
+
+            <!-- Frequency -->
+            <h6 class="hr-lines"><span><b>Frequency</b></span></h6>
+
+            <div class="w3-margin-top w3-margin-bottom">
+              <div class="toggle-radio">
+                <input type="radio" name="mode" id="always" value="*" %ALWAYS_CHECKED%>
+                <label for="always">Always</label>
+
+                <input type="radio" name="mode" id="even" value="e" %EVEN_CHECKED%>
+                <label for="even">Even</label>
+
+                <input type="radio" name="mode" id="odd" value="o" %ODD_CHECKED%>
+                <label for="odd">Odd</label>
+
+                <input type="radio" name="mode" id="custom" value="c" %CUSTOM_CHECKED%>
+                <label for="custom">Custom</label>
+              </div>
+            </div>
+
+            <div id="custom_days" %IS_VISIBLE%>
+
+              <div class="w3-cell-row w3-center">
+                <div class="w3-cell col-7">
+                  <p>Sun</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Mon</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Tue</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Wed</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Thu</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Fri</p>
+                </div>
+                <div class="w3-cell col-7">
+                  <p>Sat</p>
+                </div>
+              </div>
+
+              <div class="w3-cell-row w3-center w3-margin-bottom" style='height: 40px;'>%CUSTOM_DAYS%</div>
+            </div>
+
+
+            <!-- Seasonal Adjustment -->
+            <h6 class="hr-lines"><span><b>Seasonal Adjustment&nbsp;&nbsp;<span id="slider_value"
+                    class="w3-tag w3-theme w3-round-large"
+                    style="padding: 5px 10px 5px 10px;">%SEASONAL_ADJUSTMENT%%</span></b></span></h6>
+            <div class="range w3-margin-top w3-margin-bottom">
+              <div class="field">
+                <div class="value left">25</div>
+                <input name='adjustment' id="slider" type="range" min="25" max="200" value=%SEASONAL_ADJUSTMENT%
+                  step="5" oninput="slider_value.innerText = this.value + '%'">
+                <div class="value right">200</div>
+              </div>
+            </div>
+
+            <!-- Watering start time -->
+            <h6 class="hr-lines"><span><b>Start Time</b></span></h6>
+            <div class="w3-row w3-margin-top">
+              %START_TIME%
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Navbar BOTTOM -->
+        <div class="w3-bottom">
+          <div class="w3-display-container w3-theme w3-large">
+            <a id='btn_done' class="w3-half w3-button w3-hover-theme" href="#" onclick="submit()"><i
+                class="fa fa-circle-check fa-lg"></i>&nbsp;Update</a>
+            <a class="w3-half w3-button w3-hover-theme" href="#" onclick="remove()"><i
+                class="fa fa-circle-xmark fa-lg"></i>&nbsp;Delete</a>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+</body>
+
+</html>

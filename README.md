@@ -6,7 +6,7 @@ Fonctionnalitées :
 
 - remplissage automatique de la cuve de 1000L (pilotage pompe par radio 433 MHz)
 - arrosage automatique :
-  - paramétrage du planning par interface web ou manuellement par boutons de navigation
+  - paramétrage du calendrier par interface web ou manuellement par boutons de navigation
   - pilotage de 8 vannes 24V AC pour choix de la zone
   - détection de l'humidité du sol pour décision d'arrosage
   - pilotage pompe par radio 433 MHz
@@ -31,111 +31,63 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
 
 ## 🔧 To clarify / questions
 
-- codage en natif sur windows avec unit testing + OTA upload + debug dans platform IO et release ensuite
+- Check TODOs avec extension vscode todo tree
+- Calibrate adc1 avec platform io
+- Pins no utilisés en tant qu output à low + qu'en est-il des input only ?
 
-- check si quand esp est down dans console log je vois websocket error
-- conversion code en API pour dev web plus facile (avec esp connecté en wifi)
-- maj avec beau code papa avec sidebar(page home avec status cuve/vannes/capteurs/... et arrosage + settings)
-- Ajouts capteurs (débit + présence eau pompe remplissage cuve)
-- réduire envoi radio avec biblioteque (RadioHead qui a send non bloquant) pr code papa car ajoute pb de reactivité lors d'un appui sur bouton avec arrosage en cours (seulement besoin d'envoyer 3-5 commandes, pas besoin de le faire pdt 10ms) https://chatgpt.com/c/682541fa-2364-800e-8035-e06e5f3cb1cc
+- Conversion code en API pour dev web plus facile (avec esp connecté en wifi)
+- connection state dans sidebar à connecter à socket + si api call marche pas afficher dialog
+- Check si quand esp est down dans console log je vois websocket error
+- WEB UI:
+  - changement en SPA avec sidebar et overlay/animations (et sidebar présente tout le temps sans close si grande fenêtre)
+  - séparation en pages, home (avec status cuve/vannes/capteurs/...), schedule et settings
+- bouton dans web pour sync heure avec tel, avoir le sync heure été hiver auto plutôt ?
 
+## Next
+
+### best
+
+- page séparée pour arrosage manuel, et non plus dans page planning + pouvoir faire un arrosage manuel des zones selectionnées qui s'enchaînent
+- for large screens, display the panels in a grid pattern instead of each under the other
+- handle settings modal page for large screens (have a ) + 404 not found (return the correct HTTP status code + a helpful 404 page that include clear messaging and links to popular or related content to help users recover)
+- Fault led en clignotement
 - Pb vanne si pas de planning de fait
 - Loop main par rapport à 0 de chaque minute et non random
+- Vérif dans watering.cpp : "if (at + (m_duration \* 60)" et "if (at + 10 < now)"
 - empêcher plus d'1 vannes (avoir algo qui exécute chaque watering du jour successivement après heure fixe décidée dans .ini)
 - button released logic pour écran, du genre act on press pour la navigation et release pour démarrer arrosage (dont si arrosage manuel en cours, pouvoir uniquement arrêter celui là, ne rien afficher d'autre)
-- bouton dans web pour sync heure avec tel
+- Pour arrosage à la main, ajout si appuie successif dans les 5 1ere secondes, augmenter temps total (commencer avec 10min, puis 20min, ...)
+- Short press/release pour activation vanne arrosage à la main, and for really short press/release or long press/release do nothing (so it act as a cancel).
+- Timing drift in main loop avec afficheur 7 segments pour arrosage à la main
+- versionning
+- Refactor complet du code pour enlever inter-dépendances et ajout :
+  - codage en natif sur windows avec unit testing
+  - debug dans platform IO et release ensuite
+  - OTA upload
+- Ajouts capteurs (débit + présence eau pompe remplissage cuve) dont check capteur humidité (cf. vidéo youtube)
+- Ajout afficheur à segments
+- History page simple avec bouton recherche
+- mdp pr page settings
+- Réduire envoi radio avec biblioteque ([RCSwitchRmt](https://github.com/Upartech/RCSwitchRmt/tree/main) qui a send non bloquant) pr code papa car ajoute pb de reactivité lors d'un appui sur bouton avec arrosage en cours (seulement besoin d'envoyer 3-5 commandes, pas besoin de le faire pdt 10ms) https://chatgpt.com/c/682541fa-2364-800e-8035-e06e5f3cb1cc
+- wifi sleep mode when no one connected
+
+### second
 
 - Edition zones sur web
-- Défilement sur ecran oled pr texte trop long
 - Garder info de "en remplissage cuve" si système s'éteint, pr continuer
+- mDNS pour accès avec http://arrosage.local
 - Captive portal en mode AP ? cf. notes
 - Captive portal qui demande de rien faire si pas sûr, avec lien pour visiter le site une fois sortie du portail
-- ajout check si capteur connectés ou valeurs ok
+- ajout check si capteur connectés ou valeurs ok (ajout filtres sur capteurs pour lisser valeurs)
 
+### lastly
+
+- Afficher historique des démarrages et voir la raison (watchdog, power-on, crash, etc.)
+- utiliser les watchdog interne en plus du externe
 - avoir rappel régulier sur app pour nettoyage filtre (à valider pour l'enlever) -> à aussi avoir dans futur version intégrée dans HA
-- Vérif dans watering.cpp : "if (at + (m_duration \* 60)" et "if (at + 10 < now)"
-- Ajout si appuie successif dans les 5 1ere secondes, augmenter temps total (commencer avec 10min, puis 20min, ...)
 - Pour publier des données par Internet, cf. [achat carte sim](https://www.thingsmobile.com/business/shop) et [tuto](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/) (3 façons : juste wifi esp32, `wifi esp32 + alertes par sms`, wifi esp32 uniquement pour debug serial par ex et serveur web qui communique avec esp via carte sim pour toutes les fonctionnalités)\*
 
 \*permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe
-
-# Fast web dev
-
-Quick setup for developing and testing the web interface locally.
-
-## Prerequisites
-
-Create the virtual environment and install all python dependencies:
-
-```bash
-cd server
-uv sync
-```
-
-## 1. Start the server
-
-```bash
-cd server
-uv run start_server.py [--dev_mode] [--mock_esp_api]
-```
-
-### Options
-
-- `--mock_esp_api`  
-  Use a fake API for frontend-only development. requests are sent to the ESP32 API using the URL defined in `/server/mock/config.py`.
-- `--dev_mode`  
-  Enables development features (see below).
-
----
-
-## 2. Development mode
-
-When using `--dev_mode`, start the file watcher beforehand in a separate terminal with:
-
-```bash
-cd server
-uv run live_refresh.py
-```
-
-This enables:
-
-- Automatic browser opening
-- Automatic browser refresh on file changes
-- FastAPI auto-reload (backend)
-- LiveReload injection (frontend)
-
----
-
-## 3. Development workflow
-
-Edit the following files:
-
-```
-/server/www/*
-/server/start_server.py
-```
-
-### Tips
-
-- Keep the Python web architecture consistent with the ESP32 implementation (`WebServer.h/cpp`)
-- Use the API docs for debugging at http://127.0.0.1:8000/docs
-
----
-
-## 4. Export for production
-
-Once everything works:
-
-```bash
-uv run export_gzip
-```
-
----
-
-## 5. Deploy to ESP32
-
-- Build the filesystem image
-- Upload it to ESP32 using PlatformIO
 
 # Features souhaitées d'un contrôleur intelligent
 
@@ -159,76 +111,63 @@ uv run export_gzip
   - arrosage à la main avec tuyau souple et pistolet (utilise une vanne 12v en plus)
   - intégration dans Home Assistant par msgs MQTT (pour voir état des capteurs dont niveau cuve et avoir des notifs en cas d’erreur, d'inactivité, ...)
 
-# ESP32 pinout
+# Possible improvements
 
-interrupteur général pour couper alim
+## Very useful
 
-Indicateurs lumineux (ou garder écran?) :
+### Water tank level (replacement)
 
-- led verte pour power on
-- led verte pour network on
-- system state avec led rouge/verte (indication si erreur/bug)
-- led verte pour arrosage en cours
+Upgrade the simplest water tank EMPTY/FULL levels with an ultrasonic distance sensor
 
-watchdog externe ou interne
+### LAN (addition by SPI interface + 2 worth considering pins)
 
-Capteurs :
+⚠️ Almost all SPI pins (18, 19 and 23) are already in use by some elements such as 7-segment display.
 
-- _flow_
-- soil humidity + soil temp ?
-- comme station météo : air temp/humidity + pression atmo + anémomètre/girouette + luxmètre + pluviomètre
-- niveaux haut/bas cuve &#8594; à remplacer par capteur ultrason
-- _présence arrivée d'eau sur tuyau remplissage cuve_
-- courant pompe arrosage (if pump is rapidly cycling ON/OFF → pb pression air du ballon, pb pression du circuit d'eau, permet d'analyser si le ballon de 50L est trop petit, ...)
-- courant pr état des solenoide des vannes
+Another external box for RJ45 LAN connectivity with lightning surge isolator by SPI and IF no LED is already present on the femelle port on the module, use the last available pin for a connection status green LED. Connection status LED states :
 
-2 boutons pr controle ecran
-Oled screen
-&#8594; à retirer
+- off (LAN not available, rare but failure state)
+- blinking (connected/communicating)
+- solid (active and ready)
 
-RTC clock
-433Hz radio emitter
-8 vannes 24v ac
-Alim 12v avec regulateur 5v
+Note for RJ45 LAN module (like ENC28J60 module), there are two additional pins that would be worth connecting:
 
-Bouton avec led
-afficheur 7 segments
-une vanne 12v
-buzzer
+- INT (reduces polling and CPU usage, allow efficient networking)
+- RESET (lets the ESP32 recover the Ethernet controller if it locks up or during startup sequencing)
 
-Analyse des GPIO restant pr flow arrosage, 3 en plus pr cuve, 4 vannes
+### Valve solenoid current sensor (addition by new I2C expander)
 
-- 36 input only - moisture
-- 39 input only - flow
-- 33
-- 32
-- 27 - input cuve 0
-- 26 - input cuve 2
-- 25 - r5
-- 19 - input cuve 3
-- 18 - r4
-- 17 - r3
-- 16 - r2
-- 15 - r1
-- 14 - r7
-- 13 - r8
-- 12 Output only (should be at low for flashing)
-- 5 - input cuve 1
-- 4 - r6
-- 2 output only (should be at low for flashing)
+Ajout d'un capteur de courant pr connâitre l'état de santé des solénoïdes des vannes
 
-# Compilation rapide avec WSL et Ubuntu 24.04.01 LTS
+### Hand watering buzzer (addition by new I2C expander)
 
-`Prend seulement une dizaine de seconde contre facilement 1min10 sur Windows avec l'IDE d'Arduino`
+Add a buzzer for knowing time left for hand watering
 
-Commandes :
+Think in terms of “where am I in the cycle?”, example:
+30:00 left → three short beeps
+20:00 left → two short beeps
+10:00 left → one short beep
+Last 30 seconds → slow periodic beep (every ~2 sec) + LED blinking on sync
+Last 5 seconds → fast beep + LED blinking in sync
+0:00 → long beep (stop)
 
-```
-$ sudo apt update
-$ sudo apt upgrade
-$ sudo snap install arduino-cli
-$ sudo apt install libstdc++6
-$ sudo apt install python-is-python3
-$ arduino-cli board details -b esp32:esp32:esp32da
-$ arduino-cli compile -v ~/gestion_arrosage_jdc --build-path ~/gestion_arrosage_jdc/build
-```
+Nice to have (peut-être pas utile car trop agressif)
+
+### Weather station (addition by new I2C expander)
+
+Another external box for weather station (wind speed/direction, air temperature/humidity, rain, ...) with expander by I2C. Add these sensors:
+
+- air temp/humidity
+- pression atmo
+- anémomètre sur girouette (pour aussi avoir direction du vent)
+- luxmètre
+- pluviomètre
+- soil temp ?
+
+## Less useful
+
+#### Mesh filter pressure sensors differential (addition by new I2C I2C expander)
+
+Ajout de 2 capteurs de pression (avant/après filtre à tamis, qui a tétons 1/4" intégrés, cf. marque Azud sur Jardinet) pour savoir qd nettoyer le filtre. Notes :
+
+- seulement utile s'il pose souvent pb en se bouchant, limitant le débit (si les capteurs sont utilisés, alors log la pression et le delta de la pression sous forme de graph dans page history)
+- possible aussi, en fonction de comment il se salit, d'ajouter simplement un préfiltre désableur sur le côté aspiration de la pompe

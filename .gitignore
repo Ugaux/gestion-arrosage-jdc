@@ -4,6 +4,6 @@
 .vscode/launch.json
 .vscode/ipch
 
-/data/www
-/server/.venv
+/firmware/data/www
+/bridge/.venv
 __pycache__

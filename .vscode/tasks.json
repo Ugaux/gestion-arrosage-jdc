@@ -1,0 +1,109 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ****************** ESP32: FILESYSTEM SIDE ****************** //
+    {
+      "label": "esp32-fs: minify webui",
+      "type": "shell",
+      "command": "python scripts/build_web.py"
+    },
+    {
+      "label": "esp32-fs: build fs image",
+      "type": "shell",
+      "command": "pio run --target buildfs"
+    },
+    {
+      "label": "esp32-fs: upload fs image (USB)",
+      "type": "shell",
+      "command": "pio run --target uploadfs"
+    },
+    {
+      "label": "🟡 esp32-fs: deploy filesystem (USB)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "esp32-fs: minify webui",
+        "esp32-fs: build FS Image",
+        "esp32-fs: upload FS image (USB)"
+      ]
+    },
+
+    // ****************** ESP32: FIRWMARE SIDE ****************** //
+    {
+      "label": "esp32-fm: build debug",
+      "type": "shell",
+      "command": "pio run -e ESP32-debug"
+    },
+    {
+      "label": "esp32-fm: upload debug (USB)",
+      "type": "shell",
+      "command": "pio run -e ESP32-debug --target upload"
+    },
+    {
+      "label": "🔴 esp32-fm: deploy debug (USB)",
+      "dependsOrder": "sequence",
+      "dependsOn": ["esp32-fm: build debug", "esp32-fm: upload debug (USB)"]
+    },
+    {
+      "label": "esp32-fm: build release",
+      "type": "shell",
+      "command": "pio run -e ESP32-release"
+    },
+    {
+      "label": "esp32-fm: upload release (USB)",
+      "type": "shell",
+      "command": "pio run -e ESP32-release --target upload"
+    },
+    {
+      "label": "🔴 esp32-fm: upload release (OTA)",
+      "type": "shell",
+      "command": "pio run -e ESP32-release-ota --target upload"
+    },
+    {
+      "label": "🔴 esp32-fm: deploy release (USB)",
+      "dependsOrder": "sequence",
+      "dependsOn": ["esp32-fm: build release", "esp32-fm: upload release (USB)"]
+    },
+
+    // ****************** ESP32: FULL SYSTEM ****************** //
+    {
+      "label": "🔁 esp32: deploy full (USB)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "🟡 esp32-fs: deploy filesystem (USB)",
+        "🔴 esp32-fm: deploy release (USB)"
+      ]
+    },
+
+    // ****************** BRIDGE ****************** //
+    {
+      "label": "bridge: dev live refresh",
+      "type": "shell",
+      "command": "uv run live_refresh.py"
+    },
+    {
+      "label": "bridge: dev (mock)",
+      "type": "shell",
+      "command": "uv run main.py --dev_mode --mock_esp_api"
+    },
+    {
+      "label": "bridge: dev (esp32)",
+      "type": "shell",
+      "command": "uv run main.py --dev_mode"
+    },
+    {
+      "label": "🟢 bridge: dev (mock)",
+      "dependsOrder": "parallel",
+      "dependsOn": ["bridge: dev live refresh", "bridge: dev (mock)"]
+    },
+    {
+      "label": "🟢 bridge: dev (esp32)",
+      "dependsOrder": "parallel",
+      "dependsOn": ["bridge: dev live refresh", "bridge: dev (esp32)"]
+    },
+    {
+      "label": "🟢 bridge: prod",
+      "type": "shell",
+      "command": "uv run main.py"
+    }
+  ]
+}

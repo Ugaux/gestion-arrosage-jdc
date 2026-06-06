@@ -1,0 +1,60 @@
+.w3-button {
+    /*
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 16px;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    */
+    border-radius: var(--radius-field) !important;
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+    border: var(--border-width) solid var(--color-base-300) !important;
+}
+
+.w3-button:hover {
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+    filter: brightness(0.91) !important;
+}
+
+.w3-button:focus {
+    outline: none;
+}
+
+.w3-button:active {
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+    filter: brightness(0.93) !important;
+    transform: scale(0.97);
+    transition: transform 50ms ease;
+}
+
+.w3-button .badge {
+    position: relative;
+    top: 0px;
+    right: 0px;
+    padding: 3px 10px;
+    border-radius: 50%;
+    background: red;
+    color: white;
+}
+
+.way-btn {
+    height: 33px;
+    width: 33px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.way-btn-small {
+    height: 1.5rem;
+    width: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,0 +1,43 @@
+.input-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.input-field {
+    /*width: 60px;*/
+    padding-right: 2.4em;
+    /* Space for the unit */
+    box-sizing: border-box;
+    border-color: var(--color-base-300);
+    border-width: var(--border-width);
+    border-radius: var(--radius-field);
+    border-style: solid;
+    /*padding-top: 3px;
+    padding-bottom: 3px;*/
+    vertical-align: middle;
+    text-align: right;
+    /*line-height: 27px;*/
+    /*display: inline-flex;
+    align-items: center;*/
+    width: 64px;
+    height: 33px;
+    /*line-height: 33px;*/
+    pointer-events: none;
+
+}
+
+.input-wrapper .unit {
+    position: absolute;
+    display: inline-block;
+    left: 2em;
+    /*top: 0%;*/
+    pointer-events: none;
+    /* Ensures clicks pass through to input */
+    color: gray;
+    line-height: 33px;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    display: none;
+}

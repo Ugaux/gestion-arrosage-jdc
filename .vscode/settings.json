@@ -6,6 +6,15 @@
     "**/.pio": true,
     "**/.clang-format": true
   },
-  "liveServer.settings.multiRootWorkspaceName": "gestion_arrosage_jdc",
-  "liveServer.settings.root": "/data"
+  "search.exclude": {
+    "**/README.md": true,
+    "**/.pio": true,
+    "**/.git": true,
+    "**/.vscode": true,
+    "**/.clang-format": true
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:venv",
+  "python.defaultInterpreterPath": "${workspaceFolder}/bridge/.venv/Scripts/python.exe",
+  "platformio-ide.autoRebuildAutocompleteIndex": false // TODO: maybe remove it ?
+  //"platformio-ide.autoPreloadEnvTasks": false
 }
