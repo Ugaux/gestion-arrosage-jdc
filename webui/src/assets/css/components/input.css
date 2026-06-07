@@ -8,6 +8,8 @@
     padding-right: 2.4em;
     /* Space for the unit */
     box-sizing: border-box;
+    color: var(--color-base-content);
+    background-color: var(--color-base-200);
     border-color: var(--color-base-300);
     border-width: var(--border-width);
     border-radius: var(--radius-field);

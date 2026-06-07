@@ -15,9 +15,7 @@
     overflow-y: auto;
 
     transform: translateX(-100%);
-    transition:
-        var(--theme-transition),
-        transform var(--sidebar-transition);
+    transition: transform var(--sidebar-transition);
 
     background-color: var(--color-base-100);
     box-shadow: 1px 0 3px rgba(0, 0, 0, 0.06);
@@ -40,10 +38,8 @@
     align-items: center;
     justify-content: center;
     padding: 0px !important;
-    /* showing is delayed and then happens instantaneously */
-    transition:
-        var(--theme-transition),
-        opacity 0s var(--sidebar-transition);
+    /* showing is delayed until sidebar is closed and then it instantaneously appears */
+    transition: opacity 0s var(--sidebar-transition);
     opacity: 1;
 }
 

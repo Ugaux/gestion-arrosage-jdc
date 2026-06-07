@@ -31,10 +31,6 @@
     --border-width: 2px;
 
     --theme-transition-duration: 0.3s;
-    --theme-transition:
-        background-color var(--theme-transition-duration) ease,
-        color var(--theme-transition-duration) ease,
-        border-color var(--theme-transition-duration) ease;
 }
 
 .dark-theme {
@@ -61,23 +57,21 @@
     --color-error-content: #4d0218;
 }
 
-/*
-*,
-*::before,
-*::after {
-    transition: var(--theme-transition)
-}
-*/
 
-/*.slider,
-.slider::before*/
-#navbar,
-main,
-#sidebar,
-body,
-.w3-card,
-.card-separator,
-.schedule-separator,
-.w3-button {
-    transition: var(--theme-transition) !important;
+:root.theme-switching :is(#navbar,
+    main,
+    #sidebar,
+    body,
+    .input-field,
+    .w3-card,
+    .card-separator,
+    .schedule-separator,
+    .w3-button,
+    .slider:not(#theme-toggle)),
+/* separate line required for ::before as it is discarded by :is */
+:root.theme-switching .slider:not(#theme-toggle)::before {
+    transition:
+        background-color var(--theme-transition-duration) ease,
+        color var(--theme-transition-duration) ease,
+        border-color var(--theme-transition-duration) ease !important;
 }

@@ -54,3 +54,8 @@ body {
     background-color: var(--color-base-200);
     color: var(--color-base-content);
 }
+
+.no-select {
+    pointer-events: none;
+    user-select: none;
+}
