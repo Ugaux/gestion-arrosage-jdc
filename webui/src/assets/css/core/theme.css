@@ -30,7 +30,7 @@
 
     --border-width: 2px;
 
-    --theme-transition-duration: 0.3s;
+    --theme-transition-duration: .4s;
 }
 
 .dark-theme {

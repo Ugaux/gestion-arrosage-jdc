@@ -22,8 +22,8 @@
     right: 0;
     bottom: 0;
     background-color: var(--color-base-300);
-    -webkit-transition: .4s;
-    transition: .4s;
+    -webkit-transition: var(--theme-transition-duration);
+    transition: var(--theme-transition-duration);
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -35,8 +35,8 @@
     left: 0.1875rem;
     bottom: 0.1875rem;
     background-color: var(--color-base-content);
-    -webkit-transition: .4s;
-    transition: .4s;
+    -webkit-transition: var(--theme-transition-duration);
+    transition: var(--theme-transition-duration);
 }
 
 @media (hover: hover) {
