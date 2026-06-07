@@ -13,6 +13,7 @@
     background-color: var(--color-base-200) !important;
     color: var(--color-base-content) !important;
     border: var(--border-width) solid var(--color-base-300) !important;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .w3-button:hover {
@@ -57,4 +58,30 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Disable hover on touch screens 
+@media (hover: none) {
+
+    .w3-button:hover:not(:active),
+    .w3-button:focus:not(:active),
+    .w3-button:focus-visible:not(:active),
+    .w3-button:focus-within {
+        background-color: inherit !important;
+        color: inherit !important;
+        outline: none !important;
+        outline-offset: 0 !important;
+        box-shadow: none !important;
+        border-color: none !important;
+        text-decoration: none !important;
+
+    }
+}
+/* Disable hover on touch screens */
+@media (hover: none) {
+
+    .w3-button:hover:not(:active),
+    .w3-button:focus:not(:active) {
+        filter: none !important;
+    }
 }

@@ -24,6 +24,7 @@
     background-color: var(--color-base-300);
     -webkit-transition: .4s;
     transition: .4s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .slider::before {
@@ -38,13 +39,14 @@
     transition: .4s;
 }
 
-.slider:hover {
-    filter: brightness(0.91) !important;
-}
+@media (hover: hover) {
+    .slider:hover {
+        filter: brightness(0.91) !important;
+    }
 
-.slider:hover::before {
-    filter: brightness(0.91) !important;
-
+    .slider:hover::before {
+        filter: brightness(0.91) !important;
+    }
 }
 
 input:checked+.slider {
@@ -58,7 +60,7 @@ input:checked+.slider::before {
 input:active+.slider {
     /*box-shadow: 0 0 0.5rem #b6b6b6;*/
     filter: brightness(0.93) !important;
-    opacity: 0.8;
+    /*opacity: 0.8;*/
     transform: scale(0.97);
     transition: transform 50ms ease;
 }
