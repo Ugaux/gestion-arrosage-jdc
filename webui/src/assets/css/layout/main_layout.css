@@ -1,7 +1,15 @@
 /* MOBILE LAYOUT (default) */
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
 #wrapper {
+    height: 100%;
     margin-left: 0;
     transition: margin-left var(--sidebar-transition);
+    background-color: var(--color-base-200);
 }
 
 #wrapper #navbar {

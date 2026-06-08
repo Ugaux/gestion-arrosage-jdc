@@ -57,11 +57,9 @@
     --color-error-content: #4d0218;
 }
 
-
 :root.theme-switching :is(#navbar,
-    main,
     #sidebar,
-    body,
+    #wrapper,
     .input-field,
     .w3-card,
     .card-separator,
