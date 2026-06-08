@@ -60,6 +60,8 @@
 :root.theme-switching :is(#navbar,
     #sidebar,
     #wrapper,
+    .logo-mask,
+    .logo-container,
     .input-field,
     .w3-card,
     .card-separator,

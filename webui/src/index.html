@@ -29,12 +29,14 @@
       <button id="close-btn" @click="$store.ui.sidebar.close()" class="w3-button"><i
           class="w3-small fa-solid fa-xmark"></i></button>
       <!-- BRANDING -->
-      <div class="w3-panel" id="branding">
-        <img src="/assets/img/logo_bwbg.png" class="w3-circle">
-        <div id="brand">
+      <div id="branding" class="w3-panel">
+        <a href="#home" @click="$store.ui.sidebar.close()" class="logo-container" aria-label="Company logo">
+          <span class="logo-mask"></span>
+        </a>
+        <a href="#home" @click="$store.ui.sidebar.close()" id="brand">
           <div class="w3-xlarge w3-bold">Arrosage</div>
           <div class="w3-opacity w3-small">Jardin du Ciel</div>
-        </div>
+        </a>
       </div>
 
       <!--NAVIGATION -->

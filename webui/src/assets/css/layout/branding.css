@@ -1,0 +1,35 @@
+#branding {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#branding>.logo-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background-color: var(--color-base-300);
+    border-radius: 50%;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+#branding>.logo-container>.logo-mask {
+    position: absolute;
+    inset: 0;
+    mask-size: contain;
+    background-color: var(--color-base-content);
+    -webkit-mask-image: url('/assets/img/logo-mask-120.png');
+    mask-image: url('/assets/img/logo-mask-120.png');
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+}
+
+#branding>.logo-container>.hidden-logo {
+    opacity: 0;
+}
+
+#branding>#brand {
+    line-height: 1;
+    text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+}
