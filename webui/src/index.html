@@ -4,19 +4,19 @@
 <head>
   <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Older browsers → ICO fallback with 16x16px, 32x32px, and 48x48px included -->
-  <link rel="icon" href="/assets/img/favicon.ico" sizes="any">
+  <link rel="icon" type="image/x-icon" sizes="any" href="/assets/img/favicon.ico">
   <!-- Modern browsers → PNG favicon -->
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png">
   <!-- iOS home screen → PNG -->
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon-apple-180.png">
   <!-- Android install/home screen → PNG + maskable PNG -->
-  <link rel="manifest" href="/assets/img/manifest.json">
+  <link rel="manifest" href="/assets/img/manifest.json?v=%VERSION%">
   <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/app.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/app.css?v=%VERSION%">
   <!-- JS -->
-  <script type="module" src="/assets/js/app.js"></script>
-  <script defer src="/assets/js/core/alpine.min.js"></script>
+  <script type="module" src="/assets/js/app.js?v=%VERSION%"></script>
+  <script defer src="/assets/js/core/alpine.min.js?v=3.15.12"></script>
 </head>
 
 <body x-data x-cloak>

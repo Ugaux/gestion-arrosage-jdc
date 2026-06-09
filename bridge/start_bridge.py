@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 import socket
 import threading
 import webbrowser
@@ -20,27 +21,61 @@ DEV_MODE = environ.get("DEV_MODE", "0") == "1"
 MOCK_ESP_API = environ.get("MOCK_ESP_API", "0") == "1"
 WEBUI_FILEPATH = path.join(Path(__file__).parent.parent, "webui", "src")
 
+
+class NoCacheStaticFiles(StaticFiles):
+    def file_response(self, path, stat_result, scope):
+        response = super().file_response(path, stat_result, scope)
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
+class CachingStaticFiles(StaticFiles):
+    def file_response(self, path, stat_result, scope):
+        response = super().file_response(path, stat_result, scope)
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 app = FastAPI()
-app.mount("/assets", StaticFiles(directory=path.join(WEBUI_FILEPATH, "assets")))
-
-
-def remove_excluded_headers(headers):
-    if headers in EXCLUDED_HEADERS:
-        del headers
+if DEV_MODE:
+    Static = NoCacheStaticFiles
+else:
+    Static = CachingStaticFiles
+app.mount("/assets", Static(directory=path.join(WEBUI_FILEPATH, "assets")))
 
 
 @app.get("/")
 def index():
-    return FileResponse(path.join(WEBUI_FILEPATH, "index.html"))
+    print("Sending index.html...")
+    with open(path.join(WEBUI_FILEPATH, "index.html"), "r", encoding="utf-8") as f:
+        html = f.read()
+    with open(path.join(WEBUI_FILEPATH, "version.json"), "r", encoding="utf-8") as f:
+        version = json.load(f)["version"]
+    html = html.replace("%VERSION%", version)  # your value here
+    response = Response(content=html, media_type="text/html")
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 """
+@app.get("/version")
+def version():
+    response = FileResponse(path.join(WEBUI_FILEPATH, "version.json"))
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+"""
 
+
+"""
 @app.get("/404")
 def not_found(url):
     return FileResponse(path.join(WEBUI_FILEPATH, "404.html"), status_code=404)
+"""
 
 
+"""
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
     return RedirectResponse(url=f"/404?url={quote(str(request.url),safe='')}", status_code=302)
@@ -50,6 +85,11 @@ async def custom_404_handler(request: Request, exc):
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
     return FileResponse(path.join(WEBUI_FILEPATH, "404.html"), status_code=404)
+
+
+def remove_excluded_headers(headers):
+    if headers in EXCLUDED_HEADERS:
+        del headers
 
 
 @app.get("/device/info")
@@ -142,7 +182,6 @@ if DEV_MODE:
             headers.pop("etag", None)
             headers.pop("last-modified", None)
             headers.pop("content-length", None)  # remove stale Content-Length
-            # del headers["content-length"]  # remove stale Content-Length
 
             return Response(
                 content=html,
