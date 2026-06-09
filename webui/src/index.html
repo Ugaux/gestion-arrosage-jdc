@@ -242,9 +242,9 @@
                   <hr class="card-separator">
                   <div class="w3-panel">
 
-                    <template x-for="way in zone.ways" :key="way.id">
+                    <template x-for="(way, way_index) in zone.ways" :key="way.id">
                       <div>
-                        <hr class="schedule-separator" x-show="way.id > 1">
+                        <hr class="schedule-separator" x-show="way_index > 0">
                         <div
                           style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                           <div style="display: flex; align-items: center; gap: 10px;">
@@ -259,25 +259,26 @@
                         </div>
 
                         <div style=" display: flex; flex-direction: column; gap: 10px;">
-                          <template x-for="schedule in way.schedules" :key="schedule.index">
+                          <template x-for="(schedule, schedule_index) in way.schedules" :key="schedule.id">
                             <div class="schedule">
 
                               <div style=" display: flex; align-items: center; gap: 10px;">
-                                <b class="w3-small">Schedule&nbsp;<span x-text="schedule.index"></span></b>
-                                <a :href="'/#schedule/edit?way=' + way.name + '&schedule=' + schedule.index"
+                                <b class="w3-small">Schedule&nbsp;<span x-text="schedule_index+1"></span></b>
+                                <a :href="'/#schedule/edit?way=' + way.name + '&schedule=' + schedule_index"
                                   class="w3-button way-btn-small">
                                   <i class="fa-solid fa-pen-to-square fa-sm"></i>
                                 </a>
                                 <label class="switch">
                                   <input name="checkbox_enable" type="checkbox"
-                                    :id="'btn_enable_' + way.name + '_' + schedule.index" :checked="schedule.enabled">
+                                    :id="'btn_enable_' + way.name + '_' + schedule_index" x-model="schedule.enabled">
                                   <span class="slider round"></span>
                                 </label>
                               </div>
 
                               <span class="w3-small">Starts&nbsp;at&nbsp;<b x-text="schedule.time"></b>&nbsp;for&nbsp;<b
                                   x-text="schedule.duration"></b>&nbsp;<b>min</b>&nbsp;on&nbsp;<b
-                                  x-text="schedule.freq"></b><span />
+                                  x-text="schedule.freq"></b>
+                              </span>
                             </div>
                           </template>
                         </div>
