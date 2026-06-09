@@ -15,14 +15,14 @@ export default (wayID) => ({
     this.step = step;
     this.duration = this.getDurations()[wayID] ?? defaultDuration;
 
-    syncJsonLocalStorage("wateringDurations", (durations) => {
+    syncJsonLocalStorage("manualWateringDurations", (durations) => {
       const newValue = durations?.[wayID];
       if (newValue) this.setDuration(newValue, false);
     });
   },
 
   getDurations() {
-    return JSON.parse(localStorage.getItem("wateringDurations") || "{}");
+    return JSON.parse(localStorage.getItem("manualWateringDurations") || "{}");
   },
 
   setDuration(value, save = true) {
@@ -37,7 +37,7 @@ export default (wayID) => ({
       const storedDurations = this.getDurations();
       storedDurations[wayID] = this.duration;
       localStorage.setItem(
-        "wateringDurations",
+        "manualWateringDurations",
         JSON.stringify(storedDurations),
       );
     }

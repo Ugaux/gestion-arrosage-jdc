@@ -97,7 +97,7 @@ export default {
     //console.log("active durations:", activeIds);
 
     const stored = JSON.parse(
-      localStorage.getItem("wateringDurations") || "{}",
+      localStorage.getItem("manualWateringDurations") || "{}",
     );
     //console.log("stored durations:", stored);
 
@@ -106,6 +106,6 @@ export default {
     ); // reconciliate stored entries with active zones
     //console.log("cleaned durations:", cleaned);
 
-    localStorage.setItem("wateringDurations", JSON.stringify(cleaned));
+    localStorage.setItem("manualWateringDurations", JSON.stringify(cleaned));
   },
 };
