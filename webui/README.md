@@ -28,7 +28,6 @@
 
 - check que rien du responsive layout n'ait de display none + visibility: hidden sur tout ce qui doit ne plus être accessible par tab par ex
 
-- avoir duration de la transition opacity sur overlay de alpine js avec var --sidebar-duration
 - check tous les hover et blue highlights sur tel apres darkmode
 - darkmode transition à tester avec délai de 5s pour voir les éléments qui switch instant (check sur toutes les pages)
 - darkmode garder logo jdc sans fond et ajouter un fond en css qui utilise une var du theme

@@ -12,6 +12,10 @@ body {
     background-color: var(--color-base-200);
 }
 
+#wrapper main {
+    z-index: 997;
+}
+
 #wrapper #navbar {
     position: sticky;
     top: 0;
@@ -36,6 +40,16 @@ body {
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 999;
+    transition: opacity var(--sidebar-transition) ease;
+    opacity: 0;
+    /* prevent clicks when hidden */
+    pointer-events: none;
+}
+
+#wrapper #overlay.show {
+    opacity: 1;
+    /* can be clicked */
+    pointer-events: auto;
 }
 
 #settings-nav-link {
@@ -44,7 +58,7 @@ body {
 
 .settings-page {
     position: relative;
-    z-index: 997;
+    z-index: 996;
 }
 
 /* ----------- LARGE SCREEN LAYOUT OVERRIDE ----------- */
@@ -94,8 +108,6 @@ body {
     top: 0;
     left: 0;
     z-index: 2000;
-
-
 }
 
 .is-desktop .settings-page-content {
