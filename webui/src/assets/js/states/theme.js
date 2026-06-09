@@ -1,3 +1,5 @@
+import { syncStringLocalStorage } from "../core/syncLocalStorage.js";
+
 const FALLBACK_DURATION_MS = 5000;
 
 function parseTransitionDuration() {
@@ -37,27 +39,39 @@ export default {
         document.documentElement.classList.toggle("dark-theme", this.dark);
       }
     });
+
+    // Sync across tabs
+    syncStringLocalStorage("theme", (newValue) => {
+      if (newValue) {
+        this.dark = newValue === "dark";
+        this.apply(false); // apply without re-saving
+      } else if (
+        this.dark !== window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        this.dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        this.apply(false); // apply without re-saving
+      }
+    });
   },
 
   toggle() {
     this.dark = !this.dark;
-    this.apply();
+    this.apply(true);
   },
 
-  apply() {
+  apply(save) {
     clearTimeout(this._timeout);
 
     console.log("Setting theme to", this.dark ? "Dark" : "Light", "mode");
     document.documentElement.classList.add("theme-switching");
     document.body.classList.add("no-select");
     document.documentElement.classList.toggle("dark-theme", this.dark);
-    localStorage.setItem("theme", this.dark ? "dark" : "light");
+    if (save) localStorage.setItem("theme", this.dark ? "dark" : "light");
 
     // Remove after transition completes
-
     this._timeout = setTimeout(() => {
       document.documentElement.classList.remove("theme-switching");
       document.body.classList.remove("no-select");
-    }, parseTransitionDuration()); // match your --theme-transition duration
+    }, parseTransitionDuration());
   },
 };
