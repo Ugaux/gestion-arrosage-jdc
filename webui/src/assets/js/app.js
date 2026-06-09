@@ -4,11 +4,10 @@ import ws from "./core/ws.js";
 import ui from "./states/ui.js";
 import theme from "./states/theme.js";
 import zones from "./states/zones.js";
-import relays from "./states/relays.js";
+import valves from "./states/valves.js";
+import esp32cfg from "./states/esp32cfg.js";
 
-import durationControl from "./components/durationControl.js";
-
-export const UI_VERSION = "1.4.2-" + Date.now(); //Web UIs on ESP32 often get aggressively cached. Version helps force reloads, /assets/app.js?v=1.7.0
+import manualDurationController from "./components/manualDurationController.js";
 
 document.addEventListener("alpine:init", () => {
   // ------------ CORE ------------
@@ -19,8 +18,9 @@ document.addEventListener("alpine:init", () => {
   Alpine.store("ui", ui);
   Alpine.store("theme", theme);
   Alpine.store("zones", zones);
-  Alpine.store("relays", relays);
+  Alpine.store("valves", valves);
+  Alpine.store("esp32cfg", esp32cfg);
 
   // --------- COMPONENTS ---------
-  Alpine.data("durationControl", durationControl);
+  Alpine.data("manualDurationController", manualDurationController);
 });

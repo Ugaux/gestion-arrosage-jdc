@@ -8,6 +8,7 @@
 
 @import './layout/main_layout.css';
 @import './layout/sidebar.css';
+@import './layout/branding.css';
 
 @import './components/toggle.css';
 @import './components/button.css';
