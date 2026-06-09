@@ -1,42 +1,29 @@
 .input-wrapper {
     position: relative;
-    display: inline-block;
 }
 
 .input-field {
-    /*width: 60px;*/
-    padding-right: 2.4em;
-    /* Space for the unit */
-    box-sizing: border-box;
-    color: var(--color-base-content);
-    background-color: var(--color-base-200);
-    border-color: var(--color-base-300);
-    border-width: var(--border-width);
-    border-radius: var(--radius-field);
-    border-style: solid;
-    /*padding-top: 3px;
-    padding-bottom: 3px;*/
-    vertical-align: middle;
-    text-align: right;
-    /*line-height: 27px;*/
-    /*display: inline-flex;
-    align-items: center;*/
     width: 64px;
     height: 33px;
-    /*line-height: 33px;*/
-    pointer-events: none;
-
+    box-sizing: border-box;
+    text-align: right;
+    padding-right: 2.4em;
+    /* Space for the unit */
+    color: var(--color-base-content);
+    background-color: var(--color-base-200);
+    border: var(--border-width) solid var(--color-base-300);
+    border-radius: var(--radius-field);
 }
 
-.input-wrapper .unit {
+.input-unit {
     position: absolute;
-    display: inline-block;
     left: 2em;
-    /*top: 0%;*/
+    top: 50%;
+    transform: translateY(-50%);
+    /* Reliable vertical centering */
     pointer-events: none;
     /* Ensures clicks pass through to input */
     color: gray;
-    line-height: 33px;
 }
 
 input[type="number"]::-webkit-inner-spin-button,

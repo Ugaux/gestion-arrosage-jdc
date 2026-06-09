@@ -311,18 +311,24 @@
                         <div style="display: flex; align-items: center; justify-content: space-between">
                           <b x-text="way.shortName"></b>
 
-                          <div style="display: flex; align-items: center; gap:15px" x-data="durationControl(way)">
-                            <b x-show="way.manual.started" :id="'lbl_' + way.name">??:??</b>
-                            <div x-show="!way.manual.started" style="display: flex; align-items: center">
-                              <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease"><i
-                                  class="fa-solid fa-minus fa-xs"></i></button>
+                          <div style="display: flex; align-items: center; gap:15px">
+                            <b x-show="way.manual.started"
+                              x-text="Math.floor(way.manual.timeLeft / 60) + ' min ' + String(way.manual.timeLeft % 60) + ' s'"></b>
+                            <div x-show="!way.manual.started" x-data="manualDurationController(way.id)">
+                              <div style="display: flex; gap: 4px;">
+                                <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease">
+                                  <i class="fa-solid fa-minus fa-xs"></i>
+                                </button>
                               <div class="input-wrapper">
-                                <input :id="'m_duration_' + way.name" class="input-field" type="number"
-                                  :value="duration" @change="setDuration()" @focus="$event.target.select()">
-                                <span class=" unit">min</span>
+                                  <input class="input-field" :id="'m_duration_' + way.name" type="number"
+                                    x-model.lazy="duration" @focus="$event.target.select()"
+                                    @blur="setDuration($event.target.value)" @keydown.enter="$event.target.blur()">
+                                  <span class="input-unit">min</span>
+                                </div>
+                                <button :disabled="duration >= max" class="w3-button way-btn" @click="increase">
+                                  <i class="fa-solid fa-plus fa-xs"></i>
+                                </button>
                               </div>
-                              <button :disabled="duration >= max" class="w3-button way-btn" @click="increase"><i
-                                  class="fa-solid fa-plus fa-xs"></i></button>
                             </div>
 
                             <button name="manual_mode" :id="'btn_' + way.name" type="button" class="w3-button way-btn">
