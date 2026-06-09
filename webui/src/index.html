@@ -71,13 +71,13 @@
           <i class="fa-solid fa-cog fa-lg"></i>&nbsp;&nbsp;Settings
         </a>
       </div>
-      <div class="w3-panel" id="dark-mode-div">
-        <div @click="$store.theme.toggle()" style="cursor:pointer; padding-right: 6px;" class="align-center">
-          <i class="fa-solid fa-lg" :class="$store.theme.dark ? 'fa-moon' : 'fa-sun'"></i>
-          <span x-text="$store.theme.dark ? 'Dark mode' : 'Light mode'"></span>
+      <div class="w3-panel" id="dark-mode-div" x-data="themeHandler">
+        <div @click="toggle()" style="cursor:pointer; padding-right: 6px;" class="align-center">
+          <i class="fa-solid fa-lg" :class="isDark ? 'fa-moon' : 'fa-sun'"></i>
+          <span x-text="isDark ? 'Dark mode' : 'Light mode'"></span>
         </div>
         <label class='switch'>
-          <input type='checkbox' x-model="$store.theme.dark" x-on:change="$store.theme.apply(true)">
+          <input type='checkbox' x-model="isDark" x-on:change="apply(true)">
           <span id="theme-toggle" class='slider round'></span>
         </label>
       </div>

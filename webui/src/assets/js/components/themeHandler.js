@@ -21,52 +21,53 @@ function parseTransitionDuration() {
       : value * 1000;
 }
 
-export default {
-  dark: false,
+export default () => ({
+  isDark: false,
   _timeout: null,
 
   init() {
     const saved = localStorage.getItem("theme");
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    this.dark = saved ? saved === "dark" : mediaQuery.matches;
+    this.isDark = saved ? saved === "dark" : mediaQuery.matches;
 
-    document.documentElement.classList.toggle("dark-theme", this.dark);
+    document.documentElement.classList.toggle("dark-theme", this.isDark);
 
     // Keep in sync with OS preference when user has no saved choice
     mediaQuery.addEventListener("change", (e) => {
       if (localStorage.getItem("theme") === null) {
-        this.dark = e.matches;
-        document.documentElement.classList.toggle("dark-theme", this.dark);
+        this.isDark = e.matches;
+        document.documentElement.classList.toggle("dark-theme", this.isDark);
       }
     });
 
     // Sync across tabs
     syncStringLocalStorage("theme", (newValue) => {
       if (newValue) {
-        this.dark = newValue === "dark";
+        this.isDark = newValue === "dark";
         this.apply(false); // apply without re-saving
       } else if (
-        this.dark !== window.matchMedia("(prefers-color-scheme: dark)").matches
+        this.isDark !==
+        window.matchMedia("(prefers-color-scheme: dark)").matches
       ) {
-        this.dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        this.isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         this.apply(false); // apply without re-saving
       }
     });
   },
 
   toggle() {
-    this.dark = !this.dark;
+    this.isDark = !this.isDark;
     this.apply(true);
   },
 
   apply(save) {
     clearTimeout(this._timeout);
 
-    console.log("Setting theme to", this.dark ? "Dark" : "Light", "mode");
+    console.log("Setting theme to", this.isDark ? "Dark" : "Light", "mode");
     document.documentElement.classList.add("theme-switching");
     document.body.classList.add("no-select");
-    document.documentElement.classList.toggle("dark-theme", this.dark);
-    if (save) localStorage.setItem("theme", this.dark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark-theme", this.isDark);
+    if (save) localStorage.setItem("theme", this.isDark ? "dark" : "light");
 
     // Remove after transition completes
     this._timeout = setTimeout(() => {
@@ -74,4 +75,4 @@ export default {
       document.body.classList.remove("no-select");
     }, parseTransitionDuration());
   },
-};
+});
