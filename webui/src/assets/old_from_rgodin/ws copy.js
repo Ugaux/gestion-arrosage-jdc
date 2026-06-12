@@ -1,9 +1,7 @@
 /************************************************/
 /************ REAL-TIME COMMUNICATION ***********/
 /************************************************/
-export default {
-  connected: false,
-};
+
 /********** WebSocket **********/
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
