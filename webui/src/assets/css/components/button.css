@@ -16,17 +16,19 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.w3-button:focus-visible {
+    outline-color: var(--color-base-content);
+    outline-style: solid;
+    outline-width: var(--border-width);
+    outline-offset: 0px;
+}
+
 .w3-button:hover {
     background-color: var(--color-base-200) !important;
     color: var(--color-base-content) !important;
-    filter: brightness(0.91) !important;
 }
 
-.w3-button:focus {
-    outline: none;
-}
-
-.w3-button:active {
+.w3-button:active:focus {
     background-color: var(--color-base-200) !important;
     color: var(--color-base-content) !important;
     filter: brightness(0.93) !important;
@@ -62,7 +64,6 @@
 
 /* Disable hover on touch screens 
 @media (hover: none) {
-
     .w3-button:hover:not(:active),
     .w3-button:focus:not(:active),
     .w3-button:focus-visible:not(:active),
@@ -74,14 +75,13 @@
         box-shadow: none !important;
         border-color: none !important;
         text-decoration: none !important;
-
     }
 }
-/* Disable hover on touch screens */
-@media (hover: none) {
+*/
 
-    .w3-button:hover:not(:active),
-    .w3-button:focus:not(:active) {
-        filter: none !important;
+/* Allow hover on devices that can use it */
+@media (hover: hover) {
+    .w3-button:hover {
+        filter: brightness(0.91) !important;
     }
 }

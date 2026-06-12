@@ -6,6 +6,13 @@
     width: 3rem;
 }
 
+.switch input:focus-visible+.slider {
+    outline-color: var(--color-base-content);
+    outline-style: solid;
+    outline-width: var(--border-width);
+    outline-offset: 0px;
+}
+
 /* Hide default HTML checkbox */
 .switch input {
     opacity: 0;
@@ -25,7 +32,10 @@
     -webkit-transition: var(--theme-transition-duration);
     transition: var(--theme-transition-duration);
     -webkit-tap-highlight-color: transparent;
+    border-radius: 4px;
 }
+
+
 
 .slider::before {
     position: absolute;
@@ -34,11 +44,13 @@
     width: 1.125rem;
     left: 0.1875rem;
     bottom: 0.1875rem;
+    border-radius: 4px;
     background-color: var(--color-base-content);
     -webkit-transition: var(--theme-transition-duration);
     transition: var(--theme-transition-duration);
 }
 
+/* Allow hover on devices that can use it */
 @media (hover: hover) {
     .slider:hover {
         filter: brightness(0.91) !important;

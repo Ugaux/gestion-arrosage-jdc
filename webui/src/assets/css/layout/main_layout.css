@@ -70,9 +70,12 @@ body {
 /* opening = instant */
 .is-desktop #sidebar #close-btn {
     opacity: 0% !important;
+    visibility: hidden !important;
     pointer-events: none !important;
     /* hiding is smooth */
-    transition: opacity var(--sidebar-transition) ease !important;
+    transition:
+        opacity var(--sidebar-transition) ease,
+        visibility var(--sidebar-transition) !important;
 }
 
 .is-desktop #settings-nav-link {
