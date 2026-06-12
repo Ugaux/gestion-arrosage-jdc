@@ -1,4 +1,4 @@
-import { syncStringLocalStorage } from "../core/syncLocalStorage.js";
+import { syncStringLocalStorage } from "../core/storage.js";
 
 const FALLBACK_DURATION_MS = 5000;
 

@@ -1,4 +1,4 @@
-import { syncJsonLocalStorage } from "../core/syncLocalStorage.js";
+import { syncJsonLocalStorage } from "../core/storage.js";
 
 export default (wayID) => ({
   // temporary typing state
