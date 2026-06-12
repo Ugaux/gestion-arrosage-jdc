@@ -1,0 +1,123 @@
+/* Root tooltip */
+.tooltip {
+    position: absolute;
+    width: auto;
+    font-size: 0.875rem;
+    /* text-sm */
+}
+
+/* Position variants */
+.tooltip-top {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    margin-top: -2px;
+}
+
+.tooltip-left {
+    top: 50%;
+    left: 0;
+    transform: translateX(-100%) translateY(-50%);
+    margin-left: -6px;
+}
+
+.tooltip-bottom {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    margin-bottom: -2px;
+}
+
+.tooltip-right {
+    top: 50%;
+    right: 0;
+    transform: translateX(100%) translateY(-50%);
+    margin-right: -6px;
+}
+
+/* Tooltip body */
+.tooltip-content {
+    position: relative;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-neutral);
+    border-radius: 0.25rem;
+}
+
+/* Text */
+.tooltip-text {
+    display: block;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    /* text-xs */
+    white-space: nowrap;
+    color: var(--color-neutral-content);
+    margin: 0;
+}
+
+/* Arrow container */
+.tooltip-arrow {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Arrow positioning */
+.tooltip-arrow-top {
+    bottom: 0;
+    left: 50%;
+    width: 10px;
+    transform: translateX(-50%) translateY(100%);
+}
+
+.tooltip-arrow-left {
+    top: 50%;
+    right: 0;
+    height: 10px;
+    margin-top: -1px;
+    transform: translateY(-50%) translateX(100%);
+}
+
+.tooltip-arrow-bottom {
+    top: 0;
+    left: 50%;
+    width: 10px;
+    transform: translateX(-50%) translateY(-100%);
+}
+
+.tooltip-arrow-right {
+    top: 50%;
+    left: 0;
+    height: 10px;
+    margin-top: -1px;
+    transform: translateY(-50%) translateX(-100%);
+}
+
+/* Arrow diamond */
+.tooltip-arrow-inner {
+    width: 6px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* Arrow rotations */
+.tooltip-arrow-inner-top {
+    transform: rotate(-45deg);
+    transform-origin: top left;
+}
+
+.tooltip-arrow-inner-left {
+    transform: rotate(45deg);
+    transform-origin: top left;
+}
+
+.tooltip-arrow-inner-bottom {
+    transform: rotate(45deg);
+    transform-origin: bottom left;
+}
+
+.tooltip-arrow-inner-right {
+    transform: rotate(-45deg);
+    transform-origin: top right;
+}

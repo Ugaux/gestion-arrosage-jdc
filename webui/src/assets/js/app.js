@@ -8,6 +8,7 @@ import esp32cfg from "./states/esp32cfg.js";
 
 import themeHandler from "./components/themeHandler.js";
 import manualDurationController from "./components/manualDurationController.js";
+import tooltip from "./components/tooltip.js";
 
 document.addEventListener("alpine:init", () => {
   // ------------ CORE ------------
@@ -23,4 +24,5 @@ document.addEventListener("alpine:init", () => {
   // --------- COMPONENTS ---------
   Alpine.data("themeHandler", themeHandler);
   Alpine.data("manualDurationController", manualDurationController);
+  Alpine.directive("tooltip", tooltip);
 });
