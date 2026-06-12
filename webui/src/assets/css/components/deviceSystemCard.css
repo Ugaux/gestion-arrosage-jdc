@@ -1,0 +1,51 @@
+#deviceSystemCard .veryweak-wifi {
+    color: var(--color-error);
+}
+
+#deviceSystemCard .excellent-wifi {
+    color: var(--color-success);
+}
+
+#deviceSystemCard .ok-state {
+    color: var(--color-success);
+}
+
+#deviceSystemCard .degraded-state {
+    color: var(--color-warning);
+}
+
+#deviceSystemCard .fault-state {
+    color: var(--color-error);
+    animation: faultPulse 1.0s infinite ease-in-out;
+}
+
+@keyframes faultPulse {
+    0% {
+        opacity: 0.85;
+        text-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+
+    40% {
+        opacity: 0.85;
+        text-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+
+    65% {
+        opacity: 1;
+        text-shadow: 0 0 15px color-mix(in srgb, var(--color-error) 70%, transparent);
+    }
+
+    90% {
+        opacity: 0.85;
+        text-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+
+    100% {
+        opacity: 0.85;
+        text-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+#deviceSystemCard .unknown-state {
+    color: gray;
+}

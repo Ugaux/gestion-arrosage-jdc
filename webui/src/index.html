@@ -138,20 +138,27 @@
                   <h5 class="card-title"><b>System</b></h5>
                 </header>
                 <hr class="card-separator">
-                <div class="w3-panel">
+                <div id="deviceSystemCard" class="w3-panel" x-data="deviceSystemCard">
                   <div class="card-list">
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-clock"></i>&nbsp;Time</div>
-                      <span id="systemTime" class="w3-bold">???</span>
+                      <div><i class="fa-solid fa-calendar"></i>&nbsp;Date</div>
+                      <div style="display: flex;flex-direction: column; align-items: end;">
+                        <b x-text="localDate"></b>
+                        <span x-text="localTime"></span>
+                      </div>
                     </div>
                     <div class="card-list-el">
                       <div><i class="fa-solid fa-heart-pulse"></i>&nbsp;State</div>
-                      <span id="systemState" class="w3-bold">???</span>
+                      <div :class="stateClass">
+                        <b x-text="stateLabel"></b>&nbsp;<i class="fa-solid" :class="stateIcon"></i>
+                      </div>
                     </div>
-                    <!-- RUNNING/FAULT (avec fault en rouge et message d'erreur) -->
                     <div class="card-list-el">
                       <div><i class="fa-solid fa-signal"></i>&nbsp;WiFi Signal</div>
-                      <div><span id="wifiStrength" class="w3-bold">???</span>&nbsp;dBm</div>
+                      <div x-tooltip.left.noarrow="Math.round(wifiSignal.rssi * 10)/10 + ' dBm'">
+                        <span :style="{ opacity: wifiSignal.opacity }" :class="wifiSignal.colorClass"
+                          x-text="wifiSignal.label"></span>
+                      </div>
                     </div>
                   </div>
                 </div>
