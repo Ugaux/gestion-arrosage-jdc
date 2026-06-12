@@ -1,6 +1,6 @@
 # Description projet
 
-Code fonctionnant sur un ESP32 permettant la gestion de l'arrosage pour le Jardin du Ciel à Vitabox à Algolsheim.
+Code fonctionnant sur un ESP32 permettant la gestion de l'arrosage pour le Jardin du Ciel à Vitabox (Algolsheim, FR).
 
 Fonctionnalitées :
 
@@ -15,94 +15,73 @@ Fonctionnalitées :
 Note importante :
 Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à débit nul. Dans les systèmes résidentiels, le pressostat arrête la pompe lorsque la pression est élevée, ce qui signifie que le débit est faible ou nul.
 
-# ⚙️ Tâches
+# ⚙️ Tasks
 
 ## ✅ OK
 
-- Copier upgrade cuve
-- Renommage wifi en "Arrosage Jardin du Ciel"
-- Pb capteur humidité
-- Changement terme "Systématique" pour "Arroser même en cas de pluie"
-- Affichage erreurs sur écran
-- RTC détection plus de pile + si déconnection du spi/5v/gnd (doit reset puis dans setup mettre msg erreur)
-- Changement design interface web avec websockets basé sur travail de [rgodin974](https://github.com/rgodin974/ESP32_sprinkler_timer/tree/main)
-- Conversion SPIFFS en LittleFS en personnalisation la librairie SPIFFSIniFile
-- Simplification structure de /src
+- Restructuration du repo en sous-projets
 
 ## 🔧 To clarify / questions
 
-- Check TODOs avec extension vscode todo tree
-- Calibrate adc1 avec platform io
-- Pins no utilisés en tant qu output à low + qu'en est-il des input only ?
+How to handle versionning automatically for all projects? (bridge, firmware, webui, hardware)
+Add automatic tags or commit version when merge to main?
 
-- Conversion code en API pour dev web plus facile (avec esp connecté en wifi)
-- connection state dans sidebar à connecter à socket + si api call marche pas afficher dialog
-- Check si quand esp est down dans console log je vois websocket error
-- WEB UI:
-  - changement en SPA avec sidebar et overlay/animations (et sidebar présente tout le temps sans close si grande fenêtre)
-  - séparation en pages, home (avec status cuve/vannes/capteurs/...), schedule et settings
-- bouton dans web pour sync heure avec tel, avoir le sync heure été hiver auto plutôt ?
+# Notes
 
-## Next
+## Versioning
 
-### best
+vMAJOR.MINOR.PATCH
 
-- page séparée pour arrosage manuel, et non plus dans page planning + pouvoir faire un arrosage manuel des zones selectionnées qui s'enchaînent
-- for large screens, display the panels in a grid pattern instead of each under the other
-- handle settings modal page for large screens (have a ) + 404 not found (return the correct HTTP status code + a helpful 404 page that include clear messaging and links to popular or related content to help users recover)
-- Fault led en clignotement
-- Pb vanne si pas de planning de fait
-- Loop main par rapport à 0 de chaque minute et non random
-- Vérif dans watering.cpp : "if (at + (m_duration \* 60)" et "if (at + 10 < now)"
-- empêcher plus d'1 vannes (avoir algo qui exécute chaque watering du jour successivement après heure fixe décidée dans .ini)
-- button released logic pour écran, du genre act on press pour la navigation et release pour démarrer arrosage (dont si arrosage manuel en cours, pouvoir uniquement arrêter celui là, ne rien afficher d'autre)
-- Pour arrosage à la main, ajout si appuie successif dans les 5 1ere secondes, augmenter temps total (commencer avec 10min, puis 20min, ...)
-- Short press/release pour activation vanne arrosage à la main, and for really short press/release or long press/release do nothing (so it act as a cancel).
-- Timing drift in main loop avec afficheur 7 segments pour arrosage à la main
-- versionning
-- Refactor complet du code pour enlever inter-dépendances et ajout :
-  - codage en natif sur windows avec unit testing
-  - debug dans platform IO et release ensuite
-  - OTA upload
-- Ajouts capteurs (débit + présence eau pompe remplissage cuve) dont check capteur humidité (cf. vidéo youtube)
-- Ajout afficheur à segments
-- History page simple avec bouton recherche
-- mdp pr page settings
-- Réduire envoi radio avec biblioteque ([RCSwitchRmt](https://github.com/Upartech/RCSwitchRmt/tree/main) qui a send non bloquant) pr code papa car ajoute pb de reactivité lors d'un appui sur bouton avec arrosage en cours (seulement besoin d'envoyer 3-5 commandes, pas besoin de le faire pdt 10ms) https://chatgpt.com/c/682541fa-2364-800e-8035-e06e5f3cb1cc
-- wifi sleep mode when no one connected
+- MAJOR → breaking changes (API changes, payload changes)
+- MINOR → new features (new sensors, UI additions)
+- PATCH → bug fixes
 
-### second
+Example for my system
 
-- Edition zones sur web
-- Garder info de "en remplissage cuve" si système s'éteint, pr continuer
-- mDNS pour accès avec http://arrosage.local
-- Captive portal en mode AP ? cf. notes
-- Captive portal qui demande de rien faire si pas sûr, avec lien pour visiter le site une fois sortie du portail
-- ajout check si capteur connectés ou valeurs ok (ajout filtres sur capteurs pour lisser valeurs)
+- WEB UI: 1.4.0
+- ESP32 API/WS: v1
+- ESP32 FW: 1.3.2
+- ESP32 HW: rev_C
 
-### lastly
+Change hardware revision when:
 
-- Afficher historique des démarrages et voir la raison (watchdog, power-on, crash, etc.)
-- utiliser les watchdog interne en plus du externe
-- avoir rappel régulier sur app pour nettoyage filtre (à valider pour l'enlever) -> à aussi avoir dans futur version intégrée dans HA
-- Pour publier des données par Internet, cf. [achat carte sim](https://www.thingsmobile.com/business/shop) et [tuto](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/) (3 façons : juste wifi esp32, `wifi esp32 + alertes par sms`, wifi esp32 uniquement pour debug serial par ex et serveur web qui communique avec esp via carte sim pour toutes les fonctionnalités)\*
+- PCB changes
+- sensors/peripherals change
+- electrical capabilities change
+- pin mappings change
 
-\*permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe
+Change firmware version when:
 
-# Features souhaitées d'un contrôleur intelligent
+- any software changes
 
-- sécurité :
+Change api/ws version when:
+
+- request/response compatibility changes
+- routes change
+- frontend behavior must adapt
+
+(same contract, just more fields)
+field missing -> not supported on this device
+null -> sensor exists but no data
+number -> valid reading
+
+## Features souhaitées d'un contrôleur intelligent
+
+- Sécurité :
   - détection du débit (comme ça message erreur au cas où pompe arrosage ne s'allume pas, tuyau est pincé/débranché, vanne est bloqué, plusieurs vannes sont ouvertes, ...)
-  - freeze prevention (températures proches de 0°C)
+  - freeze prevention (températures proches de 0°C, donc à partir de températures < 3°C )
   - water hammer reduction (by opening next valve 10s prior to its scheduled time, and each valve a few seconds after the other)
-- plannificateur optimal :
+
+- Plannificateur optimal :
   - utilise les secondes au lieu des minutes
   - cycle and soak
+  - priority execution (with "time sensitive" checkbox, using it will prioritize it over others)
   - skip by rain/humidity sensor
   - skip by chance of rain (from internet local weather)
   - scheduling on sunrise/sunset
   - seasonal adjustment
-- praticité :
+
+- Praticité :
   - enable/disable zone
   - skip/delay for x days manually
   - synchro de l’heure avec horloge internet (inclus le décalage automatique de l’horaire)
@@ -111,9 +90,67 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
   - arrosage à la main avec tuyau souple et pistolet (utilise une vanne 12v en plus)
   - intégration dans Home Assistant par msgs MQTT (pour voir état des capteurs dont niveau cuve et avoir des notifs en cas d’erreur, d'inactivité, ...)
 
+## Recommandation alimentation
+
+Recommended setup (solid and common approach), use:
+
+- External 12 V DC adapter (brick style) outside the box
+- A buck converter (12 V → 5 V) for the Pi and optionally another regulated rail if needed inside the box
+
+Why 12 V instead of 5 V directly:
+
+- Handles cable losses much better over ~1 m
+- Lets you power valves, relays, or pumps directly if needed
+- More robust overall system design
+
+Why external power is the better choice:
+
+- A watering system will live in a humid or even wet environment. Keeping 230 V AC out of the enclosure massively reduces risk.
+- Thermal stability for the Pi. The Pi already runs warm, adding an internal AC-DC supply (like a Mean Well module) increases internal temperature and can lead to throttling or instability.
+- Noise isolation. Pumps/valves switching can introduce electrical noise. Externalizing the PSU helps keep the sensitive logic side cleaner.
+- Simpler enclosure design. No need to worry about: mains isolation distances, grounding, fire safety, ventilation for a PSU
+
+## Partie eau
+
+Pressostat/manomètre au plus proche du ballon (sinon pression plus instable à cause des pertes de charge liés au coude du flexible tressé)
+
+Montage clapet et filtre côté refoulement
+
+Distance pour capteur débit (3-10x amont 2-4x aval)
+
+Eviter coudes
+
+Avoir flexible en sortie de pompe
+
+Si besoin de plus de débit, aller sur un embout rapide grand débit (pour Noémie par exemple)
+
+## PCB
+
+Use ferrite bead smd, to suppress high-frequency electromagnetic interference (EMI)
+
+## Solution avec contrôleur existant
+
+Besoin des 3 systèmes suivants :
+
+- Si puit trop loin des zones à arroser, ajouter un système automatique DIY de remplissage de la cuve avec détection arrivée d'eau et niveau + désactivation master valve ou pompe arrosage si erreur (cuve vide ou problème de capteur par exemple)\
+  &#8594; Permet aussi de recevoir une erreur de débit faible de la part du contrôleur\
+  &#8594; Avec intégration dans Home Assistant par msgs MQTT (pour voir niveau cuve et avoir notif en cas d’erreur)
+- Contrôleur intelligent utilisant les secondes
+- Ajout arrosage avec tuyau manuel si besoin avec système indépendant du contrôleur intelligent, qui comporte une vanne supplémentaire (à placer en amont du capteur de débit utilisé par le contrôleur, pour ne pas déclencher de fuite par exemple) et un bouton qui déclenche relai en parallèle pour allumer la pompe et qui déclenche un compte à rebours de 30min avec possibilité de réappuyer pour le remettre à 30min. Le bouton se trouve au niveau du branchement du tuyau avec un affichage à segments qui indique le temps restant (étiquette avec texte qui dit « purger le tuyau après utilisation » ou « ranger le tuyau après utilisation »)
+
 # Possible improvements
 
 ## Very useful
+
+### Internet connectiviy
+
+Pour publier des données par Internet, cf. [achat carte sim](https://www.thingsmobile.com/business/shop) et [tuto](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/)
+
+3 façons de faire :
+
+- juste wifi esp32,
+- `wifi esp32 + alertes par sms` <- préference pour celle-ci
+- wifi esp32 uniquement pour debug serial par ex et serveur web qui communique avec esp via carte sim pour toutes les fonctionnalités (permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe)
 
 ### Water tank level (replacement)
 
