@@ -1,0 +1,3 @@
+access point ss mdp avec captive portal qui indique que le site web à visiter dans un navigateur au choix est sur l'écran
+OU
+access point avec mdp avec mdp sur écran puis captive portal qui redirige sur navigateur par défaut
