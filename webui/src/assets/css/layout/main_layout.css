@@ -44,6 +44,9 @@ body {
     opacity: 0;
     /* prevent clicks when hidden */
     pointer-events: none;
+
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
 }
 
 #wrapper #overlay.show {
