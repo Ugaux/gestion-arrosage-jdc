@@ -35,6 +35,11 @@ h6 {
     font-family: Roboto, sans-serif;
 }
 
+html {
+    scrollbar-gutter: auto;
+    overflow-y: auto;
+}
+
 body {
     background-color: var(--color-base-200);
     color: var(--color-base-content);
@@ -42,5 +47,12 @@ body {
 
 .no-select {
     pointer-events: none;
+    /* Safari and older Chrome */
+    -webkit-user-select: none;
+    /* Firefox */
+    -moz-user-select: none;
+    /* Internet Explorer/Edge */
+    -ms-user-select: none;
+    /* Standard */
     user-select: none;
 }
