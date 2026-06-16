@@ -96,6 +96,7 @@
     </div>
     <!--x-cloak -->
 
+    <div id="header">
     <!-- TOP NAVBAR -->
     <div id="navbar" class="w3-padding">
       <div class="left-side">
@@ -119,6 +120,22 @@
           @click="$store.router.openSettings()">
           <i class="fa-solid fa-cog"></i>
         </button>
+        </div>
+      </div>
+
+      <!-- BANNER -->
+      <div x-banner class="banner">
+        <div data-inner>
+          <i data-icon></i>
+          <div class="banner-content" data-content></div>
+          <div class="banner-actions">
+            <a class="banner-btn" data-link href="#" style="display:none;">
+            </a>
+            <button data-close @click="$store.banner.close()" class="w3-button way-btn" style="display:none;">
+              <i class="w3-small fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
