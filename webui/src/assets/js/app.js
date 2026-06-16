@@ -13,10 +13,10 @@ import registerValves from "./stores/valveStore.js";
 import registerWatering from "./stores/wateringStore.js";
 import registerZones from "./stores/zoneStore.js";
 
-import themeHandler from "./components/themeHandler.js";
-import manualDurationController from "./components/manualDurationController.js";
-import tooltip from "./components/tooltip.js";
 import registerBanner from "./components/banner.js";
+import registerManualWateringDurationInput from "./components/manualWateringDurationInput.js";
+import registerThemeManager from "./components/themeManager.js";
+import registerTooltip from "./components/tooltip.js";
 
 document.addEventListener("alpine:init", () => {
   // ------------ CORE ------------
@@ -34,8 +34,8 @@ document.addEventListener("alpine:init", () => {
   registerZones(Alpine);
 
   // --------- COMPONENTS ---------
-  Alpine.data("themeHandler", themeHandler);
-  Alpine.data("manualDurationController", manualDurationController);
-  Alpine.directive("tooltip", tooltip);
   registerBanner(Alpine);
+  registerManualWateringDurationInput(Alpine);
+  registerThemeManager(Alpine);
+  registerTooltip(Alpine);
 });

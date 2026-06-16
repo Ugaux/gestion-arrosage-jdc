@@ -1,27 +1,28 @@
 /* Code inspired by https://devdojo.com/pines/docs/tooltip in "Create a Tooltip Plugin" section */
 
-export default (el, { modifiers, expression }, { evaluate, cleanup }) => {
-  let tooltipArrow = modifiers.includes("noarrow") ? false : true;
-  let tooltipPosition = "top";
-  let tooltipId =
-    "tooltip-" +
-    Date.now().toString(36) +
-    Math.random().toString(36).substring(2, 7);
-  let positions = ["top", "bottom", "left", "right"];
-  let elementPosition = getComputedStyle(el).position;
+export default (Alpine) => {
+  Alpine.directive("tooltip", (el, { modifiers, expression }, { cleanup }) => {
+    let tooltipArrow = modifiers.includes("noarrow") ? false : true;
+    let tooltipPosition = "top";
+    let tooltipId =
+      "tooltip-" +
+      Date.now().toString(36) +
+      Math.random().toString(36).substring(2, 7);
+    let positions = ["top", "bottom", "left", "right"];
+    let elementPosition = getComputedStyle(el).position;
 
-  for (let position of positions) {
-    if (modifiers.includes(position)) {
-      tooltipPosition = position;
-      break;
+    for (let position of positions) {
+      if (modifiers.includes(position)) {
+        tooltipPosition = position;
+        break;
+      }
     }
-  }
 
-  if (!["relative", "absolute", "fixed"].includes(elementPosition)) {
-    el.style.position = "relative";
-  }
+    if (!["relative", "absolute", "fixed"].includes(elementPosition)) {
+      el.style.position = "relative";
+    }
 
-  let tooltipHTML = `
+    let tooltipHTML = `
       <div
           id="${tooltipId}"
           x-data="{
@@ -71,59 +72,60 @@ export default (el, { modifiers, expression }, { evaluate, cleanup }) => {
           </div>
       </div>`;
 
-  el.dataset.tooltip = tooltipId;
+    el.dataset.tooltip = tooltipId;
 
-  let hideTimer = null;
+    let hideTimer = null;
 
-  function showTooltip() {
-    if (document.getElementById(tooltipId)) return;
+    function showTooltip() {
+      if (document.getElementById(tooltipId)) return;
 
-    el.insertAdjacentHTML("beforeend", tooltipHTML);
-    Alpine.initTree(document.getElementById(tooltipId));
-  }
-
-  function hideTooltip() {
-    clearTimeout(hideTimer);
-    hideTimer = null;
-    document.getElementById(tooltipId)?.remove();
-  }
-
-  function onPointerEnter(e) {
-    if (e.pointerType === "mouse") showTooltip();
-  }
-  function onPointerLeave(e) {
-    if (e.pointerType === "mouse") hideTooltip();
-  }
-  el.addEventListener("pointerenter", onPointerEnter);
-  el.addEventListener("pointerleave", onPointerLeave);
-
-  function onPointerDown(e) {
-    if (e.pointerType === "touch") {
-      clearTimeout(hideTimer);
-      showTooltip();
-      hideTimer = setTimeout(hideTooltip, 5000);
+      el.insertAdjacentHTML("beforeend", tooltipHTML);
+      Alpine.initTree(document.getElementById(tooltipId));
     }
-  }
-  function onGlobalPointerDown(e) {
-    if (!document.getElementById(tooltipId)) return;
 
-    if (el.contains(e.target)) return;
+    function hideTooltip() {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+      document.getElementById(tooltipId)?.remove();
+    }
 
-    hideTooltip();
-  }
-  el.addEventListener("pointerdown", onPointerDown);
-  document.addEventListener("pointerdown", onGlobalPointerDown);
+    function onPointerEnter(e) {
+      if (e.pointerType === "mouse") showTooltip();
+    }
+    function onPointerLeave(e) {
+      if (e.pointerType === "mouse") hideTooltip();
+    }
+    el.addEventListener("pointerenter", onPointerEnter);
+    el.addEventListener("pointerleave", onPointerLeave);
 
-  cleanup(() => {
-    hideTooltip();
+    function onPointerDown(e) {
+      if (e.pointerType === "touch") {
+        clearTimeout(hideTimer);
+        showTooltip();
+        hideTimer = setTimeout(hideTooltip, 5000);
+      }
+    }
+    function onGlobalPointerDown(e) {
+      if (!document.getElementById(tooltipId)) return;
 
-    el.removeEventListener("pointerenter", onPointerEnter);
-    el.removeEventListener("pointerleave", onPointerLeave);
+      if (el.contains(e.target)) return;
 
-    el.removeEventListener("pointerdown", onPointerDown);
-    document.removeEventListener("pointerdown", onGlobalPointerDown);
+      hideTooltip();
+    }
+    el.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointerdown", onGlobalPointerDown);
 
-    clearTimeout(hideTimer);
-    hideTimer = null;
+    cleanup(() => {
+      hideTooltip();
+
+      el.removeEventListener("pointerenter", onPointerEnter);
+      el.removeEventListener("pointerleave", onPointerLeave);
+
+      el.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("pointerdown", onGlobalPointerDown);
+
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    });
   });
 };
