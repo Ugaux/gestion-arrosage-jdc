@@ -29,13 +29,12 @@
     right: 0;
     bottom: 0;
     background-color: var(--color-base-300);
-    -webkit-transition: var(--theme-transition-duration);
-    transition: var(--theme-transition-duration);
+    transition:
+        background-color var(--theme-transition-duration) ease,
+        transform var(--theme-transition-duration) !important;
     -webkit-tap-highlight-color: transparent;
     border-radius: 4px;
 }
-
-
 
 .slider::before {
     position: absolute;
@@ -46,8 +45,9 @@
     bottom: 0.1875rem;
     border-radius: 4px;
     background-color: var(--color-base-content);
-    -webkit-transition: var(--theme-transition-duration);
-    transition: var(--theme-transition-duration);
+    transition:
+        background-color var(--theme-transition-duration) ease,
+        transform var(--theme-transition-duration) !important;
 }
 
 /* Allow hover on devices that can use it */
