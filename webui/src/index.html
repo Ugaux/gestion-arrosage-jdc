@@ -69,7 +69,7 @@
       <hr class="card-separator">
       <div id="settings-nav-link" class="w3-panel w3-center">
         <a href="#settings" @click="$store.ui.sidebar.close()" class="w3-button">
-          <i class="fa-solid fa-cog fa-lg"></i>&nbsp;&nbsp;Settings
+          <i class="fa-solid fa-cog fa-lg"></i>&nbsp;Settings
         </a>
       </div>
       <div class="w3-panel" id="dark-mode-div" x-data="themeManager">
@@ -97,29 +97,29 @@
     <!--x-cloak -->
 
     <div id="header">
-    <!-- TOP NAVBAR -->
-    <div id="navbar" class="w3-padding">
-      <div class="left-side">
-        <!-- Hamburger (small screens only) -->
-        <button id="hamburger-btn" class="w3-button"
-          @click="$store.router.overlayPage ? $store.router.closeSettings() : $store.ui.sidebar.open()">
-          <i x-show="!$store.router.overlayPage" class="fa-solid fa-bars"></i>
-          <i x-show="$store.router.overlayPage" class="fa-solid fa-chevron-left"></i>
-        </button>
+      <!-- TOP NAVBAR -->
+      <div id="navbar" class="w3-padding">
+        <div class="left-side">
+          <!-- Hamburger (small screens only) -->
+          <button id="hamburger-btn" class="w3-button"
+            @click="$store.router.overlayPage ? $store.router.closeSettings() : $store.ui.sidebar.open()">
+            <i x-show="!$store.router.overlayPage" class="fa-solid fa-bars"></i>
+            <i x-show="$store.router.overlayPage" class="fa-solid fa-chevron-left"></i>
+          </button>
 
-        <!-- Current page title -->
-        <span class="w3-large w3-bold" x-text="$store.router.pageTitle()">Loading...</span>
-      </div>
-      <!-- Far right: meta-level actions -->
-      <div>
-        <button class="w3-button" style="visibility: hidden;">
-          <i class="fa-solid fa-bell"></i>
-          <span class="badge">3</span>
-        </button>
-        <button id="setting-btn" class="w3-button" x-show="!$store.router.overlayPage"
-          @click="$store.router.openSettings()">
-          <i class="fa-solid fa-cog"></i>
-        </button>
+          <!-- Current page title -->
+          <span class="w3-large w3-bold" x-text="$store.router.pageTitle()">Loading...</span>
+        </div>
+        <!-- Far right: meta-level actions -->
+        <div>
+          <button class="w3-button" style="visibility: hidden;">
+            <i class="fa-solid fa-bell"></i>
+            <span class="badge">3</span>
+          </button>
+          <button id="setting-btn" class="w3-button" x-show="!$store.router.overlayPage"
+            @click="$store.router.openSettings()">
+            <i class="fa-solid fa-cog"></i>
+          </button>
         </div>
       </div>
 
@@ -158,8 +158,8 @@
                 <div id="deviceSystemCard" class="w3-panel" x-data="deviceSystemCard">
                   <div class="card-list">
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-calendar"></i>&nbsp;Date</div>
-                      <div style="display: flex;flex-direction: column; align-items: end;">
+                      <div><i class="fa-solid fa-clock"></i>&nbsp;Local Time</div>
+                      <div style="display: flex; flex-direction: column; align-items: end;">
                         <b x-text="localDate"></b>
                         <span x-text="localTime"></span>
                       </div>
@@ -189,38 +189,41 @@
                   <h5 class="card-title"><b>Watering</b></h5>
                 </header>
                 <hr class="card-separator">
-                <div class="w3-panel">
+                <div class="w3-panel" x-data="wateringCard">
                   <div class="card-list">
                     <div>
                       <div class="card-list-el">
                         <div><i class="fa-solid fa-bars-progress"></i>&nbsp;Status</div>
-                        <span id="wateringStatus" class="w3-bold">???</span>
+                        <div><i class="fa-regular" :class="wateringStatus.icon"
+                            x-show="wateringStatus.icon !== ''"></i><b class="card-value"
+                            x-text="wateringStatus.state"></b></div>
                       </div>
-                      <div class="w3-right">
-                        <div><b id="wateringLine1">???</b></div>
-                        <div id="wateringLine2">???</div>
-                        <div id="wateringLine3">???</div>
+                      <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                        <span x-text="wateringStatus.nextRun"></span>
+                        <span x-text="wateringStatus.activeValves"></span>
+                        <span x-text="lastWatered"></span>
                       </div>
                     </div>
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-sliders"></i>&nbsp;Seasonal Adj.&nbsp</div>
-                      <div><span id="seasonAdjustment" class="w3-bold">???</span>%</div>
+                      <div><i class="fa-solid fa-shower"></i>&nbsp;By Hand</div>
+                      <span class="card-value">
+                        <b x-text="byHandLabel.main"></b><span x-text="byHandLabel.suffix"></span>
+                      </span>
                     </div>
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-shower"></i>&nbsp;Hand Watering&nbsp</div>
-                      <div><span id="handWatering" class="w3-bold">???</span></div> <!-- ON/OFF, si ON timer restant-->
+                      <div><i class="fa-solid fa-bolt-lightning"></i>&nbsp;Pump</div>
+                      <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                        <b x-text="pumpStateLabel"></b>
+                        <span x-text="$store.sensors.pump.cycles + ' cycles'"></span>
+                      </div>
                     </div>
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-bolt-lightning"></i>&nbsp;Pump&nbsp</div>
-                      <div><span id="pumpState" class="w3-bold">???</span></div><!-- ON/OFF -->
+                      <div><i class="fa-solid fa-fan"></i>&nbsp;Water Flow</div>
+                      <span class="card-value"><b x-text="waterFlow"></b>&nbsp;l/min</span>
                     </div>
                     <div class="card-list-el">
-                      <div><i class="fa-solid fa-fan"></i>&nbsp;Water Flow&nbsp</div>
-                      <div><span id="flowSensor" class="w3-bold">???</span>&nbsp;l/min</div>
-                    </div>
-                    <div class="card-list-el">
-                      <div><i class="fa-solid fa-droplet"></i>&nbsp;Soil Moisture&nbsp</div>
-                      <div><span id="moistureSensor" class="w3-bold">???</span>%</div>
+                      <div><i class="fa-solid fa-droplet"></i>&nbsp;Soil Moisture</div>
+                      <span class="card-value"><b x-text="soilMoisture"></b>%</span>
                     </div>
                   </div>
                 </div>
@@ -234,15 +237,19 @@
                   <h5 class="card-title"><b>Water Tank</b></h5>
                 </header>
                 <hr class="card-separator">
-                <div class="w3-panel">
+                <div class="w3-panel" x-data="waterTankCard">
                   <div class="card-list">
                     <div class="card-list-el">
                       <div><i class="fa-solid fa-water"></i>&nbsp;Level</div>
-                      <span id="waterTankLevel" class="w3-bold">???</span> <!-- EMPTY/FULL -->
+                      <b class="card-value" x-text="levelLabel"></b>
                     </div>
                     <div class="card-list-el">
                       <div><i class="fa-solid fa-fill-drip"></i>&nbsp;State</div>
-                      <span id="waterTankState" class="w3-bold">???</span> <!-- FILLING/EMPTYING -->
+                      <b class="card-value" x-text="stateLabel"></b>
+                    </div>
+                    <div class="card-list-el">
+                      <div><i class="fa-solid fa-hourglass-end"></i>&nbsp;Last fill</div>
+                      <span><b class="card-value" x-text="lastFillLabel"></b>&nbsp;ago</span>
                     </div>
                   </div>
                 </div>
@@ -254,7 +261,7 @@
         <!-- SCHEDULE PAGE -->
         <section x-show="$store.router.currentPage === 'schedule'">
           <div class="w3-content">
-
+            <div x-show="$store.zones.items.length === 0" class="w3-panel">There are no zones.</div>
             <template x-for="zone in $store.zones.items" :key="zone.id">
 
               <div class="w3-panel">
@@ -278,7 +285,7 @@
                             </a>
                           </div>
                           <div class="w3-small">
-                            <b> <i :id="'lbl_next_'+way.name">&nbsp;Next run scheduled on ???</i> </b>
+                            <b>Next run scheduled on <i :id="'lbl_next_'+way.name">???</i></b>
                           </div>
                         </div>
 
@@ -299,9 +306,9 @@
                                 </label>
                               </div>
 
-                              <span class="w3-small">Starts&nbsp;at&nbsp;<b x-text="schedule.time"></b>&nbsp;for&nbsp;<b
-                                  x-text="schedule.duration"></b>&nbsp;<b>min</b>&nbsp;on&nbsp;<b
-                                  x-text="schedule.freq"></b>
+                              <span class="w3-small" x-tash="schedule.time, schedule.duration, schedule.freq">
+                                Starts at <b>{schedule.time}</b> for <b>{schedule.duration} min</b> on
+                                <b>{schedule.freq}</b>
                               </span>
                             </div>
                           </template>
@@ -319,7 +326,7 @@
         <section x-show="$store.router.currentPage === 'manual'">
 
           <div class="w3-content">
-
+            <div x-show="$store.zones.items.length === 0" class="w3-panel">There are no zones.</div>
             <template x-for="zone in $store.zones.items" :key="zone.id">
 
               <div class="w3-panel">
@@ -337,17 +344,18 @@
                           <b x-text="way.shortName"></b>
 
                           <div style="display: flex; align-items: center; gap:15px">
-                            <b x-show="way.manual.started"
-                              x-text="Math.floor(way.manual.timeLeft / 60) + ' min ' + String(way.manual.timeLeft % 60) + ' s'"></b>
+                            <span x-show="way.manual.started"><b
+                                x-text="formatDuration(way.manual.timeLeft)"></b>&nbsp;left</span>
                             <div x-show="!way.manual.started" x-data="manualWateringDurationInput(way.id)">
                               <div style="display: flex; gap: 4px;">
                                 <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease">
                                   <i class="fa-solid fa-minus fa-xs"></i>
                                 </button>
-                              <div class="input-wrapper">
+                                <div class="input-wrapper">
                                   <input class="input-field" :id="'m_duration_' + way.name" type="number"
                                     x-model.lazy="duration" @focus="$event.target.select()"
-                                    @blur="setDuration($event.target.value)" @keydown.enter="$event.target.blur()">
+                                    @blur="setDuration($event.target.value, true)"
+                                    @keydown.enter="$event.target.blur()">
                                   <span class="input-unit">min</span>
                                 </div>
                                 <button :disabled="duration >= max" class="w3-button way-btn" @click="increase">
@@ -391,7 +399,7 @@
       <section x-show="$store.router.overlayPage === 'settings'">
 
         <!-- Content -->
-        <div class="w3-content settings-page-content">
+        <div class="w3-content settings-page-content" x-data="settingsPage">
           <div class="w3-panel">
             <div class="w3-card w3-round-large">
               <header class="w3-container w3-center">
@@ -400,18 +408,19 @@
               <hr class="card-separator">
               <div class="w3-panel">
                 <div class="card-list">
-                  <template x-for="relay in $store.valves.items" :key="relay.id">
+                  <template x-for="valve in $store.valves.items" :key="valve.name">
                     <div style="display: flex; justify-content: space-between;">
                       <div style="display: flex; align-items: center; gap: 20px;">
-                        <b>Valve&nbsp;#<span x-text="relay.id"></span></b>
-                        <span x-text="relay.name"></span>
+                        <b>Valve&nbsp;#<span x-text="valve.index"></span></b>
+                        <span x-text="valve.name"></span>
                       </div>
                       <label class='switch'>
-                        <input name='checkbox_test' type='checkbox' :id="'btn_' + relay.id"
-                          x-model="relay.is_checked"><span class='slider round'></span>
+                        <input name='checkbox_test' type='checkbox' :id="'btn_' + valve.index"
+                          x-model="valve.is_checked"><span class='slider round'></span>
                       </label>
                     </div>
                   </template>
+                  <div x-show="$store.valves.items.length === 0">None</div>
                 </div>
               </div>
             </div>
@@ -425,15 +434,45 @@
               <hr class="card-separator">
               <div class="w3-panel">
                 <div class="card-list">
-                  <div class="card-list-el">ID&nbsp;<span id="deviceID" class="w3-bold">???</span></div>
-                  <!-- esp32-a1b2c3 -->
-                  <div class="card-list-el">Runtime&nbsp;<span id="firmwareVersion" class="w3-bold">???</span></div>
-                  <!--1.0.0-->
-                  <div class="card-list-el">Reset(s)&nbsp;<span id="apiVersion" class="w3-bold">???</span></div>
-                  <!--v1-->
-                  <div class="card-list-el">Last Reset Reason&nbsp;<span id="hardwareVersion" class="w3-bold">???</span>
+                  <div class="card-list-el">
+                    <span>ID</span>
+                    <b class="card-value" x-text="$store.deviceInfo.id"></b>
                   </div>
-                  <!--rev_a-->
+                  <div class="card-list-el">
+                    <span>Commissioning date</span>
+                    <b class="card-value" x-text="commissioningDate"></b>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Reset(s)</span>
+                    <div class="card-value">
+                      <b x-text="$store.health.resets.total"></b>
+                      <span x-text="lastResetReason"></span>
+                    </div>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Last command received</span>
+                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                      <b x-text="lastCmdReceived.elapsedTime"></b>
+                      <span x-text="lastCmdReceived.name"></span>
+                    </div>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Schedule last modified</span>
+                    <b class="card-value" x-text="scheduleLastModified"></b>
+                  </div>
+                  <hr style="margin:0px">
+                  <div class="card-list-el">
+                    <span>Runtime</span>
+                    <b class="card-value" x-text="deviceRuntime"></b>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Heap</span>
+                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                      <span>Frag: <b x-text="$store.health.heap.fragmentation"></b>%</span>
+                      <span>Largest: <b x-text="$store.health.heap.largestFreeBlock"></b> KB</span>
+                      <span>Min free: <b x-text="$store.health.heap.minFreeSize"></b> KB</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -447,11 +486,27 @@
               <hr class="card-separator">
               <div class="w3-panel">
                 <div class="card-list">
-                  <div class="card-list-el">Manual Duration Range
-                    <div><span id="wateringManualDuration" class="w3-bold">???-???</span>&nbsp;min</div>
+                  <div class="card-list-el">
+                    <span>Manual Watering Duration</span>
+                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                      <b
+                        x-text="'From '+$store.deviceCfg.manualWateringDuration.min+' to '+$store.deviceCfg.manualWateringDuration.max+' min'"></b>
+                      <span x-text="'Increments of '+$store.deviceCfg.manualWateringDuration.step"></span>
+                      <span x-text="'Defaults to '+$store.deviceCfg.manualWateringDuration.defaultDuration"></span>
+                    </div>
                   </div>
-                  <div class="card-list-el">Soil Moisture Threshold
-                    <div><span id="deviceID" class="w3-bold">???</span>%</div>
+                  <div class="card-list-el">
+                    <span>Seasonal Adjustement</span>
+                    <span class="card-value"><b x-text="seasonalAdj"></b>%</span>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Soil Moisture Threshold</span>
+                    <span class="card-value"><b x-text="soilMoistureThreshold"></b>%</span>
+                  </div>
+                  <hr style="margin:0px">
+                  <div class="w3-small card-list-el">
+                    <span>Last modified</span>
+                    <b class="card-value" x-text="deviceCfgLastModified"></b>
                   </div>
                 </div>
               </div>
@@ -466,13 +521,22 @@
               <hr class="card-separator">
               <div class="w3-panel">
                 <div class="card-list">
-                  <div class="card-list-el">Web UI&nbsp;<span id="webUIVersion" class="w3-bold">???</span></div>
-                  <!--1.0.0-->
-                  <div class="card-list-el">Firmware&nbsp;<span id="firmwareVersion" class="w3-bold">???</span></div>
-                  <!--1.0.0-->
-                  <div class="card-list-el">API&nbsp;<span id="apiVersion" class="w3-bold">???</span></div> <!--v1-->
-                  <div class="card-list-el">Hardware&nbsp;<span id="hardwareVersion" class="w3-bold">???</span></div>
-                  <!--rev_a-->
+                  <div class="card-list-el">
+                    <span>Web UI</span>
+                    <b class="card-value">%VERSION%</b>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Firmware</span>
+                    <b class="card-value" x-text="$store.deviceInfo.versions.firmware"></b>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Protocol</span>
+                    <b class="card-value" x-text="$store.deviceInfo.versions.protocol"></b>
+                  </div>
+                  <div class="card-list-el">
+                    <span>Hardware</span>
+                    <b class="card-value" x-text="$store.deviceInfo.versions.hardware"></b>
+                  </div>
                 </div>
               </div>
             </div>

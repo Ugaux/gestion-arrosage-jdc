@@ -70,3 +70,12 @@
   margin-top: 16px !important;
   margin-bottom: 16px !important;
 }
+
+.card-value {
+  opacity: 0.85;
+}
+
+.w3-content {
+  /* to force last w3-panel to use it's bottom margin of 16px */
+  padding-bottom: 1px;
+}
