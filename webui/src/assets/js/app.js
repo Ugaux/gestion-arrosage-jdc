@@ -1,10 +1,17 @@
-import router from "./core/router.js";
-import ws from "./core/ws.js";
+import { formatDuration } from "./core/formatting.js";
+window.formatDuration = formatDuration;
 
-import ui from "./states/ui.js";
-import zones from "./states/zones.js";
-import valves from "./states/valves.js";
-import esp32cfg from "./states/esp32cfg.js";
+import registerRouter from "./core/router.js";
+import registerWebsocket from "./core/ws.js";
+
+import registerDeviceCfg from "./stores/deviceCfgStore.js";
+import registerDeviceInfo from "./stores/deviceInfoStore.js";
+import registerHealth from "./stores/healthStore.js";
+import registerSensors from "./stores/sensorStore.js";
+import registerUI from "./stores/uiStore.js";
+import registerValves from "./stores/valveStore.js";
+import registerWatering from "./stores/wateringStore.js";
+import registerZones from "./stores/zoneStore.js";
 
 import themeHandler from "./components/themeHandler.js";
 import manualDurationController from "./components/manualDurationController.js";
@@ -12,14 +19,18 @@ import tooltip from "./components/tooltip.js";
 
 document.addEventListener("alpine:init", () => {
   // ------------ CORE ------------
-  Alpine.store("router", router);
-  Alpine.store("ws", ws);
+  registerRouter(Alpine);
+  registerWebsocket(Alpine);
 
-  // ----------- STATES -----------
-  Alpine.store("ui", ui);
-  Alpine.store("zones", zones);
-  Alpine.store("valves", valves);
-  Alpine.store("esp32cfg", esp32cfg);
+  // ----------- STORES -----------
+  registerDeviceCfg(Alpine);
+  registerDeviceInfo(Alpine);
+  registerHealth(Alpine);
+  registerSensors(Alpine);
+  registerUI(Alpine);
+  registerValves(Alpine);
+  registerWatering(Alpine);
+  registerZones(Alpine);
 
   // --------- COMPONENTS ---------
   Alpine.data("themeHandler", themeHandler);

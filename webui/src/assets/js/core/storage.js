@@ -1,13 +1,27 @@
-export function syncJsonLocalStorage(key, callback) {
-  window.addEventListener("storage", (e) => {
-    if (e.key !== key) return;
-    callback(e.newValue ? JSON.parse(e.newValue) : null);
-  });
+export function readJsonLocalStorage(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "{}");
+  } catch {
+    return {};
+  }
 }
 
-export function syncStringLocalStorage(key, callback) {
-  window.addEventListener("storage", (e) => {
-    if (e.key !== key) return;
-    callback(e.newValue); // raw string (no parsing)
-  });
+export function subscribeToLocalStorageJson(key, callback) {
+  function handler(event) {
+    if (event.storageArea !== localStorage || event.key !== key) return;
+    callback(event.newValue ? JSON.parse(event.newValue) : null);
+  }
+
+  window.addEventListener("storage", handler);
+  return () => removeEventListener("storage", handler);
+}
+
+export function subscribeToLocalStorageString(key, callback) {
+  function handler(event) {
+    if (event.storageArea !== localStorage || event.key !== key) return;
+    callback(event.newValue); // raw string (no parsing)
+  }
+
+  window.addEventListener("storage", handler);
+  return () => removeEventListener("storage", handler);
 }
