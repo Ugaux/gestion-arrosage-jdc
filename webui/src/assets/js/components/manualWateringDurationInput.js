@@ -28,6 +28,8 @@ export default (Alpine) => {
     min: null,
     max: null,
     step: null,
+    defaultDuration: null,
+
     duration: null,
 
     unsubStorage: null,
@@ -41,7 +43,8 @@ export default (Alpine) => {
         () =>
           `${Alpine.store("deviceCfg").manualWateringDuration.min}|` +
           `${Alpine.store("deviceCfg").manualWateringDuration.max}|` +
-          `${Alpine.store("deviceCfg").manualWateringDuration.step}`,
+          `${Alpine.store("deviceCfg").manualWateringDuration.step}` +
+          `${Alpine.store("deviceCfg").manualWateringDuration.defaultDuration}`,
         (v) => {
           console.log("watch", v);
           this.syncFromLocalStorage();
@@ -69,6 +72,7 @@ export default (Alpine) => {
       this.min = cfg.min;
       this.max = cfg.max;
       this.step = cfg.step;
+      this.defaultDuration = cfg.defaultDuration;
 
       // Re-clamp whatever duration is already stored (or fall back to default).
       const value = manualWateringDurationService.get(
@@ -81,11 +85,14 @@ export default (Alpine) => {
     },
 
     setDuration(value, save = false) {
-      const v = Number(value);
-      const clamped = isNaN(v)
-        ? this.min
-        : Math.max(this.min, Math.min(this.max, v));
-      this.duration = Math.round(clamped);
+      if (value === "") this.duration = this.defaultDuration;
+      else {
+        const v = Number(value);
+        const clamped = isNaN(v)
+          ? this.min
+          : Math.max(this.min, Math.min(this.max, v));
+        this.duration = Math.round(clamped);
+      }
 
       if (PRINT_DEBUG)
         console.log(

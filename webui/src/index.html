@@ -352,7 +352,10 @@
                                   <i class="fa-solid fa-minus fa-xs"></i>
                                 </button>
                                 <div class="input-wrapper">
-                                  <input class="input-field" :id="'m_duration_' + way.name" type="number"
+                                  <input class="input-field" :id="'m_duration_' + way.name" type="text"
+                                    inputmode="numeric" pattern="[0-9]*"
+                                    @input="$event.target.value = $event.target.value.replace(/\D/g, '')"
+                                    :placeholder="$store.deviceCfg.manualWateringDuration.defaultDuration"
                                     x-model.lazy="duration" @focus="$event.target.select()"
                                     @blur="setDuration($event.target.value, true)"
                                     @keydown.enter="$event.target.blur()">
