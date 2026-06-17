@@ -40,4 +40,6 @@ export default (Alpine) => {
       });
     },
   });
+
+  Alpine.magic("sidebar", () => Alpine.store("ui").sidebar);
 };

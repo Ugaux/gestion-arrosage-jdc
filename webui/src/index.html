@@ -42,18 +42,18 @@
   </div>
 
   <!-- SIDEBAR -->
-  <div id="sidebar" x-bind:class="{ open: $store.ui.sidebar.isOpen }">
+  <div id="sidebar" x-bind:class="{ open: $sidebar.isOpen }">
 
     <!-- HEADER -->
     <div>
-      <button id="close-btn" @click="$store.ui.sidebar.close()" class="w3-button"><i
+      <button id="close-btn" @click="$sidebar.close()" class="w3-button"><i
           class="w3-small fa-solid fa-xmark"></i></button>
       <!-- BRANDING -->
       <div id="branding" class="w3-panel">
-        <a href="#home" @click="$store.ui.sidebar.close()" class="logo-container" aria-label="Company logo">
+        <a href="#home" @click="$sidebar.close()" class="logo-container" aria-label="Company logo">
           <span class="logo-mask"></span>
         </a>
-        <a href="#home" @click="$store.ui.sidebar.close()" id="brand">
+        <a href="#home" @click="$sidebar.close()" id="brand">
           <div class="w3-xlarge w3-bold">Arrosage</div>
           <div class="w3-opacity w3-small">Jardin du Ciel</div>
         </a>
@@ -62,16 +62,16 @@
       <!--NAVIGATION -->
       <div class="w3-panel">
         <div id="nav-menu">
-          <a href="#home" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+          <a href="#home" @click="$sidebar.close()" class="w3-button nav-link">
             <i class="fa-regular fa-house fa-lg"></i>Home
           </a>
-          <a href="#schedule" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+          <a href="#schedule" @click="$sidebar.close()" class="w3-button nav-link">
             <i class="fa-regular fa-calendar fa-lg"></i>Schedule
           </a>
-          <a href="#manual" @click="$store.ui.sidebar.close()" class="w3-button nav-link">
+          <a href="#manual" @click="$sidebar.close()" class="w3-button nav-link">
             <i class="fa-regular fa-circle-play fa-lg"></i>Manual
           </a>
-          <a href="#history" @click="$store.ui.sidebar.close()" class="w3-button nav-link" style="display: none;">
+          <a href="#history" @click="$sidebar.close()" class="w3-button nav-link" style="display: none;">
             <i class="fa-regular fa-clock fa-lg"></i>History
           </a>
         </div>
@@ -87,7 +87,7 @@
       </div>
       <hr class="card-separator">
       <div id="settings-nav-link" class="w3-panel w3-center">
-        <a href="#settings" @click="$store.ui.sidebar.close()" class="w3-button">
+        <a href="#settings" @click="$sidebar.close()" class="w3-button">
           <i class="fa-solid fa-cog fa-lg"></i>&nbsp;Settings
         </a>
       </div>
@@ -111,7 +111,7 @@
   <div id="wrapper">
 
     <!-- OVERLAY (small screens only) -->
-    <div id="overlay" :class="{ show: $store.ui.sidebar.isOpen }" @click="$store.ui.sidebar.close()">
+    <div id="overlay" :class="{ show: $sidebar.isOpen }" @click="$sidebar.close()">
     </div>
     <!--x-cloak -->
 
@@ -121,7 +121,7 @@
         <div class="left-side">
           <!-- Hamburger (small screens only) -->
           <button id="hamburger-btn" class="w3-button"
-            @click="$store.router.overlayPage ? $store.router.closeSettings() : $store.ui.sidebar.open()">
+            @click="$store.router.overlayPage ? $store.router.closeSettings() : $sidebar.open()">
             <i x-show="!$store.router.overlayPage" class="fa-solid fa-bars"></i>
             <i x-show="$store.router.overlayPage" class="fa-solid fa-chevron-left"></i>
           </button>
