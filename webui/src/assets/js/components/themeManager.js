@@ -1,25 +1,5 @@
 import { subscribeToLocalStorageString } from "../core/storage.js";
-
-const FALLBACK_DURATION_MS = 5000;
-
-function parseTransitionDuration() {
-  const rawDuration = getComputedStyle(document.documentElement)
-    .getPropertyValue("--theme-transition-duration")
-    .trim();
-
-  const duration = rawDuration.endsWith("ms")
-    ? parseFloat(rawDuration)
-    : parseFloat(rawDuration) * 1000;
-
-  if (!rawDuration) return FALLBACK_DURATION_MS;
-
-  const value = parseFloat(rawDuration);
-  return isNaN(value)
-    ? FALLBACK_DURATION_MS
-    : rawDuration.endsWith("ms")
-      ? value
-      : value * 1000;
-}
+import { parseCssDurationVar } from "../core/utilities.js";
 
 export default (Alpine) => {
   Alpine.data("themeManager", () => ({
@@ -80,7 +60,7 @@ export default (Alpine) => {
       this._timeout = setTimeout(() => {
         document.documentElement.classList.remove("theme-switching");
         document.body.classList.remove("no-select");
-      }, parseTransitionDuration());
+      }, parseCssDurationVar("--theme-transition-duration"));
     },
 
     destroy() {
