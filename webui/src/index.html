@@ -22,6 +22,25 @@
 
 <body x-data x-cloak>
 
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" :class="[ containerClass(), positionClass() ]" x-data="toastContainer">
+    <template x-for="toast in items" :key="toast.id">
+      <div class="toast blurred" :class="[ toastTypeClass(toast.type), toast.leaving && toastLeaveClass() ]"
+        x-toast="toast">
+        <div class="toast-content">
+          <i class="fa-solid" :class="iconClass(toast.type)"></i>
+          <div class="toast-content-msg">
+            <span class="toast-title" x-text="toast.content"></span>
+            <span x-show="toast.description" class="toast-description w3-small" x-text="toast.description"></span>
+          </div>
+        </div>
+        <button @click="close(toast.id)" class="toast-close-btn">
+          <i class="w3-small fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </template>
+  </div>
+
   <!-- SIDEBAR -->
   <div id="sidebar" x-bind:class="{ open: $store.ui.sidebar.isOpen }">
 

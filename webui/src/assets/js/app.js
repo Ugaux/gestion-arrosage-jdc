@@ -18,6 +18,7 @@ import registerDeviceSystemCard from "./components/deviceSystemCard.js";
 import registerManualWateringDurationInput from "./components/manualWateringDurationInput.js";
 import registerSettingsPage from "./components/settingsPage.js";
 import registerThemeManager from "./components/themeManager.js";
+import registerToast from "./components/toast.js";
 import registerTooltip from "./components/tooltip.js";
 import registerWateringCard from "./components/wateringCard.js";
 import registerWaterTankCard from "./components/waterTankCard.js";
@@ -43,6 +44,7 @@ document.addEventListener("alpine:init", () => {
   registerManualWateringDurationInput(Alpine);
   registerSettingsPage(Alpine);
   registerThemeManager(Alpine);
+  registerToast(Alpine);
   registerTooltip(Alpine);
   registerWateringCard(Alpine);
   registerWaterTankCard(Alpine);

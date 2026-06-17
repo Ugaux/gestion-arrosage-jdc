@@ -17,5 +17,6 @@
 @import './components/deviceSystemCard.css';
 @import './components/tooltip.css';
 @import './components/banner.css';
+@import './components/toast.css';
 
 @import './core/utilities.css';
