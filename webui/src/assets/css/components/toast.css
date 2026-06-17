@@ -2,8 +2,11 @@
    POSITIONING CONTAINERS
 ========================= */
 
-.toast-container {
+:root {
     --toast-animation-duration: 500ms;
+}
+
+.toast-container {
 
     z-index: 9999;
     position: fixed;

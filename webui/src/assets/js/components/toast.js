@@ -1,6 +1,7 @@
 /* Code inspired by https://dev.to/zaxwebs/toast-notifications-with-alpine-js-tailwind-css-lpc for logic and https://daisyui.com/components/toast/ with https://daisyui.com/components/alert/ for looks */
 
 import { AppCfg } from "../core/appCfg.js";
+import { parseCssDurationVar } from "../core/utilities.js";
 
 const MAX_TOASTS = 4;
 const POSITION = "bottom-right";
@@ -27,6 +28,8 @@ function createToastStore() {
   return {
     items: [],
 
+    animationDuration: parseCssDurationVar("--toast-animation-duration"),
+
     show(content, options = {}) {
       const toast = {
         content,
@@ -34,7 +37,8 @@ function createToastStore() {
         description: options.description ?? "",
         duration: options.duration ?? DEFAULT_DURATION,
 
-        id: crypto.randomUUID(),
+        // For id -> crypto.randomUUID() only available in https or localhost http
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         leaving: false,
       };
 
@@ -57,7 +61,12 @@ function createToastStore() {
 
       clearTimeout(toast.timer);
       toast.timer = null;
+
       toast.leaving = true;
+      // ensure DOM update happens before removal
+      requestAnimationFrame(() => {
+        setTimeout(() => this.remove(id), this.animationDuration + 30);
+      });
     },
 
     remove(id) {
@@ -121,15 +130,21 @@ function createToastDirective(el, { expression }, { evaluate }) {
     : "toast-enter-top";
   el.classList.add(toastEnterClass);
 
+  void el.offsetWidth;
+
   requestAnimationFrame(() => {
     el.classList.remove(toastEnterClass);
   });
 
-  const handleTransition = () => {
+  /* 
+  // OLD way of removing element from DOM, based on opacity transition ending
+  // Less reliable than a timeout in close, base on CSS transition duration
+  const handleTransition = (event) => {
+    if (event.propertyName !== "opacity") return;
     if (toast.leaving) {
       Alpine.store("toast").remove(toast.id);
     }
   };
-
   el.addEventListener("transitionend", handleTransition);
+  */
 }

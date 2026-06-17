@@ -25,7 +25,7 @@
   <!-- TOAST CONTAINER -->
   <div class="toast-container" :class="[ containerClass(), positionClass() ]" x-data="toastContainer">
     <template x-for="toast in items" :key="toast.id">
-      <div class="toast blurred" :class="[ toastTypeClass(toast.type), toast.leaving && toastLeaveClass() ]"
+      <div class="toast blurred" :class="[ toastTypeClass(toast.type), toast.leaving ? toastLeaveClass() : '' ]"
         x-toast="toast">
         <div class="toast-content">
           <i class="fa-solid" :class="iconClass(toast.type)"></i>
