@@ -79,3 +79,8 @@
   /* to force last w3-panel to use it's bottom margin of 16px */
   padding-bottom: 1px;
 }
+
+.blurred {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}

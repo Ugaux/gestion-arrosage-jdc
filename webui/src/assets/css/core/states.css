@@ -1,0 +1,19 @@
+.info-state {
+    background-color: color-mix(in srgb, var(--color-info) 50%, transparent);
+    color: var(--color-info-content);
+}
+
+.success-state {
+    background-color: color-mix(in srgb, var(--color-success) 50%, transparent);
+    color: var(--color-success-content);
+}
+
+.warning-state {
+    background-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
+    color: var(--color-warning-content);
+}
+
+.error-state {
+    background-color: color-mix(in srgb, var(--color-error) 55%, transparent);
+    color: var(--color-error-content);
+}

@@ -1,5 +1,6 @@
 /* Code inspired by https://pinemix.com/components/banner for logic and https://daisyui.com/components/alert/ for looks */
 
+import { AppCfg } from "../core/appCfg.js";
 import { formatDuration } from "../core/formatting.js";
 
 function setBannerState(b) {
@@ -7,7 +8,6 @@ function setBannerState(b) {
 
   const ws = Alpine.store("ws");
   if (!ws.server.reachable) {
-    console.log(ws.now.getSeconds());
     b.show(
       "Device unreachable, all actions disabled (" +
         formatDuration(
@@ -54,14 +54,14 @@ export default (Alpine) => {
     content: "",
     link: "",
     linkText: "",
-    // dismissible: false,
+    dismissible: false,
 
     show(content, options = {}) {
       this.content = content;
-      this.type = options.type || "info";
+      this.type = options.type || "info"; // info, success, warning or error
       this.linkText = options.linkText || "Learn more";
       this.link = options.link || "";
-      // this.dismissible = options.dismissible || false;
+      this.dismissible = options.dismissible || false;
       this.open = true;
     },
 
@@ -69,6 +69,8 @@ export default (Alpine) => {
       this.open = false;
     },
   });
+
+  Alpine.magic("banner", () => Alpine.store("banner"));
 
   Alpine.directive("banner", (el) => {
     let lastType = null;
@@ -87,21 +89,14 @@ export default (Alpine) => {
       else if (b.type === "warning") textType = "Warning: ";
       el.querySelector("[data-content]").textContent = textType + b.content;
 
-      const ICONS = {
-        alert: "fa-circle-info",
-        info: "fa-circle-info",
-        success: "fa-circle-check",
-        warning: "fa-triangle-exclamation",
-        error: "fa-circle-xmark",
-      };
       if (b.type !== lastType) {
         const icon = el.querySelector("[data-icon]");
-        icon.className = "fa-xl fa-solid " + ICONS[b.type];
+        icon.className = "fa-xl fa-solid " + AppCfg.icons[b.type];
         lastType = b.type;
       }
 
       const type = el.querySelector("[data-inner]");
-      type.className = "banner-inner " + b.type;
+      type.className = "banner-inner " + b.type + "-state";
 
       const linkEl = el.querySelector("[data-link]");
       if (linkEl) {

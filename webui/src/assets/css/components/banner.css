@@ -19,8 +19,6 @@
         transform var(--banner-animation-duration) ease;
     pointer-events: none;
 
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.08);
 }
 
@@ -38,35 +36,6 @@
     justify-content: space-between;
     padding: 10px 14px;
     gap: 10px;
-}
-
-.banner-inner.info {
-    background-color: color-mix(in srgb, var(--color-info) 50%, transparent);
-    color: var(--color-info-content);
-}
-
-.test-infoo {
-    background-color: color-mix(in srgb, var(--color-error) 50%, transparent) !important;
-    color: var(--color-error-content) !important;
-    border: none !important;
-    box-shadow: 0px 2px 5px rgba(0.0, 0.0, 0.0, 0.8);
-    padding: 6px 10px !important;
-}
-
-
-.banner-inner.success {
-    background-color: color-mix(in srgb, var(--color-success) 50%, transparent);
-    color: var(--color-success-content);
-}
-
-.banner-inner.warning {
-    background-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
-    color: var(--color-warning-content);
-}
-
-.banner-inner.error {
-    background-color: color-mix(in srgb, var(--color-error) 55%, transparent);
-    color: var(--color-error-content);
 }
 
 .banner-content {
@@ -92,16 +61,53 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.banner-btn:focus-visible {
+    outline-color: var(--color-base-content);
+    outline-style: solid;
+    outline-width: var(--border-width);
+    outline-offset: 0px;
+}
+
 .banner-btn:active:focus {
     background-color: rgba(0, 0, 0, 0.07);
     transform: scale(0.97);
     transition: transform 50ms ease;
 }
 
+.banner-close-btn {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    padding: 0px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: transparent;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.banner-close-btn:focus-visible {
+    outline-color: var(--color-base-content);
+    outline-style: solid;
+    outline-width: var(--border-width);
+    outline-offset: 0px;
+}
+
+.banner-close-btn:active:focus {
+    background-color: rgba(0, 0, 0, 0.07);
+    transform: scale(0.97);
+    transition: transform 50ms ease;
+}
 
 /* Allow hover on devices that can use it */
 @media (hover: hover) {
-    .banner-btn:hover {
+
+    .banner-btn:hover,
+    .banner-close-btn:hover {
         background-color: rgba(0, 0, 0, 0.09);
     }
 }
