@@ -172,7 +172,7 @@
                     </div>
                     <div class="card-list-el">
                       <div><i class="fa-solid fa-signal"></i>&nbsp;WiFi Signal</div>
-                      <div x-tooltip.left.noarrow="Math.round(wifiSignal.rssi * 10)/10 + ' dBm'">
+                      <div x-tooltip.left.noarrow="() => Math.round(wifiSignal.rssi * 10)/10 + ' dBm'">
                         <span :style="{ opacity: wifiSignal.opacity }" :class="wifiSignal.colorClass"
                           x-text="wifiSignal.label"></span>
                       </div>

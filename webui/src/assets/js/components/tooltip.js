@@ -1,6 +1,18 @@
 /* Code inspired by https://devdojo.com/pines/docs/tooltip in "Create a Tooltip Plugin" section */
 
 export default (Alpine) => {
+  Alpine.data("tooltipComponent", (data) => ({
+    tooltipVisible: data.tooltipVisible,
+
+    tooltipArrow: data.tooltipArrow,
+    tooltipPosition: data.tooltipPosition,
+
+    get tooltipText() {
+      // function is executed in Alpine reactive scope
+      return data.compute();
+    },
+  }));
+
   Alpine.directive("tooltip", (el, { modifiers, expression }, { cleanup }) => {
     let tooltipArrow = modifiers.includes("noarrow") ? false : true;
     let tooltipPosition = "top";
@@ -25,16 +37,14 @@ export default (Alpine) => {
     let tooltipHTML = `
       <div
           id="${tooltipId}"
-          x-data="{
-              tooltipVisible: false,
-              get tooltipText() {
-                return ${expression}
-              },
-              tooltipArrow: ${tooltipArrow},
-              tooltipPosition: '${tooltipPosition}'
-          }"
+          x-data="tooltipComponent({
+            tooltipVisible: false,
+            compute: ${expression},
+            tooltipArrow: ${tooltipArrow},
+            tooltipPosition: '${tooltipPosition}'
+          })"
           x-ref="tooltip"
-          x-init="setTimeout(() => tooltipVisible = true, 1)"
+          x-init="setTimeout(() => tooltipVisible = true, 100)"
           x-show="tooltipVisible"
           :class="{
               'tooltip-top': tooltipPosition == 'top',
@@ -89,6 +99,7 @@ export default (Alpine) => {
       document.getElementById(tooltipId)?.remove();
     }
 
+    // mouse
     function onPointerEnter(e) {
       if (e.pointerType === "mouse") showTooltip();
     }
@@ -98,6 +109,7 @@ export default (Alpine) => {
     el.addEventListener("pointerenter", onPointerEnter);
     el.addEventListener("pointerleave", onPointerLeave);
 
+    // touch
     function onPointerDown(e) {
       if (e.pointerType === "touch") {
         clearTimeout(hideTimer);
@@ -105,6 +117,7 @@ export default (Alpine) => {
         hideTimer = setTimeout(hideTooltip, 5000);
       }
     }
+    // click outside
     function onGlobalPointerDown(e) {
       if (!document.getElementById(tooltipId)) return;
 
