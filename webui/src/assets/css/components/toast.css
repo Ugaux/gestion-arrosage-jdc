@@ -7,11 +7,12 @@
 }
 
 .toast-container {
-
     z-index: 9999;
     position: fixed;
     width: 100%;
     max-width: 300px;
+    /* Add space for mobile bottom navigation bar */
+    padding-bottom: env(safe-area-inset-bottom);
 
     display: flex;
     gap: 10px;
