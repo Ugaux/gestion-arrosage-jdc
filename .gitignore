@@ -6,4 +6,7 @@
 
 /firmware/data/www
 /bridge/.venv
+/webui/.venv
+/webui/node_modules
+/webui/dist
 __pycache__

@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "convert-fonts": "bun run ./build/convert_fonts.js",
+    "clean-app": "echo 'Cleaning dist/app ...' && rm -rf dist/app && echo 'Cleaning done.'",
+    "build-app": "bun run clean-app && bun run ./build/build.js",
+    "deploy-app": "bun run build-app && bun run ./build/deploy.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "lightningcss": "^1.32.0"
+  }
+}
