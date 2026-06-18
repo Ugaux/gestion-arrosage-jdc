@@ -15,6 +15,87 @@ Fonctionnalitées :
 Note importante :
 Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à débit nul. Dans les systèmes résidentiels, le pressostat arrête la pompe lorsque la pression est élevée, ce qui signifie que le débit est faible ou nul.
 
+# Fast web dev
+
+Quick setup for developing and testing the web interface locally.
+
+## Prerequisites
+
+Create the virtual environment and install all python dependencies:
+
+```bash
+cd bridge
+uv sync
+```
+
+## 1. Start the server
+
+```bash
+cd bridge/scripts
+uv run start_bridge.py [--dev_mode] [--mock_esp_api]
+```
+
+### Options
+
+- `--mock_esp_api`  
+  Use a fake API for frontend-only development. requests are sent to the ESP32 API using the URL defined in `/server/mock/config.py`.
+- `--dev_mode`  
+  Enables development features (see below).
+
+---
+
+## 2. Development mode
+
+When using `--dev_mode`, start the file watcher beforehand in a separate terminal with:
+
+```bash
+cd bridge/scripts
+uv run live_refresh.py
+```
+
+This enables:
+
+- Automatic browser opening
+- Automatic browser refresh on file changes
+- FastAPI auto-reload (backend)
+- LiveReload injection (frontend)
+
+---
+
+## 3. Development workflow
+
+Edit the following files:
+
+```
+/webui/www/*
+/bridge/scripts/start_bridge.py
+```
+
+### Tips
+
+- Keep the Python web architecture consistent with the ESP32 implementation (`WebServer.h/cpp`)
+- Links:
+  - Access website locally at http://127.0.0.1:8000
+  - Use the API docs for debugging at http://127.0.0.1:8000/docs
+
+---
+
+## 4. Export for production
+
+Once everything works:
+
+```bash
+cd webui/scripts
+uv run minify
+```
+
+---
+
+## 5. Deploy to ESP32
+
+- Build the filesystem image
+- Upload it to ESP32 using PlatformIO
+
 # ⚙️ Tasks
 
 ## ✅ OK
