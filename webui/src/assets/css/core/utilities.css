@@ -13,7 +13,8 @@
 .align-center {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .w3-card {
@@ -44,7 +45,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .card-list-el {
@@ -53,7 +54,9 @@
 }
 
 .card-title {
-  margin: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  line-height: 1;
 }
 
 .schedule {

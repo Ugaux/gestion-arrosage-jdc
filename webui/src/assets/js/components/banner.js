@@ -91,7 +91,7 @@ export default (Alpine) => {
 
       if (b.type !== lastType) {
         const icon = el.querySelector("[data-icon]");
-        icon.className = "fa-xl fa-solid " + AppCfg.icons[b.type];
+        icon.setAttribute("name", "solid-" + AppCfg.icons[b.type]);
         lastType = b.type;
       }
 
@@ -117,7 +117,7 @@ export default (Alpine) => {
 
       const closeEl = el.querySelector("[data-close]");
       if (closeEl) {
-        closeEl.style.display = b.dismissible ? "inline-block" : "none";
+        closeEl.style.display = b.dismissible ? "flex" : "none";
       }
     });
   });

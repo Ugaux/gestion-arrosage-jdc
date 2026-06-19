@@ -18,10 +18,10 @@ export default (Alpine) => {
 
     init() {
       if (AppCfg.debug) {
-        this.state = 1;
+        this.state = 2;
         this.currentRun = {
           zone: "Dripline",
-          timeLeft: 9,
+          timeLeft: 27,
           totalZones: 3,
         };
         setInterval(() => {

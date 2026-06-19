@@ -1,19 +1,19 @@
 .w3-button {
-    /*
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 8px 16px;
-    text-decoration: none;
-    cursor: pointer;
-    user-select: none;
-    */
     border-radius: var(--radius-field) !important;
     background-color: var(--color-base-200) !important;
     color: var(--color-base-content) !important;
     border: var(--border-width) solid var(--color-base-300) !important;
     -webkit-tap-highlight-color: transparent;
+
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.w3-button-start {
+    justify-content: flex-start;
 }
 
 .w3-button:focus-visible {

@@ -1,0 +1,56 @@
+x-icon {
+    display: block;
+    width: 1em;
+    height: 1em;
+
+    flex-shrink: 0;
+    line-height: 1;
+    font-size: inherit;
+}
+
+x-icon>svg {
+    width: 100%;
+    height: 100%;
+
+    fill: currentColor;
+    overflow: visible;
+
+    transform-box: fill-box;
+    transform-origin: center;
+}
+
+x-icon.xs2 {
+    font-size: .625em;
+    /*line-height: .1em;*/
+    /*vertical-align: 0.0em*/
+}
+
+x-icon.xs {
+    font-size: .75em;
+    /*line-height: .08333em;*/
+    /*vertical-align: -0.05em*/
+}
+
+x-icon.sm {
+    font-size: .875em;
+    /*line-height: .07143em;*/
+    /*vertical-align: -0.1em*/
+}
+
+x-icon.lg {
+    font-size: 1.25em;
+    /*line-height: .05em;*/
+    /*vertical-align: -0.2em*/
+}
+
+x-icon.xl {
+    font-size: 1.5em;
+    /*line-height: .04167em;*/
+    /*vertical-align: -0.25em*/
+}
+
+x-icon.xl2 {
+    font-size: 2em;
+    /*line-height: .03125em;*/
+    /*vertical-align: -0.3em*/
+}

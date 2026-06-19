@@ -13,6 +13,7 @@ import registerValves from "./stores/valveStore.js";
 import registerWatering from "./stores/wateringStore.js";
 import registerZones from "./stores/zoneStore.js";
 
+import defineXIcon from "./components/x-icon.js";
 import registerBanner from "./components/banner.js";
 import registerDeviceSystemCard from "./components/deviceSystemCard.js";
 import registerManualWateringDurationInput from "./components/manualWateringDurationInput.js";
@@ -39,6 +40,7 @@ document.addEventListener("alpine:init", () => {
   registerZones(Alpine);
 
   // --------- COMPONENTS ---------
+  defineXIcon();
   registerBanner(Alpine);
   registerDeviceSystemCard(Alpine);
   registerManualWateringDurationInput(Alpine);

@@ -20,12 +20,12 @@ export default (Alpine) => {
 
     get stateIcon() {
       const stateMap = {
-        0: "fa-check", // ✓
-        1: "fa-triangle-exclamation", // ⚠
-        2: "fa-xmark", // ✕
+        0: "check", // ✓
+        1: "triangle-exclamation", // ⚠
+        2: "xmark", // ✕
       };
       return (
-        stateMap[Alpine.store("health").state] ?? "fa-circle-question" // Fallback
+        stateMap[Alpine.store("health").state] ?? "circle-question" // Fallback
       );
     },
 

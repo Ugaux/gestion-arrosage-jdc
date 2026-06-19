@@ -27,8 +27,8 @@ export default (Alpine) => {
       }
 
       let icon = "";
-      if (Alpine.store("watering").state == 1) icon = "fa-circle-play";
-      else if (Alpine.store("watering").state == 2) icon = "fa-calendar";
+      if (Alpine.store("watering").state == 1) icon = "circle-play";
+      else if (Alpine.store("watering").state == 2) icon = "calendar";
 
       let nextRun = "No scheduled irrigation";
       if (Alpine.store("watering").nextRun)
