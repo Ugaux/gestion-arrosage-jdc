@@ -3,12 +3,12 @@
 import { AppCfg } from "../core/appCfg.js";
 import { formatDuration } from "../core/formatting.js";
 
-function setBannerState(b) {
+function setBannerState(banner, Alpine) {
   // priority logic lives here
 
   const ws = Alpine.store("ws");
   if (!ws.server.reachable) {
-    b.show(
+    banner.show(
       "Device unreachable, all actions disabled (" +
         formatDuration(
           Math.round((ws.now - ws.server.lastContactDate) / 1000),
@@ -24,7 +24,7 @@ function setBannerState(b) {
 
   const health = Alpine.store("health");
   if (health.state === 2) {
-    b.show(
+    banner.show(
       "Total of " +
         health.faults.length +
         ": " +
@@ -44,7 +44,7 @@ function setBannerState(b) {
     return;
   }
 
-  b.close();
+  banner.close();
 }
 
 export default (Alpine) => {
@@ -80,7 +80,7 @@ export default (Alpine) => {
     Alpine.effect(() => {
       const b = Alpine.store("banner");
 
-      setBannerState(b);
+      setBannerState(b, Alpine);
 
       el.classList.toggle("is-open", b.open);
 

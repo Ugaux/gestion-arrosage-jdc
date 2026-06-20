@@ -17,7 +17,7 @@ const DEFAULT_DURATION = 4000;
 export default (Alpine) => {
   Alpine.store("toast", createToastStore());
 
-  Alpine.data("toastContainer", createToastContainer);
+  Alpine.data("toastContainer", () => createToastContainer(Alpine));
 
   Alpine.magic("toast", () => Alpine.store("toast"));
 
@@ -79,7 +79,7 @@ function createToastStore() {
   };
 }
 
-function createToastContainer() {
+function createToastContainer(Alpine) {
   return {
     positionMap: {
       "top-left": "toast-top-left",

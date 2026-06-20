@@ -12,16 +12,24 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon-apple-180.png">
   <!-- Android install/home screen → PNG + maskable PNG -->
   <link rel="manifest" href="/assets/img/manifest.json?v=%VERSION%">
+  <!-- CSS -->
+  <link rel="stylesheet" type="text/css" href="/assets/css/app.css?v=%VERSION%">
+  <!-- JS -->
+  <script type="module" src="/assets/js/app.js?v=%VERSION%"></script>
+</head>
+
+<body x-data x-cloak>
+
   <!-- Icons (SVG sprite) - classic/non-full SVGs from Font Awesome 7.2.0 -->
-  <?xml version="1.0" encoding="UTF-8"?>
-  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <svg xmlns="http://www.w3.org/2000/svg" style="position: absolute; width:0; height:0;">
     <defs>
       <!--noformat-->
+      <!-- REGULAR -->
       <symbol id="regular-calendar" viewBox="0 0 448 512"><path d="M120 0c13.3 0 24 10.7 24 24l0 40 160 0 0-40c0-13.3 10.7-24 24-24s24 10.7 24 24l0 40 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-40c0-13.3 10.7-24 24-24zm0 112l-56 0c-8.8 0-16 7.2-16 16l0 48 352 0 0-48c0-8.8-7.2-16-16-16l-264 0zM48 224l0 192c0 8.8 7.2 16 16 16l320 0c8.8 0 16-7.2 16-16l0-192-352 0z"/></symbol>
       <symbol id="regular-circle-play" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM212.5 147.5c-7.4-4.5-16.7-4.7-24.3-.5S176 159.3 176 168l0 176c0 8.7 4.7 16.7 12.3 20.9s16.8 4.1 24.3-.5l144-88c7.1-4.4 11.5-12.1 11.5-20.5s-4.4-16.1-11.5-20.5l-144-88zM298 256l-74 45.2 0-90.4 74 45.2z"/></symbol>
       <symbol id="regular-clock" viewBox="0 0 512 512"><path d="M464 256a208 208 0 1 1 -416 0 208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0 256 256 0 1 0 -512 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></symbol>
       <symbol id="regular-house" viewBox="0 0 512 512"><path d="M240 6.1c9.1-8.2 22.9-8.2 32 0l232 208c9.9 8.8 10.7 24 1.8 33.9s-24 10.7-33.9 1.8l-8-7.2 0 205.3c0 35.3-28.7 64-64 64l-288 0c-35.3 0-64-28.7-64-64l0-205.3-8 7.2c-9.9 8.8-25 8-33.9-1.8s-8-25 1.8-33.9L240 6.1zm16 50.1L96 199.7 96 448c0 8.8 7.2 16 16 16l48 0 0-104c0-39.8 32.2-72 72-72l48 0c39.8 0 72 32.2 72 72l0 104 48 0c8.8 0 16-7.2 16-16l0-248.3-160-143.4zM208 464l96 0 0-104c0-13.3-10.7-24-24-24l-48 0c-13.3 0-24 10.7-24 24l0 104z"/></symbol>
-
+      <!-- SOLID -->
       <symbol id="solid-bars-progress" viewBox="0 0 448 512"><path d="M288 160l96 0 0-64-96 0 0 64zM0 160L0 80C0 53.5 21.5 32 48 32l352 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48L48 224c-26.5 0-48-21.5-48-48l0-16zM160 416l224 0 0-64-224 0 0 64zM0 416l0-80c0-26.5 21.5-48 48-48l352 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48L48 480c-26.5 0-48-21.5-48-48l0-16z"/></symbol>
       <symbol id="solid-bars" viewBox="0 0 448 512"><path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"/></symbol>
       <symbol id="solid-bell" viewBox="0 0 448 512"><path d="M224 0c-17.7 0-32 14.3-32 32l0 3.2C119 50 64 114.6 64 192l0 21.7c0 48.1-16.4 94.8-46.4 132.4L7.8 358.3C2.7 364.6 0 372.4 0 380.5 0 400.1 15.9 416 35.5 416l376.9 0c19.6 0 35.5-15.9 35.5-35.5 0-8.1-2.7-15.9-7.8-22.2l-9.8-12.2C400.4 308.5 384 261.8 384 213.7l0-21.7c0-77.4-55-142-128-156.8l0-3.2c0-17.7-14.3-32-32-32zM162 464c7.1 27.6 32.2 48 62 48s54.9-20.4 62-48l-124 0z"/></symbol>
@@ -59,15 +67,6 @@
       <!--noformat-->
     </defs>
   </svg>
-  <!-- CSS -->
-  <link rel="stylesheet" type="text/css" href="/assets/css/app.css?v=%VERSION%">
-  <!-- JS -->
-  <script type="module" src="/assets/js/app.js?v=%VERSION%"></script>
-  <script defer src="/assets/js/core/alpinejs-tash@1.2.1.min.js"></script>
-  <script defer src="/assets/js/core/alpinejs@3.15.12.min.js"></script>
-</head>
-
-<body x-data x-cloak>
 
   <!-- TOAST CONTAINER -->
   <div class="toast-container" :class="[ containerClass(), positionClass() ]" x-data="toastContainer">

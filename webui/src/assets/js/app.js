@@ -1,6 +1,4 @@
 import { formatDuration } from "./core/formatting.js";
-window.formatDuration = formatDuration;
-
 import registerRouter from "./core/router.js";
 import registerWebsocket from "./core/ws.js";
 
@@ -24,30 +22,37 @@ import registerTooltip from "./components/tooltip.js";
 import registerWateringCard from "./components/wateringCard.js";
 import registerWaterTankCard from "./components/waterTankCard.js";
 
-document.addEventListener("alpine:init", () => {
-  // ------------ CORE ------------
-  registerRouter(Alpine);
-  registerWebsocket(Alpine);
+import Tash from "./plugins/alpinejs-tash@1.2.1.esm.min.js";
+import Alpine from "./plugins/alpinejs@3.15.12.esm.js";
 
-  // ----------- STORES -----------
-  registerDeviceCfg(Alpine);
-  registerDeviceInfo(Alpine);
-  registerHealth(Alpine);
-  registerSensors(Alpine);
-  registerUI(Alpine);
-  registerValves(Alpine);
-  registerWatering(Alpine);
-  registerZones(Alpine);
+// --------- PLUGINS ---------
+Alpine.plugin(Tash);
 
-  // --------- COMPONENTS ---------
-  defineXIcon();
-  registerBanner(Alpine);
-  registerDeviceSystemCard(Alpine);
-  registerManualWateringDurationInput(Alpine);
-  registerSettingsPage(Alpine);
-  registerThemeManager(Alpine);
-  registerToast(Alpine);
-  registerTooltip(Alpine);
-  registerWateringCard(Alpine);
-  registerWaterTankCard(Alpine);
-});
+// ------------ CORE ------------
+window.formatDuration = formatDuration;
+registerNavigation(Alpine);
+registerWebsocket(Alpine);
+
+// ----------- STORES -----------
+registerDeviceCfg(Alpine);
+registerDeviceInfo(Alpine);
+registerHealth(Alpine);
+registerSensors(Alpine);
+registerUI(Alpine);
+registerValves(Alpine);
+registerWatering(Alpine);
+registerZones(Alpine);
+
+// --------- COMPONENTS ---------
+defineXIcon();
+registerBanner(Alpine);
+registerDeviceSystemCard(Alpine);
+registerManualWateringDurationInput(Alpine);
+registerSettingsPage(Alpine);
+registerThemeManager(Alpine);
+registerToast(Alpine);
+registerTooltip(Alpine);
+registerWateringCard(Alpine);
+registerWaterTankCard(Alpine);
+
+Alpine.start();
