@@ -1,121 +1,103 @@
 import argparse
 import asyncio
 import json
+import os
 import socket
 import threading
 import webbrowser
-from os import environ, path
 from pathlib import Path
-from urllib.parse import quote
 
-import mock.esp_client as esp_mock
 import requests
 import uvicorn
 import websockets
-from bridge_config import ESP_BASE_URL, EXCLUDED_HEADERS
-from fastapi import FastAPI, Request, WebSocket, status
-from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi import FastAPI, HTTPException, Request, WebSocket, status
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-DEV_MODE = environ.get("DEV_MODE", "0") == "1"
-MOCK_ESP_API = environ.get("MOCK_ESP_API", "0") == "1"
-WEBUI_FILEPATH = path.join(Path(__file__).parent.parent, "webui", "src")
+import mock.esp_client as esp_mock
+from bridge_config import ESP_BASE_URL, EXCLUDED_HEADERS
+
+DEV_MODE = os.environ.get("DEV_MODE", "0") == "1"
+MOCK_ESP_API = os.environ.get("MOCK_ESP_API", "0") == "1"
+WEBUI_FILEPATH = os.path.join(Path(__file__).parent.parent, "webui", "src")
+
+if DEV_MODE:
+    VERSION = "dev"
+else:
+    with open(os.path.join(WEBUI_FILEPATH, "version.json"), "r", encoding="utf-8") as f:
+        VERSION = json.load(f)["version"]
 
 
-class NoCacheStaticFiles(StaticFiles):
-    def file_response(self, path, stat_result, scope):
-        response = super().file_response(path, stat_result, scope)
-        response.headers["Cache-Control"] = "no-store"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        return response
+def make_static_files():
 
+    headers = (
+        {
+            "Cache-Control": "no-store",
+            "Expires": "0",
+        }
+        if DEV_MODE
+        else {
+            "Cache-Control": "public, max-age=31536000, immutable",
+        }
+    )
 
-class CachingStaticFiles(StaticFiles):
-    def file_response(self, path, stat_result, scope):
-        response = super().file_response(path, stat_result, scope)
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-        return response
+    class StaticFilesWithHeaders(StaticFiles):
+        async def get_response(self, path: str, scope):
+            if path.endswith((".html", ".css", ".js")):
+                full_path, stat_result = self.lookup_path(path)
+
+                if stat_result is None:
+                    return await super().get_response(path, scope)
+
+                with open(full_path, "r", encoding="utf-8") as f:
+                    content = f.read().replace("%VERSION%", VERSION)
+
+                if path.endswith(".html"):
+                    media_type = "text/html"
+                elif path.endswith(".css"):
+                    media_type = "text/css"
+                else:
+                    media_type = "application/javascript"
+
+                response = Response(content, media_type=media_type)
+                response.headers.update(headers)
+                return response
+
+            response = await super().get_response(path, scope)
+            response.headers.update(headers)
+            return response
+
+    return StaticFilesWithHeaders
 
 
 app = FastAPI()
-if DEV_MODE:
-    Static = NoCacheStaticFiles
-else:
-    Static = CachingStaticFiles
-app.mount("/assets", Static(directory=path.join(WEBUI_FILEPATH, "assets")))
+app.mount("/assets", make_static_files()(directory=os.path.join(WEBUI_FILEPATH, "assets")))
 
 
-@app.get("/")
-def index():
-    print("Sending index.html...")
-    with open(path.join(WEBUI_FILEPATH, "index.html"), "r", encoding="utf-8") as f:
-        html = f.read()
-    with open(path.join(WEBUI_FILEPATH, "version.json"), "r", encoding="utf-8") as f:
-        version = json.load(f)["version"]
-    html = html.replace("%VERSION%", version)  # your value here
-    response = Response(content=html, media_type="text/html")
-    response.headers["Cache-Control"] = "no-cache"
-    return response
+@app.get("/.well-known/appspecific/com.chrome.devtools.json")
+def devtools_json():
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-"""
-@app.get("/version")
-def version():
-    response = FileResponse(path.join(WEBUI_FILEPATH, "version.json"))
-    response.headers["Cache-Control"] = "no-cache"
-    return response
-"""
+def create_api_response(r):
+    # Remove excluded headers
+    headers = {k: v for k, v in r.headers.items() if k.lower() not in EXCLUDED_HEADERS}
+
+    return Response(
+        content=r.content,
+        status_code=r.status_code,
+        headers=headers,
+        media_type=r.headers.get("content-type"),
+    )
 
 
-"""
-@app.get("/404")
-def not_found(url):
-    return FileResponse(path.join(WEBUI_FILEPATH, "404.html"), status_code=404)
-"""
-
-
-"""
-@app.exception_handler(404)
-async def custom_404_handler(request: Request, exc):
-    return RedirectResponse(url=f"/404?url={quote(str(request.url),safe='')}", status_code=302)
-"""
-
-
-@app.exception_handler(404)
-async def custom_404_handler(request: Request, exc):
-    return FileResponse(path.join(WEBUI_FILEPATH, "404.html"), status_code=404)
-
-
-def remove_excluded_headers(headers):
-    if headers in EXCLUDED_HEADERS:
-        del headers
-
-
-@app.get("/device/info")
+@app.get("/api/status")
 def get_device_info():
     if MOCK_ESP_API:
         return esp_mock.mock_device_info()
+
     r = requests.get(f"{ESP_BASE_URL}/api/status", timeout=1)
-    remove_excluded_headers(r.headers)
-    return r.json()
-
-
-@app.get("/api/v1/snapshot")
-def get_api_snapshot():
-    if MOCK_ESP_API:
-        return esp_mock.mock_snapshot()
-    return {
-        "wifi": {"ssid": "REALESP32", "ip": "192.168.1.42", "rssi": -10000},
-        "valve": {"duration": 15, "openTime": 20},
-    }
-
-
-@app.post("/api/v1/zones/{zone_id}/toggle")
-async def toggle_zone(zone_id: str, payload: dict):
-    if MOCK_ESP_API:
-        return {"ok"}
-    return requests.post(f"{ESP_BASE_URL}/api/{zone_id}/command", json=payload, timeout=1).json()
+    return create_api_response(r)
 
 
 @app.websocket("/ws")
@@ -137,60 +119,73 @@ async def websocket_proxy(client_ws: WebSocket):
         await asyncio.gather(client_to_esp(), esp_to_client())
 
 
-@app.get("/.well-known/appspecific/com.chrome.devtools.json")
-def devtools_json():
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+@app.get("/{path:path}")
+def spa_index(path: str):
+    if path.startswith("api/"):
+        raise HTTPException(404)
+
+    print("Sending index.html...")
+    with open(os.path.join(WEBUI_FILEPATH, "index.html"), "r", encoding="utf-8") as f:
+        html = f.read()
+    html = html.replace("%VERSION%", VERSION)
+    response = Response(content=html, media_type="text/html")
+    response.headers["Cache-Control"] = "no-store"
+    # "no-cache, must-revalidate" -> if implementing etag and "304" response
+    return response
 
 
-if DEV_MODE:
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't actually send data
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 
-    def get_local_ip():
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            # doesn't actually send data
-            s.connect(("8.8.8.8", 80))
-            ip = s.getsockname()[0]
-        finally:
-            s.close()
-        return ip
 
-    # --- Middleware to inject livereload script --- #
-    @app.middleware("http")
-    async def livereload_injector(request: Request, call_next):
-        response = await call_next(request)
-        content_type = response.headers.get("content-type", "")
-        if "text/html" in content_type.lower():
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
+# --- Middleware to inject livereload script --- #
+@app.middleware("http")
+async def livereload_injector(request: Request, call_next):
+    response = await call_next(request)
 
-            try:
-                html = body.decode("utf-8")
-            except UnicodeDecodeError:
-                return Response(content=body, status_code=response.status_code, headers=dict(response.headers))
-
-            # Inject script before </body>
-            snippet = f'<script src="http://{get_local_ip()}:35729/livereload.js"></script>'
-            if "</body>" in html:
-                html = html.replace("</body>", snippet + "\n</body>")
-            else:
-                html += snippet
-            headers = dict(response.headers)
-            headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-            headers["Pragma"] = "no-cache"
-            headers["Expires"] = "0"
-            headers.pop("etag", None)
-            headers.pop("last-modified", None)
-            headers.pop("content-length", None)  # remove stale Content-Length
-
-            return Response(
-                content=html,
-                status_code=response.status_code,
-                headers=headers,
-                media_type="text/html",
-            )
-
+    if not DEV_MODE:
         return response
+
+    content_type = response.headers.get("content-type", "")
+    if "text/html" in content_type.lower():
+        body = b""
+        async for chunk in response.body_iterator:
+            body += chunk
+
+        try:
+            html = body.decode("utf-8")
+        except UnicodeDecodeError:
+            return Response(content=body, status_code=response.status_code, headers=dict(response.headers))
+
+        # Inject script before </body>
+        snippet = f'<script src="http://{get_local_ip()}:35729/livereload.js"></script>'
+        if "</body>" in html:
+            html = html.replace("</body>", snippet + "\n</body>")
+        else:
+            html += snippet
+        headers = dict(response.headers)
+        headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        headers["Pragma"] = "no-cache"
+        headers["Expires"] = "0"
+        headers.pop("etag", None)
+        headers.pop("last-modified", None)
+        headers.pop("content-length", None)  # remove stale Content-Length
+
+        return Response(
+            content=html,
+            status_code=response.status_code,
+            headers=headers,
+            media_type="text/html",
+        )
+
+    return response
 
 
 if __name__ == "__main__":
@@ -201,8 +196,8 @@ if __name__ == "__main__":
     dev_mode_arg = args.dev_mode
     mock_esp_api_arg = args.mock_esp_api
 
-    environ["DEV_MODE"] = "1" if dev_mode_arg else "0"
-    environ["MOCK_ESP_API"] = "1" if mock_esp_api_arg else "0"
+    os.environ["DEV_MODE"] = "1" if dev_mode_arg else "0"
+    os.environ["MOCK_ESP_API"] = "1" if mock_esp_api_arg else "0"
     print("Starting bridge...")
     if dev_mode_arg:
         print("-> DEV MODE ENABLED")

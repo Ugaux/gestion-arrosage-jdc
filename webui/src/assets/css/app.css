@@ -1,5 +1,5 @@
 @import './core/reset.css';
-@import './core/w3.css';
+@import './core/w3css@5.0.css';
 
 @import './core/fonts.css';
 @import './core/theme.css';

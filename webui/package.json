@@ -2,6 +2,8 @@
   "scripts": {
     "convert-fonts": "bun run ./build/convert_fonts.js",
     "clean-app": "echo 'Cleaning dist/app ...' && rm -rf dist/app && echo 'Cleaning done.'",
+    "dev-bundle-js": "bun build ./src/assets/js/app.js --outfile ./src/assets/app.min.js --minify",
+    "dev-bundle-css": "bun run ./build/dev_bundle_css.js",
     "build-app": "bun run clean-app && bun run ./build/build.js",
     "deploy-app": "bun run build-app && bun run ./build/deploy.js"
   },

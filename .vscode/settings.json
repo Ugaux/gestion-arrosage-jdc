@@ -15,6 +15,16 @@
   },
   "python-envs.defaultEnvManager": "ms-python.python:venv",
   "python.defaultInterpreterPath": "${workspaceFolder}/bridge/.venv/Scripts/python.exe",
-  "platformio-ide.autoRebuildAutocompleteIndex": false // TODO: maybe remove it ?
-  //"platformio-ide.autoPreloadEnvTasks": false
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "webui[\\\\/]src[\\\\/]assets[\\\\/]css[\\\\/].*\\.css$",
+        "cmd": "bun run --cwd ./webui dev-bundle-css"
+      },
+      {
+        "match": "webui[\\\\/]src[\\\\/]assets[\\\\/]js[\\\\/].*\\.js$",
+        "cmd": "bun run --cwd ./webui dev-bundle-js"
+      }
+    ]
+  }
 }
