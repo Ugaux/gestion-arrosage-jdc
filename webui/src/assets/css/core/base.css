@@ -7,22 +7,6 @@
     display: none !important;
 }
 
-/* Always reserve scrollbar space 
-html {
-    overflow-y: scroll;
-}
-*/
-/* Chrome / Edge / Safari 
-html::-webkit-scrollbar {
-    width: 0px;
-}
-*/
-/* Firefox 
-html {
-    scrollbar-width: none;
-}
-*/
-
 /* SET FONT-FAMILY */
 html,
 body,

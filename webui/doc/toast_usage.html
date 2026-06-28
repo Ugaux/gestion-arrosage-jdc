@@ -1,0 +1,22 @@
+<div style="margin-top: 100px;">
+  <button @click="$toast.show('Info message 0.5s', {duration: 500})">
+    Info
+  </button>
+
+  <button
+    @click="$toast.show('Success message 30s', {type:'success', duration: 30000, description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'})">
+    Success
+  </button>
+
+  <button @click="$toast.show('Warning message 15s', {type:'warning', duration: 15000})">
+    Warning
+  </button>
+
+  <button @click="$toast.show('Error message 4s', {type:'error'})">
+    Error
+  </button>
+
+  <button @click="$toast.clear()">
+    Clear
+  </button>
+</div>

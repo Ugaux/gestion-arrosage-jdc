@@ -10,8 +10,21 @@ export default (Alpine) => {
       manualWateringDurationService.syncWithZones(zones);
     },
 
-    getZone(id) {
-      return this.items.find((z) => z.id === id);
+    getZone(zoneId) {
+      return this.items.find((z) => z.id === zoneId);
+    },
+
+    getParentZone(wayId) {
+      return this.items.find((zone) =>
+        zone.ways.some((way) => way.id === wayId),
+      );
+    },
+
+    getWay(wayId) {
+      const way = this.items
+        .flatMap((item) => item.ways)
+        .find((way) => way.id === wayId);
+      return way;
     },
 
     init() {

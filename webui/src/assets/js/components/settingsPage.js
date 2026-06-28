@@ -1,7 +1,7 @@
 import { formatDuration } from "../core/formatting.js";
 
 export default (Alpine) => {
-  Alpine.data("settingsPage", (wayID) => ({
+  Alpine.data("settingsPage", () => ({
     get seasonalAdj() {
       const value = Alpine.store("deviceCfg").seasonalAdj * 100;
       return Math.round(value * 100) / 100;

@@ -20,13 +20,13 @@
 }
 
 .online {
-    background-color: #4CAF50;
-    box-shadow: 0 0 10px #4CAF50;
+    background-color: var(--color-success);
+    box-shadow: 0 0 10px var(--color-success);
 }
 
 .offline {
-    background-color: #f44336;
-    box-shadow: 0 0 5px #f44336;
+    background-color: var(--color-error);
+    box-shadow: 0 0 5px var(--color-error);
 }
 
 .status-dot {

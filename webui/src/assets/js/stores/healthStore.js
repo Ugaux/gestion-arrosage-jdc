@@ -23,28 +23,30 @@ export default (Alpine) => {
 
     init() {
       if (AppCfg.debug) {
-        this.state = 2;
-        this.faults = [
-          {
-            index: 0,
-            id: 46589655,
-            text: "no water is flowing to fill water tank",
-            timeStamp: 1768908922,
-          },
-          {
-            index: 1,
-            id: 23548569,
-            text: "no flow while watering, check pump and/or valves",
-            timeStamp: 1768909922,
-          },
-        ];
+        setTimeout(() => {
+          this.state = 2;
+          this.faults = [
+            {
+              index: 0,
+              id: 46589655,
+              text: "no water is flowing to fill water tank",
+              timeStamp: 1768908922,
+            },
+            {
+              index: 1,
+              id: 23548569,
+              text: "no flow while watering, check pump and/or valves",
+              timeStamp: 1768909922,
+            },
+          ];
+        }, 3000);
         if (true) {
           setTimeout(() => {
             const a = this.faults.shift();
-          }, 4000);
+          }, 7000);
           setTimeout(() => {
             this.state = 0;
-          }, 8000);
+          }, 11000);
         }
         if (false)
           setInterval(() => {

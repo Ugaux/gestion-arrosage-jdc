@@ -64,8 +64,8 @@
     .logo-container,
     .input-field,
     .w3-card,
-    .card-separator,
-    .schedule-separator,
+    .card-header-separator,
+    .card-el-separator,
     .w3-button,
     .slider:not(#theme-toggle)),
 /* separate line required for ::before as it is discarded by :is */

@@ -22,8 +22,10 @@
 
   <!-- Icons (SVG sprite) - classic/non-full SVGs from Font Awesome 7.2.0 -->
   <svg xmlns="http://www.w3.org/2000/svg" style="position: absolute; width:0; height:0;">
+
     <defs>
       <!--noformat-->
+      <symbol id="bi-dot" viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/></symbol>
       <!-- REGULAR -->
       <symbol id="regular-calendar" viewBox="0 0 448 512"><path d="M120 0c13.3 0 24 10.7 24 24l0 40 160 0 0-40c0-13.3 10.7-24 24-24s24 10.7 24 24l0 40 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-40c0-13.3 10.7-24 24-24zm0 112l-56 0c-8.8 0-16 7.2-16 16l0 48 352 0 0-48c0-8.8-7.2-16-16-16l-264 0zM48 224l0 192c0 8.8 7.2 16 16 16l320 0c8.8 0 16-7.2 16-16l0-192-352 0z"/></symbol>
       <symbol id="regular-circle-play" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM212.5 147.5c-7.4-4.5-16.7-4.7-24.3-.5S176 159.3 176 168l0 176c0 8.7 4.7 16.7 12.3 20.9s16.8 4.1 24.3-.5l144-88c7.1-4.4 11.5-12.1 11.5-20.5s-4.4-16.1-11.5-20.5l-144-88zM298 256l-74 45.2 0-90.4 74 45.2z"/></symbol>
@@ -66,10 +68,12 @@
       <symbol id="solid-xmark" viewBox="0 0 384 512"><path d="M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256 9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192.5 301.3 329.9 438.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256 375.1 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7 55.1 73.4z"/></symbol>
       <!--noformat-->
     </defs>
+
   </svg>
 
   <!-- TOAST CONTAINER -->
   <div class="toast-container" :class="[ containerClass(), positionClass() ]" x-data="toastContainer">
+
     <template x-for="toast in items" :key="toast.id">
       <div class="toast blurred" :class="[ toastTypeClass(toast.type), toast.leaving ? toastLeaveClass() : '' ]"
         x-toast="toast">
@@ -85,21 +89,22 @@
         </button>
       </div>
     </template>
+
   </div>
 
   <!-- SIDEBAR -->
-  <div id="sidebar" x-bind:class="{ open: $sidebar.isOpen }">
+  <div id="sidebar" x-bind:class="{ open: $ui.sidebar.isOpen }">
 
     <!-- HEADER -->
     <div>
-      <button id="close-btn" @click="$sidebar.close()" class="w3-button"><x-icon class="sm"
+      <button id="sidebar-close-btn" @click="$ui.sidebar.close()" class="w3-button close-btn"><x-icon class="sm"
           name="solid-xmark"></x-icon></button>
       <!-- BRANDING -->
       <div id="branding" class="w3-panel">
-        <a href="#home" @click="$sidebar.close()" class="logo-container" aria-label="Company logo">
+        <a href="/" class="logo-container" aria-label="Company logo">
           <span class="logo-mask"></span>
         </a>
-        <a href="#home" @click="$sidebar.close()" id="brand">
+        <a href="/" id="brand">
           <div class="w3-xlarge w3-bold">Arrosage</div>
           <div class="w3-opacity w3-small">Jardin du Ciel</div>
         </a>
@@ -108,21 +113,14 @@
       <!--NAVIGATION -->
       <div class="w3-panel">
         <div id="nav-menu">
-          <a href="#home" @click="$sidebar.close()" class="w3-button w3-button-start nav-link">
-            <x-icon class="lg" name="regular-house"></x-icon>Home
-          </a>
-          <a href="#schedule" @click="$sidebar.close()" class="w3-button w3-button-start nav-link">
-            <x-icon class="lg" name="regular-calendar"></x-icon>Schedule
-          </a>
-          <a href="#manual" @click="$sidebar.close()" class="w3-button w3-button-start nav-link">
-            <x-icon class="lg" name="regular-circle-play"></x-icon>Manual
-          </a>
-          <a href="#history" @click="$sidebar.close()" class="w3-button w3-button-start nav-link"
-            style="display: none;">
-            <x-icon class="lg" name="regular-clock"></x-icon>History
-          </a>
+          <template x-for="route in $navigation.routes.filter(r => r.isNav && !r.hidden)" :key="route.path">
+            <a :href="route.path" class="w3-button w3-button-start"
+              :class="{ 'active-nav-link': $navigation.show(route.type, route.name) }">
+              <x-icon class="lg" :name="route.icon"></x-icon>
+              <span x-text="route.title"></span>
+            </a>
+          </template>
         </div>
-
       </div>
     </div>
 
@@ -132,12 +130,7 @@
         <div class="status-dot pulse-animation" :class="$store.ws.connected ? 'online' : 'offline'"></div>
         <strong style="line-height:1;" x-text="$store.ws.connected ? 'Connected' : 'Disconnected'"></strong>
       </div>
-      <hr class="card-separator">
-      <div id="settings-nav-link" class="w3-panel w3-center">
-        <a href="#settings" @click="$sidebar.close()" class="w3-button">
-          <x-icon class="lg" name="solid-cog"></x-icon>Settings
-        </a>
-      </div>
+      <hr class="card-header-separator">
       <div class="w3-panel" id="dark-mode-div" x-data="themeManager">
         <div @click="toggle()" style="cursor:pointer;" class="align-center">
           <x-icon class="lg" :name="'solid-' + (isDark ? 'moon' : 'sun')"></x-icon>
@@ -154,42 +147,44 @@
     </div>
   </div>
 
+  <!-- SIDEBAR OVERLAY (small screens only) -->
+  <div id="sidebar-overlay" class="blurred-light" :class="{ show: $ui.sidebar.isOpen }" @click="$ui.sidebar.close()">
+  </div>
+
   <!-- WRAPPER -->
   <div id="wrapper">
 
-    <!-- OVERLAY (small screens only) -->
-    <div id="overlay" :class="{ show: $sidebar.isOpen }" @click="$sidebar.close()">
-    </div>
-
     <div id="header">
+
       <!-- TOP NAVBAR -->
       <div id="navbar" class="w3-padding">
+
         <div class="left-side">
           <!-- Hamburger (small screens only) -->
           <button id="hamburger-btn" class="w3-button"
-            @click="$store.router.overlayPage ? $store.router.closeSettings() : $sidebar.open()">
-            <x-icon x-show="!$store.router.overlayPage" name="solid-bars"></x-icon>
-            <x-icon x-show="$store.router.overlayPage" name="solid-chevron-left"></x-icon>
+            @click="$navigation.type === 'page' ? $ui.sidebar.open() : $navigation.closeOverlay()">
+            <x-icon :name="$navigation.type === 'page' ? 'solid-bars' : 'solid-chevron-left'"></x-icon>
           </button>
-
           <!-- Current page title -->
-          <span class="w3-large w3-bold" x-text="$store.router.pageTitle()">Loading...</span>
+          <span class="w3-large w3-bold" x-text="$navigation.getTitle()"></span>
         </div>
+
         <!-- Far right: meta-level actions -->
-        <div>
+        <div x-show="$navigation.showToolbarActions()">
           <button class="w3-button" style="visibility: hidden;">
             <x-icon name="solid-bell"></x-icon>
             <span class="badge">3</span>
           </button>
-          <button id="setting-btn" class="w3-button" x-show="!$store.router.overlayPage"
-            @click="$store.router.openSettings()">
+          <button class="w3-button" @click="$router.navigate('/settings')">
             <x-icon name="solid-cog"></x-icon>
           </button>
         </div>
+
       </div>
 
       <!-- BANNER -->
       <div x-banner class="banner blurred">
+
         <div data-inner>
           <x-icon data-icon class="xl"></x-icon>
           <div class="banner-content" data-content></div>
@@ -201,413 +196,120 @@
             </button>
           </div>
         </div>
+
       </div>
+
     </div>
 
     <!-- MAIN CONTENT -->
     <main>
 
-      <div x-show="!$store.router.overlayPage">
+      <!-- HOME PAGE -->
+      <section x-show="$navigation.show('page','home')" class="w3-content" x-data="homePage">
 
-        <!-- HOME PAGE -->
-        <section x-show="$store.router.currentPage === 'home'">
-          <div class="w3-content">
+        <!-- System -->
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title"><b>System</b></h5>
+            </header>
+            <hr class="card-header-separator">
+            <div id="deviceSystemCard" class="w3-panel">
+              <div class="card-list">
+                <div>
+                  <div class="card-list-el">
+                    <div class="align-center"><x-icon name="solid-clock"></x-icon>Local Time</div>
+                    <b x-text="localDate"></b>
+                  </div>
+                  <span class="card-list-el" style="display: block; text-align: right;" x-text="localTime"></span>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-heart-pulse"></x-icon>State</div>
+                  <div :class="deviceStateClass" class="align-center">
+                    <b x-text="deviceStateLabel"></b><x-icon :name="'solid-' + deviceStateIcon"></x-icon>
+                  </div>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-signal"></x-icon>WiFi Signal</div>
+                  <div x-tooltip.left.noarrow="() => Math.round(wifiSignal.rssi * 10)/10 + ' dBm'">
+                    <span :style="{ opacity: wifiSignal.opacity }" :class="wifiSignal.colorClass"
+                      x-text="wifiSignal.label"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <!-- System -->
+        <!-- Watering -->
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title"><b>Watering</b></h5>
+            </header>
+            <hr class="card-header-separator">
             <div class="w3-panel">
-              <div class="w3-card w3-round-large">
-                <header class="w3-container w3-center">
-                  <h5 class="card-title"><b>System</b></h5>
-                </header>
-                <hr class="card-separator">
-                <div id="deviceSystemCard" class="w3-panel" x-data="deviceSystemCard">
-                  <div class="card-list">
-                    <div>
-                      <div class="card-list-el">
-                        <div class="align-center"><x-icon name="solid-clock"></x-icon>Local Time</div>
-                        <b x-text="localDate"></b>
-                      </div>
-                      <span class="card-list-el" style="display: block; text-align: right;" x-text="localTime"></span>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-heart-pulse"></x-icon>State</div>
-                      <div :class="stateClass" class="align-center">
-                        <b x-text="stateLabel"></b><x-icon :name="'solid-' + stateIcon"></x-icon>
-                      </div>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-signal"></x-icon>WiFi Signal</div>
-                      <div x-tooltip.left.noarrow="() => Math.round(wifiSignal.rssi * 10)/10 + ' dBm'">
-                        <span :style="{ opacity: wifiSignal.opacity }" :class="wifiSignal.colorClass"
-                          x-text="wifiSignal.label"></span>
-                      </div>
+              <div class="card-list">
+                <div>
+                  <div class="card-list-el">
+                    <div class="align-center"><x-icon name="solid-bars-progress"></x-icon>Status</div>
+                    <div class="align-center">
+                      <x-icon :name="'regular-' + wateringStatus.icon" x-show="wateringStatus.icon !== ''"></x-icon>
+                      <b class="card-value" x-text="wateringStatus.state"></b>
                     </div>
                   </div>
+                  <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                    <span x-text="wateringStatus.nextRun"></span>
+                    <span x-text="wateringStatus.activeValves"></span>
+                    <span x-text="lastWatered"></span>
+                  </div>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-shower"></x-icon>By Hand</div>
+                  <span class="card-value">
+                    <b x-text="byHandLabel.main"></b><span x-text="byHandLabel.suffix"></span>
+                  </span>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-bolt-lightning"></x-icon>Pump</div>
+                  <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                    <b x-text="pumpStateLabel"></b>
+                    <span x-text="$store.sensors.pump.cycles + ' cycles'"></span>
+                  </div>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-fan"></x-icon>Water Flow</div>
+                  <span class="card-value"><b x-text="waterFlow"></b>&nbsp;l/min</span>
+                </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-droplet"></x-icon>Soil Moisture</div>
+                  <span class="card-value"><b x-text="soilMoisture"></b>%</span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Watering -->
+        <!-- Water tank -->
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title"><b>Water Tank</b></h5>
+            </header>
+            <hr class="card-header-separator">
             <div class="w3-panel">
-              <div class="w3-card w3-round-large">
-                <header class="w3-container w3-center">
-                  <h5 class="card-title"><b>Watering</b></h5>
-                </header>
-                <hr class="card-separator">
-                <div class="w3-panel" x-data="wateringCard">
-                  <div class="card-list">
-                    <div>
-                      <div class="card-list-el">
-                        <div class="align-center"><x-icon name="solid-bars-progress"></x-icon>Status</div>
-                        <div class="align-center">
-                          <x-icon :name="'regular-' + wateringStatus.icon" x-show="wateringStatus.icon !== ''"></x-icon>
-                          <b class="card-value" x-text="wateringStatus.state"></b>
-                        </div>
-                      </div>
-                      <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                        <span x-text="wateringStatus.nextRun"></span>
-                        <span x-text="wateringStatus.activeValves"></span>
-                        <span x-text="lastWatered"></span>
-                      </div>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-shower"></x-icon>By Hand</div>
-                      <span class="card-value">
-                        <b x-text="byHandLabel.main"></b><span x-text="byHandLabel.suffix"></span>
-                      </span>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-bolt-lightning"></x-icon>Pump</div>
-                      <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                        <b x-text="pumpStateLabel"></b>
-                        <span x-text="$store.sensors.pump.cycles + ' cycles'"></span>
-                      </div>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-fan"></x-icon>Water Flow</div>
-                      <span class="card-value"><b x-text="waterFlow"></b>&nbsp;l/min</span>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-droplet"></x-icon>Soil Moisture</div>
-                      <span class="card-value"><b x-text="soilMoisture"></b>%</span>
-                    </div>
-                  </div>
+              <div class="card-list">
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-water"></x-icon>Level</div>
+                  <b class="card-value" x-text="waterTankLevelLabel"></b>
                 </div>
-              </div>
-            </div>
-
-            <!-- Water tank -->
-            <div class="w3-panel">
-              <div class="w3-card w3-round-large">
-                <header class="w3-container w3-center">
-                  <h5 class="card-title"><b>Water Tank</b></h5>
-                </header>
-                <hr class="card-separator">
-                <div class="w3-panel" x-data="waterTankCard">
-                  <div class="card-list">
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-water"></x-icon>Level</div>
-                      <b class="card-value" x-text="levelLabel"></b>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-fill-drip"></x-icon>State</div>
-                      <b class="card-value" x-text="stateLabel"></b>
-                    </div>
-                    <div class="card-list-el">
-                      <div class="align-center"><x-icon name="solid-hourglass-end"></x-icon>Last fill</div>
-                      <span><b class="card-value" x-text="lastFillLabel"></b>&nbsp;ago</span>
-                    </div>
-                  </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-fill-drip"></x-icon>State</div>
+                  <b class="card-value" x-text="waterTankStateLabel"></b>
                 </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SCHEDULE PAGE -->
-        <section x-show="$store.router.currentPage === 'schedule'">
-          <div class="w3-content">
-            <div x-show="$store.zones.items.length === 0" class="w3-panel">There are no zones.</div>
-            <template x-for="zone in $store.zones.items" :key="zone.id">
-
-              <div class="w3-panel">
-                <div class="w3-card w3-round-large">
-
-                  <header class="w3-container w3-center">
-                    <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
-                  </header>
-                  <hr class="card-separator">
-                  <div class="w3-panel">
-
-                    <template x-for="(way, way_index) in zone.ways" :key="way.id">
-                      <div>
-                        <hr class="schedule-separator" x-show="way_index > 0">
-                        <div
-                          style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-                          <div style="display: flex; align-items: center; gap: 10px;">
-                            <b x-text="way.shortName"></b>
-                            <a :href="'/#schedule/new?way=' + way.name" class="w3-button way-btn-small">
-                              <x-icon class="xs" name="solid-plus"></x-icon>
-                            </a>
-                          </div>
-                          <div class="w3-small">
-                            <b>Next run scheduled on <i :id="'lbl_next_'+way.name">???</i></b>
-                          </div>
-                        </div>
-
-                        <div style=" display: flex; flex-direction: column; gap: 10px;">
-                          <template x-for="(schedule, schedule_index) in way.schedules" :key="schedule.id">
-                            <div class="schedule">
-
-                              <div style=" display: flex; align-items: center; gap: 10px;">
-                                <b class="w3-small">Schedule&nbsp;<span x-text="schedule_index+1"></span></b>
-                                <a :href="'/#schedule/edit?way=' + way.name + '&schedule=' + schedule_index"
-                                  class="w3-button way-btn-small">
-                                  <x-icon class="sm" name="solid-pen-to-square"></x-icon>
-                                </a>
-                                <label class="switch">
-                                  <input name="checkbox_enable" type="checkbox"
-                                    :id="'btn_enable_' + way.name + '_' + schedule_index" x-model="schedule.enabled">
-                                  <span class="slider round"></span>
-                                </label>
-                              </div>
-
-                              <span class="w3-small" x-tash="schedule.time, schedule.duration, schedule.freq">
-                                Starts at <b>{schedule.time}</b> for <b>{schedule.duration} min</b> on
-                                <b>{schedule.freq}</b>
-                              </span>
-                            </div>
-                          </template>
-                        </div>
-                      </div>
-                    </template>
-
-                  </div>
-            </template>
-
-          </div>
-        </section>
-
-        <!-- MANUAL PAGE -->
-        <section x-show="$store.router.currentPage === 'manual'">
-
-          <div class="w3-content">
-            <div x-show="$store.zones.items.length === 0" class="w3-panel">There are no zones.</div>
-            <template x-for="zone in $store.zones.items" :key="zone.id">
-
-              <div class="w3-panel">
-                <div class="w3-card w3-round-large">
-
-                  <header class="w3-container w3-center">
-                    <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
-                  </header>
-                  <hr class="card-separator">
-                  <div class="w3-panel">
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-
-                      <template x-for="way in zone.ways" :key="way.id">
-                        <div style="display: flex; align-items: center; justify-content: space-between">
-                          <b x-text="way.shortName"></b>
-
-                          <div style="display: flex; align-items: center; gap:15px">
-                            <span x-show="way.manual.started"><b
-                                x-text="formatDuration(way.manual.timeLeft)"></b>&nbsp;left</span>
-                            <div x-show="!way.manual.started" x-data="manualWateringDurationInput(way.id)">
-                              <div style="display: flex; gap: 4px;">
-                                <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease">
-                                  <x-icon class="xs" name="solid-minus"></x-icon>
-                                </button>
-                                <div class="input-wrapper">
-                                  <input class="input-field" :id="'m_duration_' + way.name" type="text"
-                                    inputmode="numeric" pattern="[0-9]*"
-                                    @input="$event.target.value = $event.target.value.replace(/\D/g, '')"
-                                    :placeholder="$store.deviceCfg.manualWateringDuration.defaultDuration"
-                                    x-model.lazy="duration" @focus="$event.target.select()"
-                                    @blur="setDuration($event.target.value, true)"
-                                    @keydown.enter="$event.target.blur()">
-                                  <span class="input-unit">min</span>
-                                </div>
-                                <button :disabled="duration >= max" class="w3-button way-btn" @click="increase">
-                                  <x-icon class="xs" name="solid-plus"></x-icon>
-                                </button>
-                              </div>
-                            </div>
-
-                            <button name="manual_mode" :id="'btn_' + way.name" type="button" class="w3-button way-btn">
-                              <x-icon :name="'solid-' + (way.manual.started ? 'stop' : 'play')"></x-icon>
-                            </button>
-                          </div>
-                        </div>
-                      </template>
-                    </div>
-
-                  </div>
-            </template>
-
-          </div>
-
-        </section>
-
-        <!-- HISTORY PAGE -->
-        <section x-show="$store.router.currentPage === 'history'">
-          <!-- LIST -->
-          <h2>History</h2>
-          <!-- Waterings table -->
-        </section>
-
-        <!-- INVALID PAGE -->
-        <section x-show="$store.router.currentPage === 'invalid'">
-          <div class="w3-content w3-panel">
-            Page&nbsp;#<span x-text="$store.router.invalidPageHash"></span>&nbsp;does not exist.</p>
-          </div>
-        </section>
-
-      </div>
-
-      <!-- SETTING PAGE (META-LEVEL) -->
-      <section x-show="$store.router.overlayPage === 'settings'">
-
-        <!-- Content -->
-        <div class="w3-content settings-page-content" x-data="settingsPage">
-          <div class="w3-panel">
-            <div class="w3-card w3-round-large">
-              <header class="w3-container w3-center">
-                <h5 class="card-title align-center"><x-icon name="solid-faucet"></x-icon><b>Valves</b></h5>
-              </header>
-              <hr class="card-separator">
-              <div class="w3-panel">
-                <div class="card-list">
-                  <template x-for="valve in $store.valves.items" :key="valve.name">
-                    <div style="display: flex; justify-content: space-between;">
-                      <div style="display: flex; align-items: center; gap: 20px;">
-                        <b>Valve&nbsp;#<span x-text="valve.index"></span></b>
-                        <span x-text="valve.name"></span>
-                      </div>
-                      <label class='switch'>
-                        <input name='checkbox_test' type='checkbox' :id="'btn_' + valve.index"
-                          x-model="valve.is_checked"><span class='slider round'></span>
-                      </label>
-                    </div>
-                  </template>
-                  <div x-show="$store.valves.items.length === 0">None</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="w3-panel">
-            <div class="w3-card w3-round-large">
-              <header class="w3-container w3-center">
-                <h5 class="card-title align-center">
-                  <x-icon name="solid-microchip"></x-icon><b>Device</b>
-                </h5>
-              </header>
-              <hr class="card-separator">
-              <div class="w3-panel">
-                <div class="card-list">
-                  <div class="card-list-el">
-                    <span>ID</span>
-                    <b class="card-value" x-text="$store.deviceInfo.id"></b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Commissioning date</span>
-                    <b class="card-value" x-text="commissioningDate"></b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Reset(s)</span>
-                    <div class="card-value">
-                      <b x-text="$store.health.resets.total"></b>
-                      <span x-text="lastResetReason"></span>
-                    </div>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Last command received</span>
-                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                      <b x-text="lastCmdReceived.elapsedTime"></b>
-                      <span x-text="lastCmdReceived.name"></span>
-                    </div>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Schedule last modified</span>
-                    <b class="card-value" x-text="scheduleLastModified"></b>
-                  </div>
-                  <hr style="margin:0px">
-                  <div class="card-list-el">
-                    <span>Runtime</span>
-                    <b class="card-value" x-text="deviceRuntime"></b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Heap</span>
-                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                      <span>Frag: <b x-text="$store.health.heap.fragmentation"></b>%</span>
-                      <span>Largest: <b x-text="$store.health.heap.largestFreeBlock"></b> KB</span>
-                      <span>Min free: <b x-text="$store.health.heap.minFreeSize"></b> KB</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="w3-panel">
-            <div class="w3-card w3-round-large">
-              <header class="w3-container w3-center">
-                <h5 class="card-title align-center"><x-icon name="solid-wrench"></x-icon><b>Config</b></h5>
-              </header>
-              <hr class="card-separator">
-              <div class="w3-panel">
-                <div class="card-list">
-                  <div class="card-list-el">
-                    <span>Manual Watering Duration</span>
-                    <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                      <b
-                        x-text="'From '+$store.deviceCfg.manualWateringDuration.min+' to '+$store.deviceCfg.manualWateringDuration.max+' min'"></b>
-                      <span x-text="'Increments of '+$store.deviceCfg.manualWateringDuration.step"></span>
-                      <span x-text="'Defaults to '+$store.deviceCfg.manualWateringDuration.defaultDuration"></span>
-                    </div>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Seasonal Adjustement</span>
-                    <span class="card-value"><b x-text="seasonalAdj"></b>%</span>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Soil Moisture Threshold</span>
-                    <span class="card-value"><b x-text="soilMoistureThreshold"></b>%</span>
-                  </div>
-                  <hr style="margin:0px">
-                  <div class="w3-small card-list-el">
-                    <span>Last modified</span>
-                    <b class="card-value" x-text="deviceCfgLastModified"></b>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="w3-panel">
-            <div class="w3-card w3-round-large">
-              <header class="w3-container w3-center">
-                <h5 class="card-title align-center"><x-icon name="solid-code-branch"></x-icon><b>Versions</b></h5>
-              </header>
-              <hr class="card-separator">
-              <div class="w3-panel">
-                <div class="card-list">
-                  <div class="card-list-el">
-                    <span>Web UI</span>
-                    <b class="card-value">%VERSION%</b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Firmware</span>
-                    <b class="card-value" x-text="$store.deviceInfo.versions.firmware"></b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Protocol</span>
-                    <b class="card-value" x-text="$store.deviceInfo.versions.protocol"></b>
-                  </div>
-                  <div class="card-list-el">
-                    <span>Hardware</span>
-                    <b class="card-value" x-text="$store.deviceInfo.versions.hardware"></b>
-                  </div>
+                <div class="card-list-el">
+                  <div class="align-center"><x-icon name="solid-hourglass-end"></x-icon>Last fill</div>
+                  <span><b class="card-value" x-text="waterTankLastFillLabel"></b>&nbsp;ago</span>
                 </div>
               </div>
             </div>
@@ -616,35 +318,205 @@
 
       </section>
 
-      <section x-show="$store.router.overlayPage === 'new-schedule'">
+      <!-- SCHEDULE PAGE -->
+      <section x-show="$navigation.show('page','schedule')" class="w3-content" x-data="schedulePage">
 
-        <div class="w3-content settings-page-content">
-          <!-- Navbar TOP -->
-          <div class="w3-top" style="display: none;">
-            <div class="w3-display-container w3-theme" style="height:43px;">
-              <a class="w3-display-left w3-button w3-hover-theme w3-padding" href="/"><x-icon
-                  name="solid-chevron-left"></x-icon>&nbsp;Back</a>
-              <div class="w3-display-middle w3-medium"><b>Add Schedule</b></div>
+        <template x-if="$store.zones.items.length === 0">
+          <div class="w3-panel w3-center">There are no zones.</div>
+        </template>
+
+        <template x-for="zone in $store.zones.items" :key="zone.id">
+
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
+              </header>
+              <hr class="card-header-separator">
+              <div class="w3-panel">
+
+                <template x-for="(way, wayIndex) in zone.ways" :key="way.id">
+                  <div>
+                    <hr class="card-el-separator" x-show="wayIndex > 0">
+                    <div
+                      style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <b x-text="way.shortName"></b>
+
+                        <a :href="$navigation.push('add-schedule', { wayId: way.id });" class="w3-button way-btn-small">
+                          <x-icon class="xs" name="solid-plus"></x-icon>
+                        </a>
+                      </div>
+                      <div class="w3-small">
+                        <span>Next run in <b x-text="formatNextRun(way.nextSchedule);"></b></span>
+                      </div>
+                    </div>
+
+                    <div style=" display: flex; flex-direction: column; gap: 10px;">
+                      <template x-for="(schedule, scheduleIndex) in way.schedules" :key="schedule.id">
+                        <div
+                          style="padding-left: 10px; padding-right: 10px; display: flex; flex-direction: column; gap: 6px">
+                          <div style=" display: flex; align-items: center; gap: 10px;">
+                            <span><b class="w3-small">Schedule</b>
+                              <i class="w3-small"
+                                x-text="schedule?.name?.trim() ? schedule.name : scheduleIndex + 1"></i></span>
+                            <a :href="$navigation.push('edit-schedule', { wayId: way.id, scheduleId: schedule.id });"
+                              class="w3-button way-btn-small">
+                              <x-icon class="sm" name="solid-pen-to-square"></x-icon>
+                            </a>
+                            <label class="switch">
+                              <input name="checkbox_enable" type="checkbox"
+                                :id="'btn_enable_' + way.name + '_' + scheduleIndex" x-model="schedule.enabled">
+                              <span class="slider round"></span>
+                            </label>
+                          </div>
+
+                          <span class="w3-small" style="display: flex; align-items: center;">
+                            <b x-text="formatFrequency(schedule.freq,schedule.customDays)"></b><x-icon
+                              name="bi-dot"></x-icon>
+                            <b x-text="schedule.time"></b><x-icon name="bi-dot"></x-icon>
+                            <b><span x-text="schedule.duration"></span> min</b>
+                            <!-- Mon, Wed, Fri • 06:00 • 15 min -->
+                          </span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+
+              </div>
+        </template>
+
+      </section>
+
+      <!-- MANUAL PAGE -->
+      <section x-show="$navigation.show('page','manual')" class="w3-content">
+
+        <template x-if="$store.zones.items.length === 0">
+          <div class="w3-panel w3-center">There are no zones.</div>
+        </template>
+
+        <template x-for="zone in $store.zones.items" :key="zone.id">
+
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+
+              <header class="w3-container w3-center">
+                <h5 class="card-title"><b x-text="zone.name"></b>&nbsp;Zone</h5>
+              </header>
+              <hr class="card-header-separator">
+              <div class="w3-panel">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                  <template x-for="way in zone.ways" :key="way.id">
+                    <div style="display: flex; align-items: center; justify-content: space-between">
+                      <b x-text="way.shortName"></b>
+
+                      <div style="display: flex; align-items: center; gap:15px">
+                        <span x-show="way.manual.started"><b
+                            x-text="formatDuration(way.manual.timeLeft)"></b>&nbsp;left</span>
+                        <div x-show="!way.manual.started" x-data="manualWateringDurationInput(way.id)">
+                          <div style="display: flex; gap: 4px;">
+                            <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease">
+                              <x-icon class="xs" name="solid-minus"></x-icon>
+                            </button>
+                            <div class="input-wrapper">
+                              <input class="input-field" :id="'m_duration_' + way.name" type="text" inputmode="numeric"
+                                pattern="[0-9]*" @input="$event.target.value = $event.target.value.replace(/\D/g, '')"
+                                :placeholder="$store.deviceCfg.manualWateringDuration.defaultDuration"
+                                x-model.lazy="duration" @focus="$event.target.select()"
+                                @blur="setDuration($event.target.value, true)" @keydown.enter="$event.target.blur()">
+                              <span class="input-unit">min</span>
+                            </div>
+                            <button :disabled="duration >= max" class="w3-button way-btn" @click="increase">
+                              <x-icon class="xs" name="solid-plus"></x-icon>
+                            </button>
+                          </div>
+                        </div>
+
+                        <button name="manual_mode" :id="'btn_' + way.name" type="button" class="w3-button way-btn">
+                          <x-icon :name="'solid-' + (way.manual.started ? 'stop' : 'play')"></x-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+              </div>
+        </template>
+
+      </section>
+
+      <!-- HISTORY PAGE -->
+      <section x-show="$navigation.show('page','history')" class="w3-content">
+      </section>
+
+      <!-- "NOT FOUND" PAGE -->
+      <section x-show="$navigation.show('page','notfound')" class="w3-content">
+
+        <div class="w3-panel w3-center">
+          Page&nbsp;<i x-text="$navigation.params.notFoundPath"></i>&nbsp;does not exist.
+        </div>
+
+      </section>
+
+    </main>
+
+    <div id="overlays" x-show="$navigation.type === 'overlay'">
+
+      <!-- PAGE OVERLAY (large screens only) -->
+      <div id="page-overlay" class="blurred-light" @click="$navigation.closeOverlay()">
+      </div>
+
+      <!-- ADD/EDIT SCHEDULE OVERLAY -->
+      <section x-show="$navigation.show('overlay','add-schedule') || $navigation.show('overlay','edit-schedule')"
+        class="w3-content" x-data="modifySchedulePage">
+
+        <header x-show="$ui.isDesktop" class="w3-container modal-header">
+          <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+            <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
+            <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
+                name="solid-xmark"></x-icon></button>
+          </div>
+        </header>
+        <hr class="card-header-separator">
+
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <div class="w3-container" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <div class="card-title w3-center">
+                <h5 style="margin: 0px;"><b x-text="$navigation.getWayName()"></b> Way</h5>
+                <i class="w3-small"><b x-text="$navigation.getZoneName()"></b> Zone</i>
+              </div>
+              <x-icon x-show="$navigation.params.scheduleId" name="bi-dot"></x-icon>
+              <h5 style="margin: 0px;" x-show="$navigation.params.scheduleId">Schedule&nbsp;<span
+                  x-text="$navigation.getScheduleName(true)"></span>
+              </h5>
             </div>
           </div>
+        </div>
 
-          <!-- Content -->
-          <div class="w3-container" style="margin-top: 50px; display: none;">
-            <form id="update_form" action="edit_submit" method="get">
-              <!-- Hidden inputs -->
-              <input hidden id="way" name="way" value=%WAY%>
-              <input hidden id="schedule" name="schedule" value=%SCHEDULE%>
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <div class="w3-panel"><b>Time slot</b></div>
+            <div class="w3-panel">
+              <!-- Watering start time -->
+              <div style="display: flex;flex-direction: row; align-items: center; gap: 10px;">
+                Starts at<input type="number" name="startTime" id="addScheduleStartTime">
+                for<input type="number" name="duration" id="addScheduleDuration">
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <!-- Way name -->
-              <h6 class="hr-lines"><span><b>Ways</b></span></h6>
-              <h6
-                class="w3-border w3-border-theme w3-round w3-center w3-text-theme w3-padding w3-margin-top w3-margin-bottom">
-                %WAY_NAME%</h6>
-
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <div class="w3-panel"><b>Frequency</b></div>
+            <div class="w3-panel">
               <!-- Frequency -->
-              <h6 class="hr-lines"><span><b>Frequency</b></span></h6>
 
-              <div class="w3-margin-top w3-margin-bottom">
+              <div>
                 <div class="toggle-radio">
                   <input type="radio" name="mode" id="always" value="*" checked>
                   <label for="always">Always</label>
@@ -660,181 +532,211 @@
                 </div>
               </div>
 
-              <div id="custom_days" hidden>
+              <div id="custom_days">
 
-                <div class="w3-cell-row w3-center">
-                  <div class="w3-cell col-7">
-                    <p>Sun</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Mon</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Tue</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Wed</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Thu</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Fri</p>
-                  </div>
-                  <div class="w3-cell col-7">
-                    <p>Sat</p>
-                  </div>
+                <div style="display: flex; justify-content: space-evenly;">
+                  <span>Sun</span>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
                 </div>
 
-                <div class="w3-cell-row w3-center w3-margin-bottom" style='height: 40px;'>
+                <div class="w3-cell-row w3-center">
                   %CUSTOM_DAYS%
                 </div>
               </div>
 
-
-              <!-- Seasonal Adjustment -->
-              <h6 class="hr-lines"><span><b>Seasonal Adjustment&nbsp;&nbsp;<span id="slider_value"
-                      class="w3-tag w3-theme w3-round-large"
-                      style="padding: 5px 10px 5px 10px;">%SEASONAL_ADJUSTMENT%%</span></b></span></h6>
-              <div class="range w3-margin-top w3-margin-bottom">
-                <div class="field">
-                  <div class="value left">25</div>
-                  <input name='adjustment' id="slider" type="range" min="25" max="200" value=%SEASONAL_ADJUSTMENT%
-                    step="5" oninput="slider_value.innerText = this.value + '%'">
-                  <div class="value right">200</div>
-                </div>
-              </div>
-
-              <!-- Watering start time -->
-              <h6 class="hr-lines"><span><b>Start Time</b></span></h6>
-              <div class="w3-row w3-margin-top">
-                %START_TIME%
-              </div>
-
-            </form>
+            </div>
           </div>
+        </div>
 
-          <!-- Navbar BOTTOM -->
-          <div class="w3-bottom" style="display: none;">
-            <div class="w3-display-container w3-theme w3-large">
-              <a id='btn_done' class="w3-half w3-button w3-hover-theme" href="#" onclick="submit()"><x-icon class="lg"
-                  name="solid-circle-check"></x-icon>&nbsp;Add</a>
-              <a class="w3-half w3-button w3-hover-theme" href="/"><x-icon class="lg"
-                  name="solid-circle-xmark"></x-icon>&nbsp;Cancel</a>
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+
+            <div class="w3-panel">
+              <div
+                style="display: flex; flex-direction: row; align-items: center; gap: 20px; justify-content: space-between;">
+
+                <b>Skip if soil is moist</b>
+
+                <!-- Water only dry soil -->
+                <label class='switch'>
+                  <input type='checkbox'>
+                  <span class='slider round'></span>
+                </label>
+
+              </div>
+
             </div>
           </div>
         </div>
 
       </section>
 
-      <section x-show="$store.router.overlayPage === 'edit-schedule'">
+      <!-- SETTING OVERLAY -->
+      <section x-show="$navigation.show('overlay','settings')" class="w3-content" x-data="settingsPage">
 
-        <!-- Navbar TOP -->
-        <div class="w3-top">
-          <div class="w3-display-container w3-theme" style="height:43px;">
-            <a class="w3-display-left w3-button w3-hover-theme w3-padding" href="/"><x-icon
-                name="solid-chevron-left"></x-icon>&nbsp;Back</a>
-            <div class="w3-display-middle w3-medium"><b>Edit Schedule</b></div>
+        <header x-show="$ui.isDesktop" class="w3-container modal-header">
+          <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+            <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
+            <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
+                name="solid-xmark"></x-icon></button>
+          </div>
+        </header>
+        <hr class="card-header-separator">
+
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title align-center"><x-icon name="solid-faucet"></x-icon><b>Valves</b></h5>
+            </header>
+            <hr class="card-header-separator">
+            <div class="w3-panel">
+              <div class="card-list">
+                <template x-for="valve in $store.valves.items" :key="valve.name">
+                  <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                      <b>Valve&nbsp;#<span x-text="valve.index"></span></b>
+                      <span x-text="valve.name"></span>
+                    </div>
+                    <label class='switch'>
+                      <input name='checkbox_test' type='checkbox' :id="'btn_' + valve.index"
+                        x-model="valve.is_checked"><span class='slider round'></span>
+                    </label>
+                  </div>
+                </template>
+                <div x-show="$store.valves.items.length === 0">None</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Content -->
-        <div class="w3-container" style="margin-top: 50px;">
-          <form id="update_form" action="edit_submit" method="get">
-            <!-- Hidden inputs -->
-            <input hidden id="way" name="way" value=%WAY%>
-            <input hidden id="schedule" name="schedule" value=%SCHEDULE%>
-
-            <!-- Way name -->
-            <h6 class="hr-lines"><span><b>Ways</b></span></h6>
-            <h6
-              class="w3-border w3-border-theme w3-round w3-center w3-text-theme w3-padding w3-margin-top w3-margin-bottom">
-              %WAY_NAME%</h6>
-
-            <!-- Frequency -->
-            <h6 class="hr-lines"><span><b>Frequency</b></span></h6>
-
-            <div class="w3-margin-top w3-margin-bottom">
-              <div class="toggle-radio">
-                <input type="radio" name="mode" id="always" value="*" %ALWAYS_CHECKED%>
-                <label for="always">Always</label>
-
-                <input type="radio" name="mode" id="even" value="e" %EVEN_CHECKED%>
-                <label for="even">Even</label>
-
-                <input type="radio" name="mode" id="odd" value="o" %ODD_CHECKED%>
-                <label for="odd">Odd</label>
-
-                <input type="radio" name="mode" id="custom" value="c" %CUSTOM_CHECKED%>
-                <label for="custom">Custom</label>
-              </div>
-            </div>
-
-            <div id="custom_days" %IS_VISIBLE%>
-
-              <div class="w3-cell-row w3-center">
-                <div class="w3-cell col-7">
-                  <p>Sun</p>
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title align-center">
+                <x-icon name="solid-microchip"></x-icon><b>Device</b>
+              </h5>
+            </header>
+            <hr class="card-header-separator">
+            <div class="w3-panel">
+              <div class="card-list">
+                <div class="card-list-el">
+                  <span>ID</span>
+                  <b class="card-value" x-text="$store.deviceInfo.id"></b>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Mon</p>
+                <div class="card-list-el">
+                  <span>Commissioning date</span>
+                  <b class="card-value" x-text="commissioningDate"></b>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Tue</p>
+                <div class="card-list-el">
+                  <span>Reset(s)</span>
+                  <div class="card-value">
+                    <b x-text="$store.health.resets.total"></b>
+                    <span x-text="lastResetReason"></span>
+                  </div>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Wed</p>
+                <div class="card-list-el">
+                  <span>Last command received</span>
+                  <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                    <b x-text="lastCmdReceived.elapsedTime"></b>
+                    <span x-text="lastCmdReceived.name"></span>
+                  </div>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Thu</p>
+                <div class="card-list-el">
+                  <span>Schedule last modified</span>
+                  <b class="card-value" x-text="scheduleLastModified"></b>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Fri</p>
+                <hr style="margin:0px">
+                <div class="card-list-el">
+                  <span>Runtime</span>
+                  <b class="card-value" x-text="deviceRuntime"></b>
                 </div>
-                <div class="w3-cell col-7">
-                  <p>Sat</p>
+                <div class="card-list-el">
+                  <span>Heap</span>
+                  <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                    <span>Frag: <b x-text="$store.health.heap.fragmentation"></b>%</span>
+                    <span>Largest: <b x-text="$store.health.heap.largestFreeBlock"></b> KB</span>
+                    <span>Min free: <b x-text="$store.health.heap.minFreeSize"></b> KB</span>
+                  </div>
                 </div>
               </div>
-
-              <div class="w3-cell-row w3-center w3-margin-bottom" style='height: 40px;'>%CUSTOM_DAYS%</div>
             </div>
-
-
-            <!-- Seasonal Adjustment -->
-            <h6 class="hr-lines"><span><b>Seasonal Adjustment&nbsp;&nbsp;<span id="slider_value"
-                    class="w3-tag w3-theme w3-round-large"
-                    style="padding: 5px 10px 5px 10px;">%SEASONAL_ADJUSTMENT%%</span></b></span></h6>
-            <div class="range w3-margin-top w3-margin-bottom">
-              <div class="field">
-                <div class="value left">25</div>
-                <input name='adjustment' id="slider" type="range" min="25" max="200" value=%SEASONAL_ADJUSTMENT%
-                  step="5" oninput="slider_value.innerText = this.value + '%'">
-                <div class="value right">200</div>
-              </div>
-            </div>
-
-            <!-- Watering start time -->
-            <h6 class="hr-lines"><span><b>Start Time</b></span></h6>
-            <div class="w3-row w3-margin-top">
-              %START_TIME%
-            </div>
-
-          </form>
+          </div>
         </div>
 
-        <!-- Navbar BOTTOM -->
-        <div class="w3-bottom">
-          <div class="w3-display-container w3-theme w3-large">
-            <a id='btn_done' class="w3-half w3-button w3-hover-theme" href="#" onclick="submit()"><x-icon class="lg"
-                name="solid-circle-check"></x-icon>&nbsp;Update</a>
-            <a class="w3-half w3-button w3-hover-theme" href="#" onclick="remove()"><x-icon class="lg"
-                name="solid-circle-xmark"></x-icon>&nbsp;Delete</a>
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title align-center"><x-icon name="solid-wrench"></x-icon><b>Config</b></h5>
+            </header>
+            <hr class="card-header-separator">
+            <div class="w3-panel">
+              <div class="card-list">
+                <div class="card-list-el">
+                  <span>Manual Watering Duration</span>
+                  <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
+                    <b
+                      x-text="'From '+$store.deviceCfg.manualWateringDuration.min+' to '+$store.deviceCfg.manualWateringDuration.max+' min'"></b>
+                    <span x-text="'Increments of '+$store.deviceCfg.manualWateringDuration.step"></span>
+                    <span x-text="'Defaults to '+$store.deviceCfg.manualWateringDuration.defaultDuration"></span>
+                  </div>
+                </div>
+                <div class="card-list-el">
+                  <span>Seasonal Adjustement</span>
+                  <span class="card-value"><b x-text="seasonalAdj"></b>%</span>
+                </div>
+                <div class="card-list-el">
+                  <span>Soil Moisture Threshold</span>
+                  <span class="card-value"><b x-text="soilMoistureThreshold"></b>%</span>
+                </div>
+                <hr style="margin:0px">
+                <div class="w3-small card-list-el">
+                  <span>Last modified</span>
+                  <b class="card-value" x-text="deviceCfgLastModified"></b>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="w3-panel">
+          <div class="w3-card w3-round-large">
+            <header class="w3-container w3-center">
+              <h5 class="card-title align-center"><x-icon name="solid-code-branch"></x-icon><b>Versions</b></h5>
+            </header>
+            <hr class="card-header-separator">
+            <div class="w3-panel">
+              <div class="card-list">
+                <div class="card-list-el">
+                  <span>Web UI</span>
+                  <b class="card-value">%VERSION%</b>
+                </div>
+                <div class="card-list-el">
+                  <span>Firmware</span>
+                  <b class="card-value" x-text="$store.deviceInfo.versions.firmware"></b>
+                </div>
+                <div class="card-list-el">
+                  <span>Protocol</span>
+                  <b class="card-value" x-text="$store.deviceInfo.versions.protocol"></b>
+                </div>
+                <div class="card-list-el">
+                  <span>Hardware</span>
+                  <b class="card-value" x-text="$store.deviceInfo.versions.hardware"></b>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </section>
 
-    </main>
+    </div>
+
+  </div>
 
   </div>
 

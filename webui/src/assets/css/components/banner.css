@@ -2,8 +2,8 @@
 .banner {
     --banner-animation-duration: 500ms;
 
-    z-index: 997;
     position: absolute;
+    z-index: 1;
     top: 100%;
     left: 0;
 

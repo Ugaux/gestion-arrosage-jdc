@@ -12,6 +12,8 @@ export default (Alpine) => {
       },
     },
 
+    isDesktop: null,
+
     init() {
       // Add closing of sidebar with escape key
       window.addEventListener("keydown", (e) => {
@@ -25,9 +27,11 @@ export default (Alpine) => {
         "is-desktop",
         mediaQuery.matches,
       );
+      this.isDesktop = mediaQuery.matches;
 
       mediaQuery.addEventListener("change", (e) => {
         document.documentElement.classList.toggle("is-desktop", e.matches);
+        this.isDesktop = e.matches;
         if (e.matches) {
           // Entering large screen
           if (this.sidebar.isOpen) {
@@ -41,5 +45,5 @@ export default (Alpine) => {
     },
   });
 
-  Alpine.magic("sidebar", () => Alpine.store("ui").sidebar);
+  Alpine.magic("ui", () => Alpine.store("ui"));
 };

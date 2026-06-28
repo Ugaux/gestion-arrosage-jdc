@@ -1,5 +1,6 @@
+import { AppCfg } from "./core/appCfg.js";
 import { formatDuration } from "./core/formatting.js";
-import registerRouter from "./core/router.js";
+import registerNavigation from "./core/navigation.js";
 import registerWebsocket from "./core/ws.js";
 
 import registerDeviceCfg from "./stores/deviceCfgStore.js";
@@ -13,20 +14,22 @@ import registerZones from "./stores/zoneStore.js";
 
 import defineXIcon from "./components/x-icon.js";
 import registerBanner from "./components/banner.js";
-import registerDeviceSystemCard from "./components/deviceSystemCard.js";
+import registerHomePage from "./components/homePage.js";
 import registerManualWateringDurationInput from "./components/manualWateringDurationInput.js";
+import registerModifySchedulePage from "./components/modifySchedulePage.js";
+import registerSchedulePage from "./components/schedulePage.js";
 import registerSettingsPage from "./components/settingsPage.js";
 import registerThemeManager from "./components/themeManager.js";
 import registerToast from "./components/toast.js";
 import registerTooltip from "./components/tooltip.js";
-import registerWateringCard from "./components/wateringCard.js";
-import registerWaterTankCard from "./components/waterTankCard.js";
 
 import Tash from "./plugins/alpinejs-tash@1.2.1.esm.min.js";
+import PineconeRouter from "./plugins/pinecone-router@7.5.2.esm.min.js";
 import Alpine from "./plugins/alpinejs@3.15.12.esm.js";
 
 // --------- PLUGINS ---------
 Alpine.plugin(Tash);
+Alpine.plugin(PineconeRouter);
 
 // ------------ CORE ------------
 window.formatDuration = formatDuration;
@@ -46,13 +49,14 @@ registerZones(Alpine);
 // --------- COMPONENTS ---------
 defineXIcon();
 registerBanner(Alpine);
-registerDeviceSystemCard(Alpine);
+registerHomePage(Alpine);
 registerManualWateringDurationInput(Alpine);
+registerModifySchedulePage(Alpine);
+registerSchedulePage(Alpine);
 registerSettingsPage(Alpine);
 registerThemeManager(Alpine);
 registerToast(Alpine);
 registerTooltip(Alpine);
-registerWateringCard(Alpine);
-registerWaterTankCard(Alpine);
 
+if (AppCfg.debug) window.Alpine = Alpine;
 Alpine.start();
