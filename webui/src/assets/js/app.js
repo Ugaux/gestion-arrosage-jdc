@@ -19,13 +19,19 @@ import registerManualWateringDurationInput from "./components/manualWateringDura
 import registerModifySchedulePage from "./components/modifySchedulePage.js";
 import registerSchedulePage from "./components/schedulePage.js";
 import registerSettingsPage from "./components/settingsPage.js";
-import registerThemeManager from "./components/themeManager.js";
+import {
+  setTheme,
+  getInitialDarkMode,
+  registerThemeManager,
+} from "./components/themeManager.js";
 import registerToast from "./components/toast.js";
 import registerTooltip from "./components/tooltip.js";
 
 import Tash from "./plugins/alpinejs-tash@1.2.1.esm.min.js";
 import PineconeRouter from "./plugins/pinecone-router@7.5.2.esm.min.js";
 import Alpine from "./plugins/alpinejs@3.15.12.esm.js";
+
+setTheme(getInitialDarkMode());
 
 // --------- PLUGINS ---------
 Alpine.plugin(Tash);

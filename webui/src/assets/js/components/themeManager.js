@@ -1,7 +1,17 @@
 import { subscribeToLocalStorageString } from "../core/storage.js";
 import { parseCssDurationVar } from "../core/utilities.js";
 
-export default (Alpine) => {
+export function getInitialDarkMode() {
+  const saved = localStorage.getItem("theme");
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  return saved ? saved === "dark" : mediaQuery.matches;
+}
+
+export function setTheme(isDark) {
+  document.documentElement.classList.toggle("dark-theme", isDark);
+}
+
+export function registerThemeManager(Alpine) {
   Alpine.data("themeManager", () => ({
     isDark: false,
     _timeout: null,
@@ -9,13 +19,11 @@ export default (Alpine) => {
     unsubStorage: null,
 
     init() {
-      const saved = localStorage.getItem("theme");
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      this.isDark = saved ? saved === "dark" : mediaQuery.matches;
-
-      document.documentElement.classList.toggle("dark-theme", this.isDark);
+      this.isDark = getInitialDarkMode();
+      setTheme(this.isDark);
 
       // Keep in sync with OS preference when user has no saved choice
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       mediaQuery.addEventListener("change", this.syncToOsPreference);
 
       // Sync across tabs
@@ -38,7 +46,7 @@ export default (Alpine) => {
     syncToOsPreference(event) {
       if (localStorage.getItem("theme") === null) {
         this.isDark = event.matches;
-        document.documentElement.classList.toggle("dark-theme", this.isDark);
+        setTheme(this.isDark);
       }
     },
 
@@ -53,7 +61,7 @@ export default (Alpine) => {
       console.log("Setting theme to", this.isDark ? "Dark" : "Light", "mode");
       document.documentElement.classList.add("theme-switching");
       document.body.classList.add("no-select");
-      document.documentElement.classList.toggle("dark-theme", this.isDark);
+      setTheme(this.isDark);
       if (save) localStorage.setItem("theme", this.isDark ? "dark" : "light");
 
       // Remove after transition completes
@@ -70,4 +78,4 @@ export default (Alpine) => {
         .removeEventListener("change", this.syncToOsPreference);
     },
   }));
-};
+}
