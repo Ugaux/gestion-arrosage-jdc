@@ -1,8 +1,8 @@
 export const AppCfg = {
   /* General websocket settings */
-  logSocketInConsole: true,
+  logSocketInConsole: false,
   websocketAckTimeout: 500, // ms before a pending command times out
-  useFakeSocket: true,
+  useFakeSocket: false,
 
   /* Only fake socket settings */
   fakeScenario: "scheduledWatering", // default is 'empty'
@@ -11,7 +11,7 @@ export const AppCfg = {
   /* Only real socket settings */
   websocketURL: `ws://${location.hostname}:8000/ws`,
 
-  debugAlpine: true,
+  debugAlpine: false,
 
   icons: {
     info: "circle-info",

@@ -13,6 +13,17 @@ export default (Alpine) => {
       );
     },
 
+    syncTime() {
+      Alpine.store("wsClient").sendExclusive(
+        "syncTime",
+        {
+          action: "syncTime",
+          timeSec: Math.floor(Date.now() / 1000),
+        },
+        { showToast: true },
+      );
+    },
+
     get seasonalAdj() {
       const value = Alpine.store("deviceCfg").seasonalAdj * 100;
       return Math.round(value * 100) / 100;

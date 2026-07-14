@@ -19,21 +19,7 @@ Icons https://fontawesome.com/v7/search
 
 ## 🔧 To clarify / questions
 
-- _ID ON ERROR FOR DELETION IF MULTIPLE PRESS OF CLEAR AT SAME TIME_
-- Utiliser nvs pour stocker pump cycles et ajouter une date pour savoir depuis quand ça incrémente (commissioningTimeSec), et pour last command et last schedule update et last config modified ... + ne pas écraser lors d'un upload firmware et littlefs
-- Quand activation manuelle de la vanne dans settings, la fermer automatiquement après un timeout
-  => Dépend de comment c'est géré par rgodin
-- sync de l'heure, 2 options :
-  - bouton dans web pour sync heure avec tel, avoir le sync heure été hiver auto plutôt ?
-  - maj de l'heure de l'esp automatique quand telephone sy connecte si heure différentes de + de qq secondes (pas besoin de mettre dans settings pr changement manuel) + ajout changements dheures de saison
 - Get config button dans settings qui s'enlève quand config reçu et laisse place à une textinput et bouton "save and reboot" + toast "rebooting..." on click. après appuie sur save button, check si config valide sinon toast erreur
-
-Serveur :
-
-- /api/… returns first (keep at least API call for device status (GET) and to reset (POST) device with CURL command and one/two other relevant calls)
-- all others url paths return index.html
-  The index.html handles "Page Not Found"
-- Check si quand esp est down dans console log je vois websocket error
 
 ### Next updates
 

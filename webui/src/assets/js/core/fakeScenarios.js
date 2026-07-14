@@ -927,6 +927,21 @@ export const scenarios = {
           }, ackDelay);
           break;
         }
+        case "syncTime": {
+          socket.data.device.info.localTimeSec = msg.payload.timeSec;
+
+          setTimeout(() => {
+            socket.onmessage?.({
+              data: JSON.stringify({
+                type: "ACK",
+                id: msg.id,
+                ok: true,
+                error: {},
+              }),
+            });
+          }, ackDelay);
+          break;
+        }
       }
     },
   },
