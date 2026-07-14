@@ -127,7 +127,7 @@
     <!-- FOOTER -->
     <div>
       <div x-show="$wsClient.isConnected()" x-transition>
-      <div class="w3-panel" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <div class="w3-panel" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
           <div class="status-dot pulse-animation online"></div>
           <strong style="line-height:1;">Connected</strong>
         </div>
@@ -282,7 +282,8 @@
                   </div>
                 </div>
                 <div class="card-list-el">
-                  <div class="align-center"><x-icon name="solid-fan"></x-icon>Water Flow</div>
+                  <div class="align-center"><x-icon :style="'transform: rotate(' + propellerRotation + 'deg)'"
+                      name="solid-fan"></x-icon>Water Flow</div>
                   <span class="card-value"><b x-text="waterFlow"></b>&nbsp;l/min</span>
                 </div>
                 <div class="card-list-el">
@@ -490,13 +491,13 @@
         <div x-show="$ui.isDesktop">
 
           <header class="w3-container modal-header">
-          <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
-            <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
-            <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
-                name="solid-xmark"></x-icon></button>
-          </div>
-        </header>
-        <hr class="card-header-separator">
+            <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+              <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
+              <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
+                  name="solid-xmark"></x-icon></button>
+            </div>
+          </header>
+          <hr class="card-header-separator">
 
         </div>
 
@@ -522,26 +523,26 @@
 
         <div x-show="canScheduleBeEdited">
 
-        <div class="w3-panel">
-          <div class="w3-card w3-round-large">
-            <div class="w3-container" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-              <div class="card-title w3-center">
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <div class="w3-container" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div class="card-title w3-center">
                   <h6 style="margin: 0px;"><b x-text="$navigation.getWayName()"></b> Way</h6>
-                <i class="w3-small"><b x-text="$navigation.getZoneName()"></b> Zone</i>
+                  <i class="w3-small"><b x-text="$navigation.getZoneName()"></b> Zone</i>
+                </div>
+                <x-icon x-show="$navigation.params.scheduleId" name="bi-dot"></x-icon>
+                <h5 style="margin: 0px;" x-show="$navigation.params.scheduleId">Schedule&nbsp;<span
+                    x-text="$navigation.getScheduleName(true)"></span>
+                </h5>
               </div>
-              <x-icon x-show="$navigation.params.scheduleId" name="bi-dot"></x-icon>
-              <h5 style="margin: 0px;" x-show="$navigation.params.scheduleId">Schedule&nbsp;<span
-                  x-text="$navigation.getScheduleName(true)"></span>
-              </h5>
             </div>
           </div>
-        </div>
 
-        <div class="w3-panel">
-          <div class="w3-card w3-round-large">
-            <div class="w3-panel"><b>Time slot</b></div>
-            <div class="w3-panel">
-              <!-- Watering start time -->
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <div class="w3-panel"><b>Time slot</b></div>
+              <div class="w3-panel">
+                <!-- Watering start time -->
                 <div style="display: flex;flex-direction: row; align-items: center; gap: 4px; flex-wrap: wrap;">
                   <span>Starts at</span>
                   <input x-model="time" class="input-field" style="width:56px" @input="formatTimeOnInput" type="text"
@@ -564,17 +565,17 @@
                       <x-icon class="xs" name="solid-plus"></x-icon>
                     </button>
                   </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="w3-panel">
-          <div class="w3-card w3-round-large">
-            <div class="w3-panel"><b>Frequency</b></div>
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
+              <div class="w3-panel"><b>Frequency</b></div>
 
-            <div class="w3-panel">
-              <!-- Frequency -->
+              <div class="w3-panel">
+                <!-- Frequency -->
                 <div class="radio-list">
                   <template x-for="freq in frequencies" :key="freq">
                     <button class="radio-element radio-element-rect" :class="{ selected: selectedFreq === freq }"
@@ -591,30 +592,30 @@
                       :class="{ selected: customDays.includes(day) }" @click="toggleDay(day)" x-text="day"></button>
                   </template>
                 </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="w3-panel">
-          <div class="w3-card w3-round-large">
+          <div class="w3-panel">
+            <div class="w3-card w3-round-large">
 
-            <div class="w3-panel">
-              <div
-                style="display: flex; flex-direction: row; align-items: center; gap: 20px; justify-content: space-between;">
+              <div class="w3-panel">
+                <div
+                  style="display: flex; flex-direction: row; align-items: center; gap: 20px; justify-content: space-between;">
 
                   <b @click="skipIfSoilIsMoist = !skipIfSoilIsMoist" style="cursor: pointer">Skip if soil is
                     moist</b>
 
-                <!-- Water only dry soil -->
+                  <!-- Water only dry soil -->
                   <label class="switch" @click.stop>
                     <input type="checkbox" x-model="skipIfSoilIsMoist">
                     <span class="slider round"></span>
-                </label>
+                  </label>
+
+                </div>
 
               </div>
-
             </div>
-          </div>
           </div>
 
           <div class="w3-panel">
@@ -637,13 +638,13 @@
         <div x-show="$ui.isDesktop">
 
           <header class="w3-container modal-header">
-          <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
-            <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
-            <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
-                name="solid-xmark"></x-icon></button>
-          </div>
-        </header>
-        <hr class="card-header-separator">
+            <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+              <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
+              <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
+                  name="solid-xmark"></x-icon></button>
+            </div>
+          </header>
+          <hr class="card-header-separator">
 
         </div>
 

@@ -1,7 +1,14 @@
 import { formatDuration } from "../core/formatting.js";
 
+const MAX_WATER_FLOW = 80; // L/min
+const MAX_PROPELLER_ROTATION_SPEED = 720; // deg/sec at MAX_WATER_FLOW
+
 export default (Alpine) => {
   Alpine.data("homePage", () => ({
+    init() {
+      this.startFlowAnimation();
+    },
+
     // ************** System Card ************** //
 
     get deviceStateLabel() {
@@ -158,6 +165,33 @@ export default (Alpine) => {
 
     get waterFlow() {
       return Math.round(Alpine.store("sensors").waterFlow);
+    },
+
+    propellerRotation: 0,
+    _lastAnimationUpdate: null,
+
+    startFlowAnimation() {
+      const animate = (timestamp) => {
+        if (!this._lastAnimationUpdate) {
+          this._lastAnimationUpdate = timestamp;
+          requestAnimationFrame(animate);
+          return;
+        }
+        const delta = Math.min(
+          (timestamp - this._lastAnimationUpdate) / 1000,
+          0.05,
+        );
+        this._lastAnimationUpdate = timestamp;
+
+        // Convert flowRate from L/min into deg/s
+        const speed =
+          (Alpine.store("sensors").waterFlow / MAX_WATER_FLOW) *
+          MAX_PROPELLER_ROTATION_SPEED;
+        this.propellerRotation += speed * delta;
+        requestAnimationFrame(animate);
+      };
+
+      requestAnimationFrame(animate);
     },
 
     get pumpStateLabel() {
