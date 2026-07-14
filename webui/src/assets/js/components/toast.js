@@ -1,7 +1,7 @@
 /* Code inspired by https://dev.to/zaxwebs/toast-notifications-with-alpine-js-tailwind-css-lpc for logic and https://daisyui.com/components/toast/ with https://daisyui.com/components/alert/ for looks */
 
 import { AppCfg } from "../core/appCfg.js";
-import { parseCssDurationVar } from "../core/utilities.js";
+import { parseCssDurationVar, generateUniqueID } from "../core/utilities.js";
 
 const MAX_TOASTS = 4;
 const POSITION = "bottom-right";
@@ -37,8 +37,7 @@ function createToastStore() {
         description: options.description ?? "",
         duration: options.duration ?? DEFAULT_DURATION,
 
-        // For id -> crypto.randomUUID() only available in https or localhost http
-        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        id: generateUniqueID(),
         leaving: false,
       };
 
@@ -53,6 +52,8 @@ function createToastStore() {
       toast.timer = setTimeout(() => {
         this.close(toast.id);
       }, toast.duration);
+
+      return toast.id;
     },
 
     close(id) {
@@ -65,12 +66,11 @@ function createToastStore() {
       toast.leaving = true;
       // ensure DOM update happens before removal
       requestAnimationFrame(() => {
-        setTimeout(() => this.remove(id), this.animationDuration + 30);
+        setTimeout(
+          () => (this.items = this.items.filter((t) => t.id !== id)),
+          this.animationDuration + 30,
+        );
       });
-    },
-
-    remove(id) {
-      this.items = this.items.filter((t) => t.id !== id);
     },
 
     clear() {

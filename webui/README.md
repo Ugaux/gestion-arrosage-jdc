@@ -19,16 +19,6 @@ Icons https://fontawesome.com/v7/search
 
 ## 🔧 To clarify / questions
 
-commit
-
-commit propeller animation avec html index
-
-commit toast
-
-2e commit avec: truc bizarre qui fait que l'overlay est clickable quand changement de theme
-
-3e commit scroll to top for overlay pages
-
 - _ID ON ERROR FOR DELETION IF MULTIPLE PRESS OF CLEAR AT SAME TIME_
 - Utiliser nvs pour stocker pump cycles et ajouter une date pour savoir depuis quand ça incrémente (commissioningTimeSec), et pour last command et last schedule update et last config modified ... + ne pas écraser lors d'un upload firmware et littlefs
 - Quand activation manuelle de la vanne dans settings, la fermer automatiquement après un timeout
