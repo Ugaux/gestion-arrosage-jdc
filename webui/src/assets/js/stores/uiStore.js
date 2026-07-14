@@ -40,6 +40,13 @@ export default (Alpine) => {
             console.log("Closing small/medium screens sidebar...");
             this.sidebar.close();
           }
+
+          // Scrolling to top for overlay pages on resize
+          document.querySelectorAll("#overlays>section").forEach((el) => {
+            if (el.offsetParent !== null) {
+              el.scrollTop = 0;
+            }
+          });
         }
       });
     },
