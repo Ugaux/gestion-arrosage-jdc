@@ -9,4 +9,5 @@
 /webui/.venv
 /webui/node_modules
 /webui/dist
+/webui/src/assets/app.min.*
 __pycache__

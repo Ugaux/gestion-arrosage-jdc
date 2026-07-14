@@ -1,10 +1,7 @@
-const DEBUG = false;
-
 function registerRoutes(routes, Alpine) {
   for (const route of routes) {
     Alpine.$router.add(route.path, {
       name: route.name,
-      // templates: null, // fixes bug in PineconeRouter 7.5.0/7.5.1 where "pinecone:end" event never triggers
       handlers: [
         (ctx) => {
           Alpine.store("navigation").navigate({
@@ -17,16 +14,25 @@ function registerRoutes(routes, Alpine) {
   }
 }
 
+function buildPath(path, params = {}) {
+  return path.replace(/:([a-zA-Z0-9]+)/g, (_, key) => {
+    if (!(key in params)) {
+      throw new TypeError(`Missing param: ${key}`);
+    }
+    return params[key];
+  });
+}
+
 export default (Alpine) => {
   Alpine.store("navigation", {
     path: null,
     type: null,
     name: null,
-    parentPath: null,
     title: null,
     params: {},
 
-    lastNavPath: null,
+    lastNavigatableName: null,
+    parentRoute: null,
 
     routes: [
       {
@@ -39,7 +45,7 @@ export default (Alpine) => {
       },
 
       {
-        path: "/schedule",
+        path: "/ways/schedules",
         type: "page",
         name: "schedule",
         title: "Schedule",
@@ -48,7 +54,7 @@ export default (Alpine) => {
       },
 
       {
-        path: "/manual",
+        path: "/ways/manual",
         type: "page",
         name: "manual",
         title: "Manual",
@@ -67,21 +73,27 @@ export default (Alpine) => {
       },
 
       {
-        path: "/schedule/add",
+        path: "/ways/:wayId/schedules/add",
         type: "overlay",
         name: "add-schedule",
-        parentPath: "/schedule",
+        parentName: "schedule",
         title: "Add Schedule",
+        params: (ctx) => ({
+          action: "add",
+          wayId: ctx.params.wayId,
+        }),
       },
 
       {
-        path: "/schedule/edit/:id",
+        path: "/ways/:wayId/schedules/:scheduleId/edit",
         type: "overlay",
         name: "edit-schedule",
-        parentPath: "/schedule",
+        parentName: "schedule",
         title: "Edit Schedule",
         params: (ctx) => ({
-          id: ctx.params.id,
+          action: "edit",
+          wayId: ctx.params.wayId,
+          scheduleId: ctx.params.scheduleId,
         }),
       },
 
@@ -89,7 +101,7 @@ export default (Alpine) => {
         path: "/settings",
         type: "overlay",
         name: "settings",
-        // no parentPath as it is a global overlay
+        parentName: "*",
         title: "Settings",
       },
 
@@ -108,7 +120,21 @@ export default (Alpine) => {
       registerRoutes(this.routes, Alpine);
 
       document.addEventListener("pinecone:end", () => {
-        document.title = "Arrosage JdC - " + this.title;
+        let modifyScheduleName = "";
+        if (this.params.wayId) {
+          modifyScheduleName += this.params.scheduleId
+            ? " " + this.getScheduleName(true) + " of "
+            : " to ";
+          modifyScheduleName +=
+            this.getWayName() + " Way in " + this.getZoneName() + " Zone";
+        }
+        document.title = this.title + modifyScheduleName + " — Arrosage JdC";
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          this.closeOverlay();
+        }
       });
     },
 
@@ -116,11 +142,11 @@ export default (Alpine) => {
       this.path = route.path ?? null;
       this.type = route.type ?? null;
       this.name = route.name ?? null;
-      this.parentPath = route.parentPath ?? null;
       this.title = route.title ?? null;
       this.params = route.params ?? {};
 
-      if (route.isNav) this.lastNavPath = this.path;
+      if (route.isNav) this.lastNavigatableName = this.name;
+      this.parentRoute = this._resolveParentRoute(route.parentName);
 
       // Ensure navigation ends in content-focused state
       // (includes navigation to the current route and browser back/forward).
@@ -131,27 +157,89 @@ export default (Alpine) => {
     closeOverlay() {
       if (this.type !== "overlay") return;
 
-      // Overlay has a specific parent
-      if (this.parentPath) {
-        if (DEBUG)
-          console.log(`Overlay has a specific parent '${this.parentPath}'`);
-        Alpine.$router.navigate(this.parentPath);
-        return;
+      Alpine.$router.navigate(this.parentRoute?.path || "/");
+    },
+
+    push(name, params) {
+      const route = this.routes.find((route) => route.name === name);
+      if (!route) throw new Error(`Unknown route: ${name}`);
+
+      return buildPath(route.path, params);
+    },
+
+    _resolveParentRoute(parentName) {
+      if (parentName === "*") {
+        const lastName =
+          this.lastNavigatableName ??
+          this.routes.find((route) => route.path === "/").name;
+
+        return this.routes.find((route) => route.name === lastName);
       }
 
-      // Previous navigation exists
-      if (this.lastNavPath) {
-        if (DEBUG)
-          console.log(
-            `Previous navigation exists, using last path '${this.lastNavPath}'`,
-          );
-        Alpine.$router.navigate(this.lastNavPath);
-        return;
+      return this.routes.find((route) => route.name === parentName);
+    },
+
+    getTitle() {
+      if (!Alpine.store("ui").isDesktop || this.type === "page")
+        return this.title;
+
+      if (this.type === "overlay") return this.parentRoute.title;
+    },
+
+    show(type, name) {
+      // Show page/overlay from url
+      if (type === this.type && name === this.name) return true;
+
+      if (!Alpine.store("ui").isDesktop) return;
+      if (type === "page" && this.type === "overlay") {
+        // If on large screens and an overlay is displayed, also show its parent page
+        if (name === this.parentRoute.name) {
+          return true;
+        }
       }
 
-      // No previous navigation (first page load)
-      if (DEBUG) console.log("No previous navigation: '/'");
-      Alpine.$router.navigate("/");
+      return false;
+    },
+
+    showToolbarActions() {
+      return Alpine.store("ui").isDesktop || this.type === "page";
+    },
+
+    getZoneName() {
+      if (!this.params.wayId) return;
+
+      return Alpine.store("zones").getParentZone(this.params.wayId)?.name;
+    },
+
+    getWayName() {
+      if (!this.params.wayId) return;
+
+      return Alpine.store("zones").getWay(this.params.wayId)?.shortName;
+    },
+
+    getScheduleName(useApostrophe = false) {
+      if (!this.params.scheduleId) return;
+
+      const way = Alpine.store("zones").getWay(this.params.wayId);
+      if (!way) return;
+
+      let foundSchedule = null;
+      let foundIndex = -1;
+      way?.schedules?.some((schedule, index) => {
+        if (schedule.id === this.params.scheduleId) {
+          foundSchedule = schedule;
+          foundIndex = index;
+          return true;
+        }
+        return false;
+      });
+
+      if (!foundSchedule?.name || foundSchedule?.name.trim() === "")
+        return foundIndex + 1;
+
+      return useApostrophe
+        ? `'${foundSchedule.name.trim()}'`
+        : foundSchedule.name.trim();
     },
   });
 

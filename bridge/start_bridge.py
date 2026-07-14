@@ -13,6 +13,7 @@ import websockets
 from fastapi import FastAPI, HTTPException, Request, WebSocket, status
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+from starlette.websockets import WebSocketDisconnect
 
 import mock.esp_client as esp_mock
 from bridge_config import ESP_BASE_URL, EXCLUDED_HEADERS
@@ -104,19 +105,81 @@ def get_device_info():
 async def websocket_proxy(client_ws: WebSocket):
     await client_ws.accept()
 
-    async with websockets.connect("ws://192.168.1.50/ws") as esp_ws:
+    if MOCK_ESP_API:
 
-        async def client_to_esp():
+        try:
+            await client_ws.send_json(
+                {
+                    "type": "SNAPSHOT",
+                    "payload": [
+                        {
+                            "topic": "valves",
+                            "event": "updateAll",
+                            "payload": [
+                                {"index": 0, "name": "Expander-GPIO:0", "is_checked": False},
+                                {"index": 1, "name": "Expander-GPIO:1", "is_checked": False},
+                                {"index": 2, "name": "Expander-GPIO:2", "is_checked": True},
+                                {"index": 3, "name": "Expander-GPIO:3", "is_checked": False},
+                                {"index": 4, "name": "Expander-GPIO:4", "is_checked": False},
+                                {"index": 5, "name": "Expander-GPIO:5", "is_checked": True},
+                                {"index": 6, "name": "Expander-GPIO:6", "is_checked": False},
+                                {"index": 7, "name": "Expander-GPIO:7", "is_checked": False},
+                            ],
+                        }
+                    ],
+                }
+            )
             while True:
-                msg = await client_ws.receive_text()
-                await esp_ws.send(msg)
+                # Receive a text message
+                data = await client_ws.receive_text()
+                message = json.loads(data)
+                action = message["payload"]["action"]
+                print(f"Received: {data}")
 
-        async def esp_to_client():
-            while True:
-                msg = await esp_ws.recv(decode=True)
-                await client_ws.send_text(msg)
+                if action == "toggleValve":
+                    await client_ws.send_json(
+                        {
+                            "type": "EVENT",
+                            "topic": "valves",
+                            "event": "updateAll",
+                            "payload": [{"index": 5, "name": "Expander-GPIO:5", "is_checked": True}],
+                        }
+                    )
+                    await client_ws.send_json(
+                        {
+                            "id": message["id"],
+                            "type": "ACK",
+                            "ok": True,
+                        }
+                    )
+                else:
+                    await client_ws.send_json(
+                        {
+                            "id": message["id"],
+                            "type": "ACK",
+                            "ok": False,
+                            "error": {"name": "Unknown action", "message": f"Could not execute '{action}'"},
+                        }
+                    )
 
-        await asyncio.gather(client_to_esp(), esp_to_client())
+        except WebSocketDisconnect:
+            print("Client disconnected")
+
+    else:
+
+        async with websockets.connect("ws://192.168.1.50/ws") as esp_ws:
+
+            async def client_to_esp():
+                while True:
+                    msg = await client_ws.receive_text()
+                    await esp_ws.send(msg)
+
+            async def esp_to_client():
+                while True:
+                    msg = await esp_ws.recv(decode=True)
+                    await client_ws.send_text(msg)
+
+            await asyncio.gather(client_to_esp(), esp_to_client())
 
 
 @app.get("/{path:path}")

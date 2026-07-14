@@ -1,0 +1,79 @@
+.radio-list {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.radio-element {
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+    /* Makes it round */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+
+    border: var(--border-width) solid var(--color-primary);
+    background-color: var(--color-base-200) !important;
+    color: var(--color-base-content) !important;
+
+    -webkit-tap-highlight-color: transparent;
+    /* Safari and older Chrome */
+    -webkit-user-select: none;
+    /* Firefox */
+    -moz-user-select: none;
+    /* Internet Explorer/Edge */
+    -ms-user-select: none;
+    /* Standard */
+    user-select: none;
+    text-decoration: none;
+
+    transition:
+        background-color 300ms ease,
+        color 300ms ease !important;
+}
+
+.radio-element.selected {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-content) !important;
+}
+
+.radio-element-rect {
+    width: 100% !important;
+    height: 30px !important;
+
+    border-radius: 0px;
+}
+
+.radio-element-rect:first-of-type {
+    border-radius: 4px 0 0 4px;
+}
+
+.radio-element-rect:last-of-type {
+    border-radius: 0 4px 4px 0;
+}
+
+.radio-element-rect+.radio-element-rect {
+    border-left: none;
+}
+
+.radio-element:focus-visible {
+    outline-color: var(--color-base-content);
+    outline-style: solid;
+    outline-width: var(--border-width);
+    outline-offset: 0px;
+}
+
+.radio-element:active:focus {
+    filter: brightness(0.93);
+}
+
+/* Allow hover on devices that can use it */
+@media (hover: hover) {
+    .radio-element:hover {
+        filter: brightness(0.91);
+    }
+}

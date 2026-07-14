@@ -24,15 +24,17 @@ Quick setup for developing and testing the web interface locally.
 Create the virtual environment and install all python dependencies:
 
 ```bash
-cd bridge
-uv sync
+uv sync --project ./bridge
+bun install --cwd ./webui
 ```
+
+`bun` toolkit is required, install it from [here](https://bun.com/docs/installation).
 
 ## 1. Start the server
 
 ```bash
 cd bridge/scripts
-uv run start_bridge.py [--dev_mode] [--mock_esp_api]
+cls && uv run ./start_bridge.py [--mock_esp_api] [--dev_mode]
 ```
 
 ### Options
@@ -49,8 +51,8 @@ uv run start_bridge.py [--dev_mode] [--mock_esp_api]
 When using `--dev_mode`, start the file watcher beforehand in a separate terminal with:
 
 ```bash
-cd bridge/scripts
-uv run live_refresh.py
+cd bridge
+cls && uv run ./live_refresh.py
 ```
 
 This enables:
@@ -67,8 +69,16 @@ This enables:
 Edit the following files:
 
 ```
-/webui/www/*
-/bridge/scripts/start_bridge.py
+./webui/src/*
+./bridge/start_bridge.py
+```
+
+### Adding new webfonts
+
+Put the .ttf files that need to be converted in the `webui/fonts` folder and execute in terminal:
+
+```bash
+bun run --cwd webui convert-fonts
 ```
 
 ### Tips
@@ -82,12 +92,13 @@ Edit the following files:
 
 ## 4. Export for production
 
-Once everything works:
+Once everything works, try a build (minify+gzip):
 
 ```bash
-cd webui/scripts
-uv run minify
+bun run --cwd webui build
 ```
+
+Note that it is not required to do before uploading to ESP32 filesystem image, since it is done automatically.
 
 ---
 

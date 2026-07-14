@@ -2,6 +2,17 @@ import { formatDuration } from "../core/formatting.js";
 
 export default (Alpine) => {
   Alpine.data("settingsPage", () => ({
+    toggleValve(index) {
+      Alpine.store("wsClient").sendExclusive(
+        `toggleValve:${index}`,
+        {
+          action: "toggleValve",
+          index,
+        },
+        { showToast: true },
+      );
+    },
+
     get seasonalAdj() {
       const value = Alpine.store("deviceCfg").seasonalAdj * 100;
       return Math.round(value * 100) / 100;
@@ -13,26 +24,26 @@ export default (Alpine) => {
     },
 
     get lastResetReason() {
-      return Alpine.store("health").resets.total > 0
-        ? "(last: " + Alpine.store("health").resets.lastReason + ")"
+      return Alpine.store("deviceHealth").resets.total > 0
+        ? "(last: " + Alpine.store("deviceHealth").resets.lastReason + ")"
         : "";
     },
 
     get deviceRuntime() {
       return formatDuration(
         Alpine.store("deviceInfo").localTimeSec -
-          Alpine.store("health").runtime,
+          Alpine.store("deviceHealth").runtime,
       );
     },
 
     get lastCmdReceived() {
-      if (Alpine.store("health").lastCommandReceived.name !== "")
+      if (Alpine.store("deviceHealth").lastReceivedCommand.name !== "")
         return {
-          name: Alpine.store("health").lastCommandReceived.name,
+          name: Alpine.store("deviceHealth").lastReceivedCommand.name,
           elapsedTime:
             formatDuration(
               Alpine.store("deviceInfo").localTimeSec -
-                Alpine.store("health").lastCommandReceived.timestamp,
+                Alpine.store("deviceHealth").lastReceivedCommand.timestamp,
             ) + " ago",
         };
 

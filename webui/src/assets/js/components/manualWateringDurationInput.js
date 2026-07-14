@@ -46,7 +46,7 @@ export default (Alpine) => {
           `${Alpine.store("deviceCfg").manualWateringDuration.step}` +
           `${Alpine.store("deviceCfg").manualWateringDuration.defaultDuration}`,
         (v) => {
-          console.log("watch", v);
+          //console.log("watch", v);
           this.syncFromLocalStorage();
         },
       );

@@ -13,77 +13,53 @@ Icons https://fontawesome.com/v7/search
 
 ## ✅ OK
 
-- WEB UI:
-  - changement en SPA avec sidebar et overlay/animations (et sidebar présente tout le temps sans close si grande fenêtre)
-  - séparation en pages, home (avec status cuve/vannes/capteurs/...), schedule, manual et settings
+- Changement en SPA avec sidebar et overlay/animations (et sidebar présente tout le temps sans close si grande fenêtre)
+- Séparation en pages, home (avec status cuve/vannes/capteurs/...), schedule, manual et settings
+- Elements does not shift when scroll bar appears (clearly visible on the settings page button and on the clear button of banner) => this was only happening when duplicating the tab on Brave PC when using the F12 dev-tools on mobile mode
 
 ## 🔧 To clarify / questions
 
-Bugfix:
+commit
 
-- ajout transition sur apparition/masquage du hamburger avec :
+commit propeller animation avec html index
 
-  ```css
-  .hamburger {
-    opacity: 1;
-    transform: scale(1);
-    transition:
-      opacity 200ms ease,
-      transform 200ms ease,
-      visibility 200ms;
-  }
+commit toast
 
-  @media (min-width: 1024px) {
-    .hamburger {
-      opacity: 0;
-      transform: scale(0.8);
-      visibility: hidden;
-      pointer-events: none;
-    }
-  }
-  ```
+2e commit avec: truc bizarre qui fait que l'overlay est clickable quand changement de theme
 
-- handle overlay pages as modals for large screens (as settings page for example)
-- password to access settings/setup page
-- add actives valves to home page
-- Blur sur overlay sidebar et pour tous les modals
-- Add placeholder dans input manual duration
-- remove x-data from body ?
-- check that there is no double execution of apply because of x-model and x-on:change on toggle (maybe use $watch?)
-- PB du hover sur sidebar close button
-- sidebar close button hover pas désactivé sur mobile
-- clear data of modals when closing them or for stuff that does not need to stay in the dom
+3e commit scroll to top for overlay pages
+
+- _ID ON ERROR FOR DELETION IF MULTIPLE PRESS OF CLEAR AT SAME TIME_
+- Utiliser nvs pour stocker pump cycles et ajouter une date pour savoir depuis quand ça incrémente (commissioningTimeSec), et pour last command et last schedule update et last config modified ... + ne pas écraser lors d'un upload firmware et littlefs
+- Quand activation manuelle de la vanne dans settings, la fermer automatiquement après un timeout
+  => Dépend de comment c'est géré par rgodin
 - sync de l'heure, 2 options :
   - bouton dans web pour sync heure avec tel, avoir le sync heure été hiver auto plutôt ?
   - maj de l'heure de l'esp automatique quand telephone sy connecte si heure différentes de + de qq secondes (pas besoin de mettre dans settings pr changement manuel) + ajout changements dheures de saison
-- check comportement sur firefox p/r à -webkit (Vendor extensions https://www.w3schools.com/w3css/w3css_validation.asp)
+- Get config button dans settings qui s'enlève quand config reçu et laisse place à une textinput et bouton "save and reboot" + toast "rebooting..." on click. après appuie sur save button, check si config valide sinon toast erreur
 
-  ```CSS
-    /* For Chrome, Safari, Edge */
-    button, a {
-      -webkit-tap-highlight-color: transparent;
-    }
+Serveur :
 
-    /* For Firefox */
-    button:active, a:active,
-    button:focus, a:focus {
-    outline: none; /* Removes the default focus ring */
-    /* Optional: Add a custom visual cue to maintain accessibility */
-    /* box-shadow: 0 0 0 2px rgba(0,0,0,0.2); */
-    }
-  ```
-
-- add cleanups fct in js
+- /api/… returns first (keep at least API call for device status (GET) and to reset (POST) device with CURL command and one/two other relevant calls)
+- all others url paths return index.html
+  The index.html handles "Page Not Found"
+- Check si quand esp est down dans console log je vois websocket error
 
 ### Next updates
 
+Add cleanups (in destroy()) in js
+
 Look upgrade:
 
-- Keyboard tab focus (:focus, :focus-visible et :focus-within)
+- check comportement sur firefox p/r à -webkit (Vendor extensions https://www.w3schools.com/w3css/w3css_validation.asp)
+- Transitions on show/close overlay modals
+- Use variable Roboto font instead of just regular, italic and bold?
+- Keyboard tab focus (:focus, :focus-visible et :focus-within), dont ne pas mettre sur sidebar si masquée
 - Responsive layout (adaptive on screen size):
   - for large screens, display the panels in a grid pattern instead of each under the other
   - Sur mobile, collapse toutes les zones sauf la première dans page schedule (et toujours avoir qu'une seule zone de uncollapsed)
     => Single open accordion https://www.penguinui.com/components/accordion
+  - avoir toasts centrés en bas sur mobile et en bas à droite sur desktop (besoin de changer le centrage pour l'avoir p/r à main content et pas body, utiliser classe css .is-desktop ?)
 - Smooth fast transition for page switching (on nav-link button and section itself)
 - FAB (Floating Action Button) pour ajouter nouveau schedule au lieu d'en avoir un par zone ?
 - Check que la transition du thème s'applique bien à tous les éléments de toutes les pages (utiliser un délai > 5s pour mieux voir)
@@ -94,6 +70,7 @@ Look upgrade:
 
 Convenience:
 
+- Add a text input to edit schedule names
 - Avoir rappel régulier sur app pour nettoyage filtre (à valider pour l'enlever) -> à aussi avoir dans futur version intégrée dans HA
 - Avoir rappel régulier pour verif pression vessie surpresseur tous les mois (0.2 bar en dessous de pression de déclenchement seuil bas du pressostat) + check et nettoyage du filtre mesh
 - Edition zones sur page settings/setup dans une card "Link relays to zones" (max 10 characters for way and zone name, à limiter dans ui mais aussi par ws/api) + "Test zones" pour tester chaque zones et faire sequence allumage progressif des vannes dans la zone concernée
@@ -102,11 +79,67 @@ Convenience:
 
 Security :
 
+- Password to access settings/setup page par modal avec flou sur page (avec autorisation par ESP32 backend => mdp stocké dans nvs par ex + se souvenir sur l'esp32 du device pour au moins 1 semaine, pour éviter d'avoir à entrer le mdp trop souvent)
 - `visibility: hidden` sur tout ce qui doit ne plus être accessible par touche "tab" du clavier par ex
 - Prevent XSS vulnerabilities + all other known vulnerabilities
 - for production, consider:
   - Authentication (username/password)
   - TLS encryption
+
+### Websocket
+
+#### Fake socket
+
+In browser dev-tools console, use FakeSocket object to test websocket behavior. The following are available :
+
+- `FakeSocket.close()` to simulation a websocket disconnection
+- `FakeSocket.loadScenario(scenarioName, delay = 0)` to load a different scenario from the one chosen on load in AppCfg
+- `FakeSocket.startSimulation()` to start simulation
+- `FakeSocket.haltSimulation()` to pause simulation
+
+Note :
+
+- when developping, don’t let fake mode accidentally “depend” on real-time assumptions elsewhere
+- use it only for rendering / logic testing, not connectivity validation
+
+#### Messages
+
+```js
+// TYPES: CMD | SNAPSHOT | ACK | EVENT
+
+// Command (web → ESP32)
+{
+  "type": "CMD",
+  "id": "abc123",          // UUID — for acks
+  "action": "waterZone",
+  "payload": { "zone": 2, "duration_s": 30 }
+}
+
+// Acknowledgement (ESP32 → web)
+{
+  "type": "ACK",
+  "id": "abc123",          // echoes the command id
+  "ok": true,
+  "error": null            // or "zone_busy" / "valve_fault"
+}
+
+// Event pushed by ESP32 (no request needed)
+{
+  "type": "EVENT",
+  "event": "sensorUpdate",
+  "payload": { "zone": 2, "moisture_pct": 42, "ts": 1718000000 }
+}
+
+// Full state snapshot (sent on every new connection)
+{
+  "type": "SNAPSHOT",
+  "payload": [ {topic: "deviceConfig",event: "updateAll",payload: {..}}, {...}]
+}
+```
+
+Add a `wsAckTracker.js` only when your pending-ack logic grows beyond a simple Map.
+Like if you add retry logic, per-command timeouts, or optimistic UI rollback, that logic deserves its own home.
+While it fits in 10 lines inside ws.js, leave it there.
 
 ### App structure
 

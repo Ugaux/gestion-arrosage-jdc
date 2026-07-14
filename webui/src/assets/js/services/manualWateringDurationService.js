@@ -25,9 +25,16 @@ export default {
   },
 
   syncWithZones(zones) {
-    const activeIds = new Set(
-      zones.flatMap((z) => z.ways.map((w) => String(w.id))),
-    );
+    let activeIds;
+    try {
+      activeIds = new Set(
+        zones.flatMap((z) => z.ways.map((w) => String(w.id))),
+      );
+    } catch (error) {
+      console.error("Failed to sync zones:", error);
+      return;
+    }
+
     if (PRINT_DEBUG) console.log("active durations:", activeIds);
 
     const stored = readJsonLocalStorage(KEY);

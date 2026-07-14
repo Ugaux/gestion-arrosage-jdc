@@ -4,6 +4,9 @@
     display: inline-block;
     height: 1.5rem;
     width: 3rem;
+
+    /* for IOs only */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .switch input:focus-visible+.slider {

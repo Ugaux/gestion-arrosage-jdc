@@ -7,14 +7,11 @@
     top: 100%;
     left: 0;
 
-    max-height: 200px;
     width: 100%;
 
     opacity: 0;
     transform: translateY(-10px);
     transition:
-        transform var(--banner-animation-duration) ease,
-        /*max-height var(--banner-animation-duration) ease,*/
         opacity var(--banner-animation-duration) ease,
         transform var(--banner-animation-duration) ease;
     pointer-events: none;
@@ -40,7 +37,11 @@
 
 .banner-content {
     flex: 1;
-    /*font-weight: 500;*/
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    max-height: 200px;
+    overflow: hidden;
 }
 
 .banner-actions {

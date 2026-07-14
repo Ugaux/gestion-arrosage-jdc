@@ -126,19 +126,21 @@
 
     <!-- FOOTER -->
     <div>
+      <div x-show="$wsClient.isConnected()" x-transition>
       <div class="w3-panel" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <div class="status-dot pulse-animation" :class="$store.ws.connected ? 'online' : 'offline'"></div>
-        <strong style="line-height:1;" x-text="$store.ws.connected ? 'Connected' : 'Disconnected'"></strong>
+          <div class="status-dot pulse-animation online"></div>
+          <strong style="line-height:1;">Connected</strong>
+        </div>
       </div>
       <hr class="card-header-separator">
       <div class="w3-panel" id="dark-mode-div" x-data="themeManager">
-        <div @click="toggle()" style="cursor:pointer;" class="align-center">
+        <div @click="toggle()" style="cursor: pointer;" class="align-center">
           <x-icon class="lg" :name="'solid-' + (isDark ? 'moon' : 'sun')"></x-icon>
           <span x-text="isDark ? 'Dark mode' : 'Light mode'"></span>
         </div>
-        <label class='switch'>
-          <input type='checkbox' x-model="isDark" x-on:change="apply(true)">
-          <span id="theme-toggle" class='slider round'></span>
+        <label class="switch">
+          <input type="checkbox" x-model="isDark" @change="apply(true)">
+          <span id="theme-toggle" class="slider round"></span>
         </label>
       </div>
       <div class="w3-panel w3-center">
@@ -171,7 +173,7 @@
 
         <!-- Far right: meta-level actions -->
         <div x-show="$navigation.showToolbarActions()">
-          <button class="w3-button" style="visibility: hidden;">
+          <button class="w3-button" style="display: none;">
             <x-icon name="solid-bell"></x-icon>
             <span class="badge">3</span>
           </button>
@@ -191,6 +193,8 @@
           <div class="banner-actions">
             <a class="banner-btn" data-link href="#" style="display:none;">
             </a>
+            <button class="banner-btn" data-action style="display:none;">
+            </button>
             <button data-close @click="$banner.close()" class="banner-close-btn" style="display:none;">
               <x-icon class="sm" name="solid-xmark"></x-icon>
             </button>
@@ -354,11 +358,12 @@
                     </div>
 
                     <div style=" display: flex; flex-direction: column; gap: 10px;">
-                      <template x-for="(schedule, scheduleIndex) in way.schedules" :key="schedule.id">
+                      <template x-for="(schedule, scheduleIndex) in sortedSchedules(way.schedules)" :key="schedule.id">
                         <div
                           style="padding-left: 10px; padding-right: 10px; display: flex; flex-direction: column; gap: 6px">
                           <div style=" display: flex; align-items: center; gap: 10px;">
-                            <span><b class="w3-small">Schedule</b>
+                            <span style="cursor: pointer;" @click="toggleScheduleEnable(way.id, schedule.id)"><b
+                                class="w3-small">Schedule</b>
                               <i class="w3-small"
                                 x-text="schedule?.name?.trim() ? schedule.name : scheduleIndex + 1"></i></span>
                             <a :href="$navigation.push('edit-schedule', { wayId: way.id, scheduleId: schedule.id });"
@@ -366,8 +371,8 @@
                               <x-icon class="sm" name="solid-pen-to-square"></x-icon>
                             </a>
                             <label class="switch">
-                              <input name="checkbox_enable" type="checkbox"
-                                :id="'btn_enable_' + way.name + '_' + scheduleIndex" x-model="schedule.enabled">
+                              <input type="checkbox" x-model="schedule.enabled"
+                                @click.prevent="toggleScheduleEnable(way.id, schedule.id)">
                               <span class="slider round"></span>
                             </label>
                           </div>
@@ -377,6 +382,11 @@
                               name="bi-dot"></x-icon>
                             <b x-text="schedule.time"></b><x-icon name="bi-dot"></x-icon>
                             <b><span x-text="schedule.duration"></span> min</b>
+                            <div x-show="schedule.skipIfSoilIsMoist">
+                              <span style="display: flex; flex-direction: row; align-items: center;"><x-icon
+                                  name="bi-dot"></x-icon><b>Only
+                                  if dry soil</b></span>
+                            </div>
                             <!-- Mon, Wed, Fri • 06:00 • 15 min -->
                           </span>
                         </div>
@@ -391,7 +401,7 @@
       </section>
 
       <!-- MANUAL PAGE -->
-      <section x-show="$navigation.show('page','manual')" class="w3-content">
+      <section x-show="$navigation.show('page','manual')" class="w3-content" x-data="manualPage">
 
         <template x-if="$store.zones.items.length === 0">
           <div class="w3-panel w3-center">There are no zones.</div>
@@ -413,18 +423,18 @@
                     <div style="display: flex; align-items: center; justify-content: space-between">
                       <b x-text="way.shortName"></b>
 
-                      <div style="display: flex; align-items: center; gap:15px">
+                      <div style="display: flex; align-items: center; gap:15px"
+                        x-data="manualWateringDurationInput(way.id)">
                         <span x-show="way.manual.started"><b
                             x-text="formatDuration(way.manual.timeLeft)"></b>&nbsp;left</span>
-                        <div x-show="!way.manual.started" x-data="manualWateringDurationInput(way.id)">
+                        <div x-show="!way.manual.started">
                           <div style="display: flex; gap: 4px;">
                             <button :disabled="duration <= min" class="w3-button way-btn" @click="decrease">
                               <x-icon class="xs" name="solid-minus"></x-icon>
                             </button>
                             <div class="input-wrapper">
-                              <input class="input-field" :id="'m_duration_' + way.name" type="text" inputmode="numeric"
+                              <input class="input-field input-field-unitpadded" type="text" inputmode="numeric"
                                 pattern="[0-9]*" @input="$event.target.value = $event.target.value.replace(/\D/g, '')"
-                                :placeholder="$store.deviceCfg.manualWateringDuration.defaultDuration"
                                 x-model.lazy="duration" @focus="$event.target.select()"
                                 @blur="setDuration($event.target.value, true)" @keydown.enter="$event.target.blur()">
                               <span class="input-unit">min</span>
@@ -435,7 +445,8 @@
                           </div>
                         </div>
 
-                        <button name="manual_mode" :id="'btn_' + way.name" type="button" class="w3-button way-btn">
+                        <button type="button" class="w3-button way-btn"
+                          @click="toggleManualWatering(way.id, duration*60)">
                           <x-icon :name="'solid-' + (way.manual.started ? 'stop' : 'play')"></x-icon>
                         </button>
                       </div>
@@ -456,7 +467,9 @@
       <section x-show="$navigation.show('page','notfound')" class="w3-content">
 
         <div class="w3-panel w3-center">
-          Page&nbsp;<i x-text="$navigation.params.notFoundPath"></i>&nbsp;does not exist.
+          <span>Page </span><i>'</i><i x-text="$navigation.params.notFoundPath"
+            style="word-wrap: break-word;"></i><i>'</i><span> does
+            not exist.</span>
         </div>
 
       </section>
@@ -470,10 +483,13 @@
       </div>
 
       <!-- ADD/EDIT SCHEDULE OVERLAY -->
-      <section x-show="$navigation.show('overlay','add-schedule') || $navigation.show('overlay','edit-schedule')"
+      <section
+        x-show.immediate="$navigation.show('overlay','add-schedule') || $navigation.show('overlay','edit-schedule')"
         class="w3-content" x-data="modifySchedulePage">
 
-        <header x-show="$ui.isDesktop" class="w3-container modal-header">
+        <div x-show="$ui.isDesktop">
+
+          <header class="w3-container modal-header">
           <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
             <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
             <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
@@ -482,11 +498,35 @@
         </header>
         <hr class="card-header-separator">
 
+        </div>
+
+        <div x-show="!canScheduleBeEdited">
+
+          <div class="w3-panel">
+            <div class="w3-panel w3-center">
+              <div x-show="!isWayExisting">
+                <span>No way with id </span><i>'</i><i x-text="$navigation.params.wayId"
+                  style="word-wrap: break-word;"></i><i>'</i><span>
+                  exists.</span>
+              </div>
+              <div x-show="isWayExisting">
+                <span>No schedule with id </span><i>'</i><i x-text="$navigation.params.scheduleId"
+                  style="word-wrap: break-word;"></i><i>'</i><span>
+                  exists in </span><b x-text="$navigation.getWayName()">Studio</b><span> way (</span><b
+                  x-text="$navigation.getZoneName()">Lawn</b><span> zone)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div x-show="canScheduleBeEdited">
+
         <div class="w3-panel">
           <div class="w3-card w3-round-large">
             <div class="w3-container" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
               <div class="card-title w3-center">
-                <h5 style="margin: 0px;"><b x-text="$navigation.getWayName()"></b> Way</h5>
+                  <h6 style="margin: 0px;"><b x-text="$navigation.getWayName()"></b> Way</h6>
                 <i class="w3-small"><b x-text="$navigation.getZoneName()"></b> Zone</i>
               </div>
               <x-icon x-show="$navigation.params.scheduleId" name="bi-dot"></x-icon>
@@ -502,9 +542,28 @@
             <div class="w3-panel"><b>Time slot</b></div>
             <div class="w3-panel">
               <!-- Watering start time -->
-              <div style="display: flex;flex-direction: row; align-items: center; gap: 10px;">
-                Starts at<input type="number" name="startTime" id="addScheduleStartTime">
-                for<input type="number" name="duration" id="addScheduleDuration">
+                <div style="display: flex;flex-direction: row; align-items: center; gap: 4px; flex-wrap: wrap;">
+                  <span>Starts at</span>
+                  <input x-model="time" class="input-field" style="width:56px" @input="formatTimeOnInput" type="text"
+                    inputmode="numeric" @focus="$event.target.select()" @blur="formatTimeOnblur"
+                    @keydown.enter="$event.target.blur()">
+                  <span>for</span>
+                  <div style="display: flex; gap: 4px;">
+                    <button :disabled="duration <= min" class="w3-button way-btn" @click="decreaseDuration">
+                      <x-icon class="xs" name="solid-minus"></x-icon>
+                    </button>
+                    <div class="input-wrapper">
+                      <input :value="duration" class="input-field input-field-unitpadded" type="text"
+                        inputmode="numeric" pattern="[0-9]*"
+                        @input="$event.target.value = $event.target.value.replace(/\D/g, '')"
+                        @focus="$event.target.select()" @blur="setDuration($event.target.value)"
+                        @keydown.enter="$event.target.blur()">
+                      <span class="input-unit">min</span>
+                    </div>
+                    <button :disabled="duration >= max" class="w3-button way-btn" @click="increaseDuration">
+                      <x-icon class="xs" name="solid-plus"></x-icon>
+                    </button>
+                  </div>
               </div>
             </div>
           </div>
@@ -513,42 +572,25 @@
         <div class="w3-panel">
           <div class="w3-card w3-round-large">
             <div class="w3-panel"><b>Frequency</b></div>
+
             <div class="w3-panel">
               <!-- Frequency -->
-
-              <div>
-                <div class="toggle-radio">
-                  <input type="radio" name="mode" id="always" value="*" checked>
-                  <label for="always">Always</label>
-
-                  <input type="radio" name="mode" id="even" value="e">
-                  <label for="even">Even</label>
-
-                  <input type="radio" name="mode" id="odd" value="o">
-                  <label for="odd">Odd</label>
-
-                  <input type="radio" name="mode" id="custom" value="c">
-                  <label for="custom">Custom</label>
+                <div class="radio-list">
+                  <template x-for="freq in frequencies" :key="freq">
+                    <button class="radio-element radio-element-rect" :class="{ selected: selectedFreq === freq }"
+                      @click="selectFrequency(freq)" x-text="formatFrequency(freq)"></button>
+                  </template>
                 </div>
               </div>
 
-              <div id="custom_days">
-
-                <div style="display: flex; justify-content: space-evenly;">
-                  <span>Sun</span>
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <span>Sat</span>
+              <div class="w3-panel" x-show.immediate="selectedFreq === 'custom'" x-transition>
+                <hr class="card-header-separator" style="padding-bottom: 16px ">
+                <div class="radio-list">
+                  <template x-for="day in weekdays" :key="day">
+                    <button class="radio-element w3-small" style="opacity: 0.9;"
+                      :class="{ selected: customDays.includes(day) }" @click="toggleDay(day)" x-text="day"></button>
+                  </template>
                 </div>
-
-                <div class="w3-cell-row w3-center">
-                  %CUSTOM_DAYS%
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
@@ -560,18 +602,31 @@
               <div
                 style="display: flex; flex-direction: row; align-items: center; gap: 20px; justify-content: space-between;">
 
-                <b>Skip if soil is moist</b>
+                  <b @click="skipIfSoilIsMoist = !skipIfSoilIsMoist" style="cursor: pointer">Skip if soil is
+                    moist</b>
 
                 <!-- Water only dry soil -->
-                <label class='switch'>
-                  <input type='checkbox'>
-                  <span class='slider round'></span>
+                  <label class="switch" @click.stop>
+                    <input type="checkbox" x-model="skipIfSoilIsMoist">
+                    <span class="slider round"></span>
                 </label>
 
               </div>
 
             </div>
           </div>
+          </div>
+
+          <div class="w3-panel">
+            <div style="display: flex; justify-content: end; gap: 10px;">
+              <button class="w3-button w3-button-primary" @click="update()"
+                x-text="$navigation.params.action === 'edit' ? 'Update' : 'Add'"></button>
+              <button x-show="canDelete" class="w3-button w3-button-primary"
+                @click="update(remove=true)">Delete</button>
+              <button class="w3-button w3-button-secondary" @click="$navigation.closeOverlay()">Cancel</button>
+            </div>
+          </div>
+
         </div>
 
       </section>
@@ -579,7 +634,9 @@
       <!-- SETTING OVERLAY -->
       <section x-show="$navigation.show('overlay','settings')" class="w3-content" x-data="settingsPage">
 
-        <header x-show="$ui.isDesktop" class="w3-container modal-header">
+        <div x-show="$ui.isDesktop">
+
+          <header class="w3-container modal-header">
           <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
             <h5 class="card-title-bigger"><b x-text="$navigation.title"></b></h5>
             <button class="w3-button close-btn" @click="$navigation.closeOverlay()"><x-icon class="sm"
@@ -587,6 +644,8 @@
           </div>
         </header>
         <hr class="card-header-separator">
+
+        </div>
 
         <div class="w3-panel">
           <div class="w3-card w3-round-large">
@@ -598,13 +657,14 @@
               <div class="card-list">
                 <template x-for="valve in $store.valves.items" :key="valve.name">
                   <div style="display: flex; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                      <b>Valve&nbsp;#<span x-text="valve.index"></span></b>
+                    <div style="display: flex; align-items: center; gap: 20px; cursor: pointer;"
+                      @click="toggleValve(valve.index)">
+                      <b>Valve&nbsp;#<span x-text="valve.index+1"></span></b>
                       <span x-text="valve.name"></span>
                     </div>
-                    <label class='switch'>
-                      <input name='checkbox_test' type='checkbox' :id="'btn_' + valve.index"
-                        x-model="valve.is_checked"><span class='slider round'></span>
+                    <label class="switch">
+                      <input type="checkbox" x-model="valve.is_checked" @click.prevent="toggleValve(valve.index)"><span
+                        class="slider round"></span>
                     </label>
                   </div>
                 </template>
@@ -635,7 +695,7 @@
                 <div class="card-list-el">
                   <span>Reset(s)</span>
                   <div class="card-value">
-                    <b x-text="$store.health.resets.total"></b>
+                    <b x-text="$store.deviceHealth.resets.total"></b>
                     <span x-text="lastResetReason"></span>
                   </div>
                 </div>
@@ -658,9 +718,9 @@
                 <div class="card-list-el">
                   <span>Heap</span>
                   <div class="card-value" style="display: flex; flex-direction: column; align-items: end;">
-                    <span>Frag: <b x-text="$store.health.heap.fragmentation"></b>%</span>
-                    <span>Largest: <b x-text="$store.health.heap.largestFreeBlock"></b> KB</span>
-                    <span>Min free: <b x-text="$store.health.heap.minFreeSize"></b> KB</span>
+                    <span>Frag: <b x-text="$store.deviceHealth.heap.fragmentation"></b>%</span>
+                    <span>Largest: <b x-text="$store.deviceHealth.heap.largestFreeBlock"></b> KB</span>
+                    <span>Min free: <b x-text="$store.deviceHealth.heap.minFreeSize"></b> KB</span>
                   </div>
                 </div>
               </div>

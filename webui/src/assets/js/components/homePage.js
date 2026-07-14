@@ -10,7 +10,7 @@ export default (Alpine) => {
         1: "Degraded",
         2: "Fault",
       };
-      return stateMap[Alpine.store("health").state] ?? "Unknown"; // Fallback
+      return stateMap[Alpine.store("deviceHealth").state] ?? "Unknown"; // Fallback
     },
 
     get deviceStateClass() {
@@ -19,7 +19,7 @@ export default (Alpine) => {
         1: "degraded-state",
         2: "fault-state",
       };
-      return stateMap[Alpine.store("health").state] ?? "unknown-state"; // Fallback
+      return stateMap[Alpine.store("deviceHealth").state] ?? "unknown-state"; // Fallback
     },
 
     get deviceStateIcon() {
@@ -29,7 +29,7 @@ export default (Alpine) => {
         2: "xmark", // ✕
       };
       return (
-        stateMap[Alpine.store("health").state] ?? "circle-question" // Fallback
+        stateMap[Alpine.store("deviceHealth").state] ?? "circle-question" // Fallback
       );
     },
 
