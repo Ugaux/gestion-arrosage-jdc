@@ -60,14 +60,14 @@ export function registerThemeManager(Alpine) {
 
       console.log("Setting theme to", this.isDark ? "Dark" : "Light", "mode");
       document.documentElement.classList.add("theme-switching");
-      document.body.classList.add("no-select");
+      //document.body.classList.add("no-select");
       setTheme(this.isDark);
       if (save) localStorage.setItem("theme", this.isDark ? "dark" : "light");
 
       // Remove after transition completes
       this._timeout = setTimeout(() => {
         document.documentElement.classList.remove("theme-switching");
-        document.body.classList.remove("no-select");
+        //document.body.classList.remove("no-select");
       }, parseCssDurationVar("--theme-transition-duration"));
     },
 
