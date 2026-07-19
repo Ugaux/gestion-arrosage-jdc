@@ -269,7 +269,7 @@ export const scenarios = {
       {
         at: 1000,
         run(socket) {
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "zones",
             event: "updateZoneName",
@@ -280,7 +280,7 @@ export const scenarios = {
       {
         at: 3000,
         run(socket) {
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "zones",
             event: "updateZoneName",
@@ -291,60 +291,60 @@ export const scenarios = {
     ],
 
     tick(socket) {
-      if (socket._every("wifiRSSI", 1000, 5000)) {
+      if (socket.every("wifiRSSI", 1000, 5000)) {
         if (socket.data.device.info.wifiRSSI < -120)
           socket.data.device.info.wifiRSSI = 0;
         else
           socket.data.device.info.wifiRSSI =
             socket.data.device.info.wifiRSSI - Math.random() - 10;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "deviceInfo",
           event: "updateWifiRSSI",
           payload: socket.data.device.info.wifiRSSI,
         });
       }
-      if (socket._every("pump", 36000)) {
+      if (socket.every("pump", 36000)) {
         socket.data.sensors.pump.state =
           socket.data.sensors.pump.state === 0 ? 1 : 0;
         if (socket.data.sensors.pump.state === 0)
           socket.data.sensors.pump.cycles++;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "sensors",
           event: "updatePump",
           payload: socket.data.sensors.pump,
         });
       }
-      if (socket._every("soilMoisture", 500, 15000)) {
-        socket._emitFromServer({
+      if (socket.every("soilMoisture", 500, 15000)) {
+        socket.emitFromServer({
           type: "EVENT",
           topic: "sensors",
           event: "updateSoilMoisture",
           payload: Math.random() / 10 + 0.33,
         });
       }
-      if (socket._every("waterFlow", 1000, 10000)) {
-        socket._emitFromServer({
+      if (socket.every("waterFlow", 1000, 10000)) {
+        socket.emitFromServer({
           type: "EVENT",
           topic: "sensors",
           event: "updateWaterFlow",
           payload: 12 + Math.random() * 20,
         });
       }
-      if (socket._every("waterTank", 9000)) {
+      if (socket.every("waterTank", 9000)) {
         socket.data.sensors.waterTank.state =
           socket.data.sensors.waterTank.state === 0 ? 1 : 0;
         socket.data.sensors.waterTank.level =
           socket.data.sensors.waterTank.state === 1 ? 2 : 1;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "sensors",
           event: "updateWaterTank",
           payload: socket.data.sensors.waterTank,
         });
       }
-      if (socket._every("wateringAuto", 1000)) {
+      if (socket.every("wateringAuto", 1000)) {
         if (!this.currentRun) return;
         if (this.currentRun.timeLeft <= 0) {
           this.state = 0;
@@ -354,20 +354,20 @@ export const scenarios = {
         this.currentRun.timeLeft--;
 
         socket.data.watering;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "watering",
           event: "updateAll",
           payload: socket.data.watering,
         });
       }
-      if (socket._every("wateringByHand", 1000)) {
+      if (socket.every("wateringByHand", 1000)) {
         if (socket.data.watering.byHand.state === 1) {
           if (socket.data.watering.byHand.timeLeft > 0)
             socket.data.watering.byHand.timeLeft--;
           if (socket.data.watering.byHand.timeLeft <= 0)
             socket.data.watering.byHand.state = 0;
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "watering",
             event: "updateByHand",
@@ -376,9 +376,9 @@ export const scenarios = {
         }
       }
 
-      if (socket._every("heartbeat", 1000)) {
+      if (socket.every("heartbeat", 1000)) {
         socket.data.device.info.localTimeSec++;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "deviceInfo",
           event: "updateLocalTime",
@@ -410,7 +410,7 @@ export const scenarios = {
               console.log(socket.data.device.health.faults);
               if (socket.data.device.health.faults.length === 0)
                 socket.data.device.health.state = 0;
-              socket._emitFromServer({
+              socket.emitFromServer({
                 type: "EVENT",
                 topic: "deviceHealth",
                 event: "updateState",
@@ -447,7 +447,7 @@ export const scenarios = {
       {
         at: 500,
         run(socket) {
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceHealth",
             event: "updateState",
@@ -461,7 +461,7 @@ export const scenarios = {
       {
         at: 1000,
         run(socket) {
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceHealth",
             event: "updateState",
@@ -486,7 +486,7 @@ export const scenarios = {
           ];
           socket.data.device.health.state = 2;
           socket.data.device.health.faults = structuredClone(faults);
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceHealth",
             event: "updateState",
@@ -517,7 +517,7 @@ export const scenarios = {
           ];
           socket.data.device.health.state = 2;
           socket.data.device.health.faults = structuredClone(faults);
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceHealth",
             event: "updateState",
@@ -558,7 +558,7 @@ export const scenarios = {
               console.log(socket.data.device.health.faults);
               if (socket.data.device.health.faults.length === 0)
                 socket.data.device.health.state = 0;
-              socket._emitFromServer({
+              socket.emitFromServer({
                 type: "EVENT",
                 topic: "deviceHealth",
                 event: "updateState",
@@ -606,7 +606,7 @@ export const scenarios = {
             soilMoistureThreshold: 0.7,
             lastModified: AppCfg.fakeDataLocalTimeSec - 41,
           };
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceConfig",
             event: "updateAll",
@@ -625,7 +625,7 @@ export const scenarios = {
           };
           socket.data.device.config.lastModified =
             AppCfg.fakeDataLocalTimeSec - 41 + 7;
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceConfig",
             event: "updateAll",
@@ -644,7 +644,7 @@ export const scenarios = {
           };
           socket.data.device.config.lastModified =
             AppCfg.fakeDataLocalTimeSec - 41 + 7 + 7;
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "deviceConfig",
             event: "updateAll",
@@ -669,7 +669,7 @@ export const scenarios = {
             totalZones: 2,
             activeValves: [2, 3],
           };
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "watering",
             event: "updateCurrentRun",
@@ -688,7 +688,7 @@ export const scenarios = {
             startTime: AppCfg.fakeDataLocalTimeSec + 3600 * 23,
             duration: 513,
           }),
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "watering",
               event: "updateNextRun",
@@ -699,9 +699,9 @@ export const scenarios = {
     ],
 
     tick(socket) {
-      if (socket._every("heartbeat", 1000)) {
+      if (socket.every("heartbeat", 1000)) {
         socket.data.device.info.localTimeSec++;
-        socket._emitFromServer({
+        socket.emitFromServer({
           type: "EVENT",
           topic: "deviceInfo",
           event: "updateLocalTime",
@@ -711,7 +711,7 @@ export const scenarios = {
         const currentRun = socket.data.watering.currentRun;
         if (currentRun.timeLeft > 0) {
           currentRun.timeLeft--;
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "watering",
             event: "updateCurrentRun",
@@ -721,7 +721,7 @@ export const scenarios = {
               activeValves: [2, 3],
             },
           });
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "watering",
             event: "updateLastWateringTime",
@@ -729,7 +729,7 @@ export const scenarios = {
           });
         }
         if (currentRun.timeLeft <= 0) {
-          socket._emitFromServer({
+          socket.emitFromServer({
             type: "EVENT",
             topic: "watering",
             event: "updateCurrentRun",
@@ -760,7 +760,7 @@ export const scenarios = {
             v.is_checked = !v.is_checked;
 
             setTimeout(() => {
-              socket._emitFromServer({
+              socket.emitFromServer({
                 type: "EVENT",
                 topic: "valves",
                 event: "updateAll",
@@ -791,7 +791,7 @@ export const scenarios = {
           m.timeLeft = msg.payload.duration;
 
           setTimeout(() => {
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "zones",
               event: "updateWayManual",
@@ -818,7 +818,7 @@ export const scenarios = {
           schedule.enabled = !schedule.enabled;
 
           setTimeout(() => {
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "zones",
               event: "updateWaySchedules",
@@ -851,7 +851,7 @@ export const scenarios = {
           });
 
           setTimeout(() => {
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "zones",
               event: "updateWaySchedules",
@@ -877,7 +877,7 @@ export const scenarios = {
           );
 
           setTimeout(() => {
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "zones",
               event: "updateWaySchedules",
@@ -909,7 +909,7 @@ export const scenarios = {
             msg.payload.scheduleData.skipIfSoilIsMoist;
 
           setTimeout(() => {
-            socket._emitFromServer({
+            socket.emitFromServer({
               type: "EVENT",
               topic: "zones",
               event: "updateWaySchedules",

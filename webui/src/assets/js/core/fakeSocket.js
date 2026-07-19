@@ -36,13 +36,13 @@ export class FakeSocket {
     }
   }
 
-  _emitFromServer(msg) {
+  emitFromServer(msg) {
     this.onmessage?.({
       data: JSON.stringify(msg),
     });
   }
 
-  _every(key, interval, maxRandomInterval = null) {
+  every(key, interval, maxRandomInterval = null) {
     this._timers ??= {};
     this._timersRandomInterval ??= {};
 
@@ -109,7 +109,7 @@ export class FakeSocket {
       this.readyState = WebSocket.OPEN;
       this.onopen?.();
 
-      this._emitFromServer(createSnapshot(this.data));
+      this.emitFromServer(createSnapshot(this.data));
       this.startSimulation();
     }, delay);
 
