@@ -7,6 +7,7 @@ const output = "src/assets/app.min.css";
 const result = bundle({
   filename: input,
   minify: true,
+  targets: {},
 });
 
 writeFileSync(output, result.code);

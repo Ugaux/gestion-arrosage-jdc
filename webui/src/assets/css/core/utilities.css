@@ -74,10 +74,8 @@
 
 .blurred {
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .blurred-light {
   backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
 }
