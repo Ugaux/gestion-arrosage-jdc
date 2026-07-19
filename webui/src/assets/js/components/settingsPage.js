@@ -1,27 +1,72 @@
 import { formatDuration } from "../core/formatting.js";
 
+const DEFAULT_RAW_CFG_TEXT =
+  "Click the download button to get settings.ini content...";
+
 export default (Alpine) => {
   Alpine.data("settingsPage", () => ({
+    init() {
+      this.resetConfigText();
+    },
+
     toggleValve(index) {
-      Alpine.store("wsClient").sendExclusive(
-        `toggleValve:${index}`,
-        {
-          action: "toggleValve",
-          index,
-        },
-        { showToast: true },
-      );
+      Alpine.store("wsClient").sendExclusive(`toggleValve:${index}`, {
+        action: "toggleValve",
+        index,
+      });
     },
 
     syncTime() {
-      Alpine.store("wsClient").sendExclusive(
-        "syncTime",
-        {
-          action: "syncTime",
-          timeSec: Math.floor(Date.now() / 1000),
-        },
-        { showToast: true },
-      );
+      Alpine.store("wsClient").sendExclusive("syncTime", {
+        action: "syncTime",
+        timeMillisec: Date.now(),
+      });
+    },
+
+    resetConfigText() {
+      this.rawConfigText = DEFAULT_RAW_CFG_TEXT;
+      this.cfgTextAvailable = false;
+      this.configTextHasChanged = false;
+    },
+    async downloadConfigText() {
+      try {
+        const result = await Alpine.store("wsClient").sendExclusive(
+          `getDeviceCfg`,
+          {
+            action: "getDeviceCfg",
+          },
+        );
+        if (!result.initiated) return;
+        if (!result.payload) return;
+
+        this.rawConfigText = result.payload;
+        this.cfgTextAvailable = true;
+        this.configTextHasChanged = false;
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    async uploadConfigText() {
+      try {
+        const result = await Alpine.store("wsClient").sendExclusive(
+          `setDeviceCfg`,
+          {
+            action: "setDeviceCfg",
+            rawConfigText: this.rawConfigText,
+          },
+        );
+        if (!result.initiated) return;
+
+        Alpine.store("toast").show("Device is rebooting...", {
+          type: "info",
+          description: "Please wait a few seconds!",
+          duration: 30000,
+          tag: "device-reboot",
+        });
+        this.resetConfigText();
+      } catch (err) {
+        console.error(err);
+      }
     },
 
     get seasonalAdj() {

@@ -10,5 +10,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "lightningcss": "^1.32.0"
+  },
+  "dependencies": {
+    "dedent": "^1.7.2"
   }
 }

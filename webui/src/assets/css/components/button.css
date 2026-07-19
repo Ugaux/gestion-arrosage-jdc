@@ -51,7 +51,7 @@
 }
 
 .w3-button:focus-visible {
-    outline-color: var(--btn-fg);
+    outline-color: var(--color-base-content);
     outline-style: solid;
     outline-width: var(--border-width);
     outline-offset: 0px;
@@ -80,7 +80,7 @@
     color: white;
 }
 
-.way-btn {
+.w3-button-square {
     height: 33px;
     width: 33px;
     display: inline-flex;
@@ -88,9 +88,10 @@
     justify-content: center;
 }
 
-.way-btn-small {
+.w3-button-rect {
     height: 1.5rem;
-    width: 1rem;
+    padding-left: 8px;
+    padding-right: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

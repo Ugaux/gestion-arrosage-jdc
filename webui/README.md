@@ -19,8 +19,6 @@ Icons https://fontawesome.com/v7/search
 
 ## 🔧 To clarify / questions
 
-- Get config button dans settings qui s'enlève quand config reçu et laisse place à une textinput et bouton "save and reboot" + toast "rebooting..." on click. après appuie sur save button, check si config valide sinon toast erreur
-
 ### Next updates
 
 Add cleanups (in destroy()) in js
@@ -97,6 +95,7 @@ Note :
   "id": "abc123",          // echoes the command id
   "ok": true,
   "error": null            // or "zone_busy" / "valve_fault"
+  "payload": {}            // for server to specific client communication
 }
 
 // Event pushed by ESP32 (no request needed)
@@ -109,7 +108,7 @@ Note :
 // Full state snapshot (sent on every new connection)
 {
   "type": "SNAPSHOT",
-  "payload": [ {topic: "deviceConfig",event: "updateAll",payload: {..}}, {...}]
+  "payload": [ {"topic": "deviceConfig", "event": "updateAll", "payload": {..}}, {...}] // list of events
 }
 ```
 

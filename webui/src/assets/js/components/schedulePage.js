@@ -21,15 +21,11 @@ export default (Alpine) => {
     },
 
     toggleScheduleEnable(wayId, scheduleId) {
-      Alpine.store("wsClient").sendExclusive(
-        `toggleScheduleEnable:${wayId}`,
-        {
-          action: "toggleScheduleEnable",
-          wayId,
-          scheduleId,
-        },
-        { showToast: true },
-      );
+      Alpine.store("wsClient").sendExclusive(`toggleScheduleEnable:${wayId}`, {
+        action: "toggleScheduleEnable",
+        wayId,
+        scheduleId,
+      });
     },
   }));
 };

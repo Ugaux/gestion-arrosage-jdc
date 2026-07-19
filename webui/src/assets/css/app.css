@@ -19,5 +19,6 @@
 @import './components/toast.css';
 @import './components/connectionDot.css';
 @import './components/radioList.css';
+@import './components/textarea.css';
 
 @import './core/utilities.css';

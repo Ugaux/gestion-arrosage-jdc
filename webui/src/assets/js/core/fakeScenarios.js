@@ -1,5 +1,6 @@
 import { AppCfg } from "./appCfg";
 import { logStatus, generateUniqueID } from "./utilities";
+import dedent from "dedent";
 
 const LOG_PREFIX = "[fakeScenarios]";
 
@@ -343,7 +344,7 @@ export const scenarios = {
           payload: socket.data.sensors.waterTank,
         });
       }
-      if (false && socket._every("wateringAuto", 1000)) {
+      if (socket._every("wateringAuto", 1000)) {
         if (!this.currentRun) return;
         if (this.currentRun.timeLeft <= 0) {
           this.state = 0;
@@ -366,7 +367,6 @@ export const scenarios = {
             socket.data.watering.byHand.timeLeft--;
           if (socket.data.watering.byHand.timeLeft <= 0)
             socket.data.watering.byHand.state = 0;
-          //console.log(socket.data.watering.byHand);
           socket._emitFromServer({
             type: "EVENT",
             topic: "watering",
@@ -400,40 +400,40 @@ export const scenarios = {
         case "setValve": {
           const success = Math.round(Math.random());
           if (success) {
-            console.log(msg.payload.id);
-            //socket.data.device.health.faults.shift();
-            socket.data.device.health.faults =
-              socket.data.device.health.faults.filter(
-                (f) => f.id !== msg.payload.id,
-              );
-            console.log(socket.data.device.health.faults);
-            if (socket.data.device.health.faults.length === 0)
-              socket.data.device.health.state = 0;
-            socket._emitFromServer({
-              type: "EVENT",
-              topic: "deviceHealth",
-              event: "updateState",
-              payload: {
-                state: socket.data.device.health.state,
-                faults: socket.data.device.health.faults,
-              },
-            });
+            setTimeout(() => {
+              console.log(msg.payload.id);
+              //socket.data.device.health.faults.shift();
+              socket.data.device.health.faults =
+                socket.data.device.health.faults.filter(
+                  (f) => f.id !== msg.payload.id,
+                );
+              console.log(socket.data.device.health.faults);
+              if (socket.data.device.health.faults.length === 0)
+                socket.data.device.health.state = 0;
+              socket._emitFromServer({
+                type: "EVENT",
+                topic: "deviceHealth",
+                event: "updateState",
+                payload: {
+                  state: socket.data.device.health.state,
+                  faults: socket.data.device.health.faults,
+                },
+              });
+              socket.onmessage?.({
+                data: JSON.stringify({
+                  type: "ACK",
+                  id: msg.id,
+                  ok: success,
+                  error: success
+                    ? {}
+                    : {
+                        name: "Failed to set valve",
+                        message: "Valve is not connected",
+                      },
+                }),
+              });
+            }, ackDelay);
           }
-          setTimeout(() => {
-            socket.onmessage?.({
-              data: JSON.stringify({
-                type: "ACK",
-                id: msg.id,
-                ok: success,
-                error: success
-                  ? {}
-                  : {
-                      name: "Failed to set valve",
-                      message: "Valve is not connected",
-                    },
-              }),
-            });
-          }, ackDelay);
           break;
         }
       }
@@ -549,39 +549,39 @@ export const scenarios = {
         case "clearFault": {
           const success = Math.round(Math.random());
           if (success) {
-            //socket.data.device.health.faults.shift();
-            socket.data.device.health.faults =
-              socket.data.device.health.faults.filter(
-                (f) => f.id !== msg.payload.id,
-              );
-            console.log(socket.data.device.health.faults);
-            if (socket.data.device.health.faults.length === 0)
-              socket.data.device.health.state = 0;
-            socket._emitFromServer({
-              type: "EVENT",
-              topic: "deviceHealth",
-              event: "updateState",
-              payload: {
-                state: socket.data.device.health.state,
-                faults: socket.data.device.health.faults,
-              },
-            });
+            setTimeout(() => {
+              //socket.data.device.health.faults.shift();
+              socket.data.device.health.faults =
+                socket.data.device.health.faults.filter(
+                  (f) => f.id !== msg.payload.id,
+                );
+              console.log(socket.data.device.health.faults);
+              if (socket.data.device.health.faults.length === 0)
+                socket.data.device.health.state = 0;
+              socket._emitFromServer({
+                type: "EVENT",
+                topic: "deviceHealth",
+                event: "updateState",
+                payload: {
+                  state: socket.data.device.health.state,
+                  faults: socket.data.device.health.faults,
+                },
+              });
+              socket.onmessage?.({
+                data: JSON.stringify({
+                  type: "ACK",
+                  id: msg.id,
+                  ok: success,
+                  error: success
+                    ? {}
+                    : {
+                        name: "Failed to clear fault",
+                        message: "ESP32 bad memory access",
+                      },
+                }),
+              });
+            }, ackDelay);
           }
-          setTimeout(() => {
-            socket.onmessage?.({
-              data: JSON.stringify({
-                type: "ACK",
-                id: msg.id,
-                ok: success,
-                error: success
-                  ? {}
-                  : {
-                      name: "Failed to clear fault",
-                      message: "ESP32 bad memory access",
-                    },
-              }),
-            });
-          }, ackDelay);
           break;
         }
       }
@@ -758,28 +758,29 @@ export const scenarios = {
           if (v) {
             success = true;
             v.is_checked = !v.is_checked;
-            socket._emitFromServer({
-              type: "EVENT",
-              topic: "valves",
-              event: "updateAll",
-              payload: socket.data.valves,
-            });
+
+            setTimeout(() => {
+              socket._emitFromServer({
+                type: "EVENT",
+                topic: "valves",
+                event: "updateAll",
+                payload: socket.data.valves,
+              });
+              socket.onmessage?.({
+                data: JSON.stringify({
+                  type: "ACK",
+                  id: msg.id,
+                  ok: success,
+                  error: success
+                    ? {}
+                    : {
+                        name: "Failed to toggle valve",
+                        message: "Index out of range",
+                      },
+                }),
+              });
+            }, 2);
           }
-          setTimeout(() => {
-            socket.onmessage?.({
-              data: JSON.stringify({
-                type: "ACK",
-                id: msg.id,
-                ok: success,
-                error: success
-                  ? {}
-                  : {
-                      name: "Failed to toggle valve",
-                      message: "Index out of range",
-                    },
-              }),
-            });
-          }, 2);
           break;
         }
         case "toggleManualWatering": {
@@ -788,14 +789,14 @@ export const scenarios = {
             .find((way) => way.id === msg.payload.id).manual;
           m.started = !m.started;
           m.timeLeft = msg.payload.duration;
-          socket._emitFromServer({
-            type: "EVENT",
-            topic: "zones",
-            event: "updateWayManual",
-            payload: { id: msg.payload.id, manual: m },
-          });
 
           setTimeout(() => {
+            socket._emitFromServer({
+              type: "EVENT",
+              topic: "zones",
+              event: "updateWayManual",
+              payload: { id: msg.payload.id, manual: m },
+            });
             socket.onmessage?.({
               data: JSON.stringify({
                 type: "ACK",
@@ -816,14 +817,13 @@ export const scenarios = {
           );
           schedule.enabled = !schedule.enabled;
 
-          socket._emitFromServer({
-            type: "EVENT",
-            topic: "zones",
-            event: "updateWaySchedules",
-            payload: { id: msg.payload.wayId, schedules },
-          });
-
           setTimeout(() => {
+            socket._emitFromServer({
+              type: "EVENT",
+              topic: "zones",
+              event: "updateWaySchedules",
+              payload: { id: msg.payload.wayId, schedules },
+            });
             socket.onmessage?.({
               data: JSON.stringify({
                 type: "ACK",
@@ -849,14 +849,14 @@ export const scenarios = {
             customDays: msg.payload.scheduleData.customDays,
             skipIfSoilIsMoist: msg.payload.scheduleData.skipIfSoilIsMoist,
           });
-          socket._emitFromServer({
-            type: "EVENT",
-            topic: "zones",
-            event: "updateWaySchedules",
-            payload: { id: msg.payload.wayId, schedules: zone.schedules },
-          });
 
           setTimeout(() => {
+            socket._emitFromServer({
+              type: "EVENT",
+              topic: "zones",
+              event: "updateWaySchedules",
+              payload: { id: msg.payload.wayId, schedules: zone.schedules },
+            });
             socket.onmessage?.({
               data: JSON.stringify({
                 type: "ACK",
@@ -875,14 +875,14 @@ export const scenarios = {
           zone.schedules = zone.schedules.filter(
             (s) => s.id !== msg.payload.scheduleId,
           );
-          socket._emitFromServer({
-            type: "EVENT",
-            topic: "zones",
-            event: "updateWaySchedules",
-            payload: { id: msg.payload.wayId, schedules: zone.schedules },
-          });
 
           setTimeout(() => {
+            socket._emitFromServer({
+              type: "EVENT",
+              topic: "zones",
+              event: "updateWaySchedules",
+              payload: { id: msg.payload.wayId, schedules: zone.schedules },
+            });
             socket.onmessage?.({
               data: JSON.stringify({
                 type: "ACK",
@@ -908,12 +908,27 @@ export const scenarios = {
           schedule.skipIfSoilIsMoist =
             msg.payload.scheduleData.skipIfSoilIsMoist;
 
-          socket._emitFromServer({
-            type: "EVENT",
-            topic: "zones",
-            event: "updateWaySchedules",
-            payload: { id: msg.payload.wayId, schedules: zone.schedules },
-          });
+          setTimeout(() => {
+            socket._emitFromServer({
+              type: "EVENT",
+              topic: "zones",
+              event: "updateWaySchedules",
+              payload: { id: msg.payload.wayId, schedules: zone.schedules },
+            });
+            socket.onmessage?.({
+              data: JSON.stringify({
+                type: "ACK",
+                id: msg.id,
+                ok: true,
+                error: {},
+              }),
+            });
+          }, ackDelay);
+          break;
+        }
+        case "syncTime": {
+          socket.data.device.info.localTimeSec =
+            msg.payload.timeMillisec / 1000;
 
           setTimeout(() => {
             socket.onmessage?.({
@@ -927,8 +942,57 @@ export const scenarios = {
           }, ackDelay);
           break;
         }
-        case "syncTime": {
-          socket.data.device.info.localTimeSec = msg.payload.timeSec;
+        case "getDeviceCfg": {
+          const initDeviceTxtCfg = dedent`
+            [WIFI]
+            access-point=JardinDuCiel-Arrosage:: ; SSID:Password
+
+            [relays]
+            modules=gpio-1
+            gpio-1=GPIO-H(4), GPIO-H(14), GPIO-H(15), GPIO-H(16), GPIO-H(17), GPIO-H(18)
+
+            [valve]
+            main=gpio-1.0
+
+            [zones]
+            zones=Serre, Noémie, Aromatiques
+
+            [Serre]
+            ways=Tout(gpio-1.1)
+
+            [Noémie]
+            ways=Oscillant(gpio-1.2), Goutteurs(gpio-1.3)
+
+            [Aromatiques]
+            ways=Tout(gpio-1.4)
+
+            [manual]
+            duration=10
+
+            [moisture]
+            sensor=32
+            max=60
+
+            [flow]
+            sensor=39
+            max=10
+          `;
+
+          setTimeout(() => {
+            socket.onmessage?.({
+              data: JSON.stringify({
+                type: "ACK",
+                id: msg.id,
+                ok: true,
+                error: {},
+                payload: initDeviceTxtCfg,
+              }),
+            });
+          }, ackDelay);
+          break;
+        }
+        case "setDeviceCfg": {
+          /*console.log("** Sent config **\n\n", msg.payload.rawConfigText);*/
 
           setTimeout(() => {
             socket.onmessage?.({
@@ -939,6 +1003,7 @@ export const scenarios = {
                 error: {},
               }),
             });
+            socket.close();
           }, ackDelay);
           break;
         }

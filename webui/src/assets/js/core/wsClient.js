@@ -78,6 +78,7 @@ export default (Alpine) => {
 
         this.status = "connected";
         logStatus(LOG_PREFIX, this.status);
+        Alpine.store("toast").dismissByTag("device-reboot");
       };
 
       this.socket.onclose = (event) => {
@@ -209,16 +210,19 @@ export default (Alpine) => {
 
     pendingActions: new Map(),
 
-    async sendExclusive(key, payload, options = { showToast: false }) {
+    async sendExclusive(key, payload, options = { showToast: true }) {
       // If this action is already running, wait for the existing one.
       if (this.pendingActions.has(key)) {
-        await this.pendingActions.get(key);
-        return false; // I was not the initiator
+        const ackPayload = await this.pendingActions.get(key);
+        return {
+          initiated: false, // I was not the initiator
+          payload: ackPayload,
+        };
       }
 
       const promise = (async () => {
         try {
-          await this.send(payload);
+          return await this.send(payload);
         } catch (err) {
           if (options.showToast)
             Alpine.store("toast").show(err.name ?? "Error", {
@@ -234,8 +238,11 @@ export default (Alpine) => {
 
       this.pendingActions.set(key, promise);
 
-      await promise;
-      return true; // I initiated the request
+      const ackPayload = await promise;
+      return {
+        initiated: true, // I initiated the request
+        payload: ackPayload,
+      };
     },
 
     resolveAck(msg) {
@@ -244,14 +251,15 @@ export default (Alpine) => {
 
       clearTimeout(p.timer);
       this.pendingMessages.delete(msg.id);
-      msg.ok
-        ? p.resolve()
-        : p.reject(
-            new CommError(
-              msg.error.message ?? "Command failed (unknown reason)",
-              msg.error.name,
-            ),
-          );
+      if (msg.ok)
+        p.resolve(msg.payload); // return the ACK payload
+      else
+        p.reject(
+          new CommError(
+            msg.error.message ?? "Command failed (unknown reason)",
+            msg.error.name,
+          ),
+        );
 
       return true;
     },

@@ -247,14 +247,11 @@ export default (Alpine) => {
             },
       };
       try {
-        const shouldContinue = await Alpine.store("wsClient").sendExclusive(
+        const result = await Alpine.store("wsClient").sendExclusive(
           key,
           payload,
-          {
-            showToast: true,
-          },
         );
-        if (!shouldContinue) return;
+        if (!result.initiated) return;
 
         Alpine.store("navigation").closeOverlay();
       } catch (err) {

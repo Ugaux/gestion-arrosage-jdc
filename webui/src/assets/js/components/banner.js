@@ -44,7 +44,6 @@ function setBannerState(banner, Alpine) {
               action: "clearFault",
               id: firstFault.id,
             },
-            { showToast: true },
           ),
         actionText: "Clear",
         dismissible: false,

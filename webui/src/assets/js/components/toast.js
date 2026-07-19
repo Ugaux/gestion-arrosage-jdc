@@ -36,6 +36,7 @@ function createToastStore() {
         type: options.type || "info", // info, success, warning or error
         description: options.description ?? "",
         duration: options.duration ?? DEFAULT_DURATION,
+        tag: options.tag ?? "",
 
         id: generateUniqueID(),
         leaving: false,
@@ -71,6 +72,13 @@ function createToastStore() {
           this.animationDuration + 30,
         );
       });
+    },
+
+    dismissByTag(tag) {
+      const toast = this.items.find((t) => t.tag === tag);
+      if (!toast) return;
+
+      this.close(toast.id);
     },
 
     clear() {

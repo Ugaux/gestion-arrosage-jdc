@@ -108,6 +108,7 @@
 }
 
 .is-desktop #wrapper>#overlays>section::-webkit-scrollbar {
+    height: 6px;
     width: 6px;
     background-color: transparent;
 }
@@ -123,6 +124,6 @@
 
 .is-desktop #wrapper>#overlays>section::-webkit-scrollbar-button {
     display: block;
-    height: var(--radius-box);
+    height: calc(var(--radius-box)/2);
     pointer-events: none;
 }
