@@ -15,6 +15,10 @@ Fonctionnalitées :
 Note importante :
 Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à débit nul. Dans les systèmes résidentiels, le pressostat arrête la pompe lorsque la pression est élevée, ce qui signifie que le débit est faible ou nul.
 
+`Il existe 8 tâches pouvant être lancées depuis VSCode pour simplifier l'utilisation du projet:`
+
+![Alt](firmware/doc/usable_tasks.png)
+
 # Fast web dev
 
 Quick setup for developing and testing the web interface locally.

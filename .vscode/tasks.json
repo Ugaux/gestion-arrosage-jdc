@@ -78,17 +78,17 @@
     {
       "label": "bridge: dev live refresh",
       "type": "shell",
-      "command": "uv run live_refresh.py"
+      "command": "cd bridge && uv run ./live_refresh.py"
     },
     {
       "label": "bridge: dev (mock)",
       "type": "shell",
-      "command": "uv run main.py --dev_mode --mock_esp_api"
+      "command": "cd bridge && uv run ./start_bridge.py --dev_mode --mock_esp_api"
     },
     {
       "label": "bridge: dev (esp32)",
       "type": "shell",
-      "command": "uv run main.py --dev_mode"
+      "command": "cd bridge && uv run ./start_bridge.py --dev_mode"
     },
     {
       "label": "🟢 bridge: dev (mock)",
@@ -103,7 +103,7 @@
     {
       "label": "🟢 bridge: prod",
       "type": "shell",
-      "command": "uv run main.py"
+      "command": "cd bridge && uv run ./start_bridge.py"
     }
   ]
 }
