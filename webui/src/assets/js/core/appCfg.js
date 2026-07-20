@@ -1,8 +1,7 @@
 export const AppCfg = {
   /* General websocket settings */
-  logSocketInConsole: false,
+  verboseWebsocket: false,
   websocketAckTimeout: 500, // ms before a pending command times out
-  useFakeSocket: false,
 
   /* Only fake socket settings */
   fakeScenario: "scheduledWatering", // default is 'empty'

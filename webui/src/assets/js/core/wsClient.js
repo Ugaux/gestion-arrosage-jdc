@@ -1,6 +1,5 @@
 import { AppCfg } from "./appCfg.js";
 import { handleMessage } from "./wsRouter.js";
-import { FakeSocket } from "./fakeSocket.js";
 import { logStatus, generateUniqueID } from "./utilities.js";
 
 const LOG_PREFIX = "[wsClient]";
@@ -9,10 +8,18 @@ const FIRST_RECONNECT_DELAY = 2000;
 const WATCHDOG_TIMEOUT = 35000;
 const TOAST_DISPLAY_DURATION = 6000;
 
-function createSocket() {
-  return AppCfg.useFakeSocket
-    ? new FakeSocket(AppCfg.fakeScenario)
-    : new WebSocket(AppCfg.websocketURL);
+async function createSocket() {
+  if (USE_FAKE_SOCKET) {
+    const { FakeSocket } = await import("./fakeSocket.js");
+    logStatus(
+      LOG_PREFIX,
+      "Using the fake socket (intended for dev-only)",
+      "warn",
+    );
+    return new FakeSocket(AppCfg.fakeScenario);
+  }
+
+  return new WebSocket(AppCfg.websocketURL);
 }
 
 class CommError extends Error {
@@ -36,7 +43,7 @@ export default (Alpine) => {
 
     pendingMessages: new Map(), // id → { resolve, reject, timer }
 
-    _connect() {
+    async _connect() {
       if (
         this.socket &&
         (this.socket.readyState === WebSocket.OPEN ||
@@ -45,115 +52,126 @@ export default (Alpine) => {
         return;
       }
 
-      this.status = "connecting";
-      logStatus(LOG_PREFIX, this.status, "info");
-      const socket = createSocket();
-      this.socket = socket;
+      try {
+        this.status = "connecting";
+        logStatus(LOG_PREFIX, this.status, "info");
+        const socket = await createSocket();
+        this.socket = socket;
 
-      let watchdog = null;
-      const resetWatchdog = () => {
-        if (AppCfg.useFakeSocket) return;
-        // If we hear nothing from the ESP32 for 35 s, force a reconnect
-        clearTimeout(watchdog);
-        watchdog = setTimeout(() => {
-          if (socket.readyState === WebSocket.OPEN) {
+        let watchdog = null;
+        const resetWatchdog = () => {
+          if (USE_FAKE_SOCKET) return;
+          // If we hear nothing from the ESP32 for 35 s, force a reconnect
+          clearTimeout(watchdog);
+          watchdog = setTimeout(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+              logStatus(
+                LOG_PREFIX,
+                `no news from server for ${WATCHDOG_TIMEOUT / 1000}s, closing...`,
+                "warn",
+              );
+              socket.close(); // IMPORTANT: closes correct socket instance
+            }
+          }, WATCHDOG_TIMEOUT);
+        };
+
+        this.socket.onopen = () => {
+          resetWatchdog();
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = null;
+          this.retryCount = 0; // reset after success
+          clearInterval(this.disconnectedTimer);
+          this.disconnectedTimer = null;
+          this.disconnectedDuration = 0;
+
+          this.status = "connected";
+          logStatus(LOG_PREFIX, this.status);
+          Alpine.store("toast").dismissByTag("device-reboot");
+        };
+
+        this.socket.onclose = (event) => {
+          clearTimeout(watchdog);
+
+          for (const p of this.pendingMessages.values()) {
+            clearTimeout(p.timer);
+            p.reject(
+              new CommError("Connection closed before message acknowledge"),
+            );
+          }
+          this.pendingMessages.clear();
+
+          this.status = "disconnected";
+          let reason = "";
+          if (!event.wasClean) {
+            switch (event.code) {
+              case 1006: {
+                reason = "server unreachable";
+                break;
+              }
+              case 1008: {
+                reason = "access denied";
+                break;
+              }
+              default: {
+                reason = `unexpected error ${event.code}`;
+              }
+            }
+            reason = ` (${reason})`;
+          }
+          logStatus(LOG_PREFIX, `${this.status}${reason}`, "info");
+          clearInterval(this.disconnectedTimer);
+          this.disconnectedTimer = setInterval(() => {
+            this.disconnectedDuration++;
+          }, 1000);
+
+          const delay = Math.min(
+            FIRST_RECONNECT_DELAY * 2 ** this.retryCount,
+            30000,
+          );
+          logStatus(
+            LOG_PREFIX,
+            `next reconnection attempt in ${delay / 1000}s`,
+          );
+
+          clearTimeout(this.reconnectTimer);
+          this.reconnectTimer = setTimeout(() => {
             logStatus(
               LOG_PREFIX,
-              `no news from server for ${WATCHDOG_TIMEOUT / 1000}s, closing...`,
-              "warn",
+              "trying again after reconnect delay timed-out",
             );
-            socket.close(); // IMPORTANT: closes correct socket instance
-          }
-        }, WATCHDOG_TIMEOUT);
-      };
+            this._connect();
+          }, delay);
+          this.retryCount++;
+        };
 
-      this.socket.onopen = () => {
-        resetWatchdog();
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = null;
-        this.retryCount = 0; // reset after success
-        clearInterval(this.disconnectedTimer);
-        this.disconnectedTimer = null;
-        this.disconnectedDuration = 0;
-
-        this.status = "connected";
-        logStatus(LOG_PREFIX, this.status);
-        Alpine.store("toast").dismissByTag("device-reboot");
-      };
-
-      this.socket.onclose = (event) => {
-        clearTimeout(watchdog);
-
-        for (const p of this.pendingMessages.values()) {
-          clearTimeout(p.timer);
-          p.reject(
-            new CommError("Connection closed before message acknowledge"),
+        this.socket.onerror = (event) => {
+          this.status = "error";
+          logStatus(
+            LOG_PREFIX,
+            `${this.status} ${event.code}, reason is '${event.reason}'`,
+            "error",
           );
-        }
-        this.pendingMessages.clear();
 
-        this.status = "disconnected";
-        let reason = "";
-        if (!event.wasClean) {
-          switch (event.code) {
-            case 1006: {
-              reason = "server unreachable";
-              break;
-            }
-            case 1008: {
-              reason = "access denied";
-              break;
-            }
-            default: {
-              reason = `unexpected error ${event.code}`;
-            }
-          }
-          reason = ` (${reason})`;
-        }
-        logStatus(LOG_PREFIX, `${this.status}${reason}`, "info");
-        clearInterval(this.disconnectedTimer);
-        this.disconnectedTimer = setInterval(() => {
-          this.disconnectedDuration++;
-        }, 1000);
+          this.socket.close();
+        };
 
-        const delay = Math.min(
-          FIRST_RECONNECT_DELAY * 2 ** this.retryCount,
-          30000,
-        );
-        logStatus(LOG_PREFIX, `next reconnection attempt in ${delay / 1000}s`);
+        this.socket.onmessage = (event) => {
+          resetWatchdog();
 
-        clearTimeout(this.reconnectTimer);
-        this.reconnectTimer = setTimeout(() => {
-          logStatus(LOG_PREFIX, "trying again after reconnect delay timed-out");
-          this._connect();
-        }, delay);
-        this.retryCount++;
-      };
-
-      this.socket.onerror = (event) => {
+          this.lastMessageAt = Date.now();
+          let msg = null;
+          try {
+            msg = JSON.parse(event.data);
+          } catch {
+            return;
+          } // silently drop malformed
+          if (!msg?.type) return;
+          handleMessage(Alpine, this, msg);
+        };
+      } catch (err) {
         this.status = "error";
-        logStatus(
-          LOG_PREFIX,
-          `${this.status} ${event.code}, reason is '${event.reason}'`,
-          "error",
-        );
-
-        this.socket.close();
-      };
-
-      this.socket.onmessage = (event) => {
-        resetWatchdog();
-
-        this.lastMessageAt = Date.now();
-        let msg = null;
-        try {
-          msg = JSON.parse(event.data);
-        } catch {
-          return;
-        } // silently drop malformed
-        if (!msg?.type) return;
-        handleMessage(Alpine, this, msg);
-      };
+        logStatus(LOG_PREFIX, `Failed to create socket: ${err}`, "error");
+      }
     },
 
     init() {

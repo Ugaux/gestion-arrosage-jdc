@@ -30,6 +30,7 @@ Create the virtual environment and install all python dependencies:
 ```bash
 uv sync --project ./bridge
 bun install --cwd ./webui
+bun run --cwd ./webui build-app
 ```
 
 `bun` toolkit is required, install it from [here](https://bun.com/docs/installation).
@@ -82,8 +83,20 @@ Edit the following files:
 Put the .ttf files that need to be converted in the `webui/fonts` folder and execute in terminal:
 
 ```bash
-bun run --cwd webui convert-fonts
+bun run --cwd ./webui convert-fonts
 ```
+
+Then manually move the desired files into the `webui/src/assets/fonts` folder.
+
+You will also have to execute the `copy-assets` bun script with:
+
+```bash
+bun run --cwd ./webui copy-assets
+```
+
+### Adding new images
+
+When adding new images into the `webui/src/assets/img` folder, it is also necessary to run `copy-assets` bun script (follow explanation in [Adding new webfonts](#adding-new-webfonts))
 
 ### Tips
 
@@ -99,7 +112,7 @@ bun run --cwd webui convert-fonts
 Once everything works, try a build (minify+gzip):
 
 ```bash
-bun run --cwd webui build
+bun run --cwd ./webui build
 ```
 
 Note that it is not required to do before uploading to ESP32 filesystem image, since it is done automatically.

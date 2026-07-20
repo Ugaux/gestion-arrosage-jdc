@@ -3,9 +3,9 @@
   "tasks": [
     // ****************** ESP32: FILESYSTEM SIDE ****************** //
     {
-      "label": "esp32-fs: minify webui",
+      "label": "esp32-fs: deploy webui",
       "type": "shell",
-      "command": "python scripts/build_web.py"
+      "command": "bun run --cwd ./webui deploy-app"
     },
     {
       "label": "esp32-fs: build fs image",
@@ -21,9 +21,9 @@
       "label": "🟡 esp32-fs: deploy filesystem (USB)",
       "dependsOrder": "sequence",
       "dependsOn": [
-        "esp32-fs: minify webui",
-        "esp32-fs: build FS Image",
-        "esp32-fs: upload FS image (USB)"
+        "esp32-fs: deploy webui",
+        "esp32-fs: build fs image",
+        "esp32-fs: upload fs image (USB)"
       ]
     },
 
@@ -93,17 +93,20 @@
     {
       "label": "🟢 bridge: dev (mock)",
       "dependsOrder": "parallel",
-      "dependsOn": ["bridge: dev live refresh", "bridge: dev (mock)"]
+      "dependsOn": ["bridge: dev live refresh", "bridge: dev (mock)"],
+      "problemMatcher": []
     },
     {
       "label": "🟢 bridge: dev (esp32)",
       "dependsOrder": "parallel",
-      "dependsOn": ["bridge: dev live refresh", "bridge: dev (esp32)"]
+      "dependsOn": ["bridge: dev live refresh", "bridge: dev (esp32)"],
+      "problemMatcher": []
     },
     {
       "label": "🟢 bridge: prod",
       "type": "shell",
-      "command": "cd bridge && uv run ./start_bridge.py"
+      "command": "cd bridge && uv run ./start_bridge.py",
+      "problemMatcher": []
     }
   ]
 }

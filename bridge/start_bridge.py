@@ -20,7 +20,7 @@ from bridge_config import ESP_BASE_URL, EXCLUDED_HEADERS
 
 DEV_MODE = os.environ.get("DEV_MODE", "0") == "1"
 MOCK_ESP_API = os.environ.get("MOCK_ESP_API", "0") == "1"
-WEBUI_FILEPATH = os.path.join(Path(__file__).parent.parent, "webui", "src")
+WEBUI_FILEPATH = os.path.join(Path(__file__).parent.parent, "webui", "dist", "app")
 
 if DEV_MODE:
     VERSION = "dev"
@@ -121,7 +121,7 @@ async def websocket_proxy(client_ws: WebSocket):
                                 {"index": 2, "name": "Expander-GPIO:2", "is_checked": True},
                                 {"index": 3, "name": "Expander-GPIO:3", "is_checked": False},
                                 {"index": 4, "name": "Expander-GPIO:4", "is_checked": False},
-                                {"index": 5, "name": "Expander-GPIO:5", "is_checked": True},
+                                {"index": 5, "name": "Expander-GPIO:5", "is_checked": False},
                                 {"index": 6, "name": "Expander-GPIO:6", "is_checked": False},
                                 {"index": 7, "name": "Expander-GPIO:7", "is_checked": False},
                             ],
@@ -137,14 +137,15 @@ async def websocket_proxy(client_ws: WebSocket):
                 print(f"Received: {data}")
 
                 if action == "toggleValve":
-                    await client_ws.send_json(
-                        {
-                            "type": "EVENT",
-                            "topic": "valves",
-                            "event": "updateAll",
-                            "payload": [{"index": 5, "name": "Expander-GPIO:5", "is_checked": True}],
-                        }
-                    )
+                    if False:
+                        await client_ws.send_json(
+                            {
+                                "type": "EVENT",
+                                "topic": "valves",
+                                "event": "updateAll",
+                                "payload": [{"index": 5, "name": "Expander-GPIO:5", "is_checked": True}],
+                            }
+                        )
                     await client_ws.send_json(
                         {
                             "id": message["id"],

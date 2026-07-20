@@ -19,10 +19,10 @@ export function parseCssDurationVar(varString) {
 }
 
 export function logStatus(prefix, status, level = "info") {
-  if (!AppCfg.logSocketInConsole) return;
-
-  if (level === "info") console.log(prefix, status);
-  else if (level === "warn") console.warn(prefix, status);
+  if (level === "info") {
+    if (!AppCfg.verboseWebsocket) return;
+    console.log(prefix, status);
+  } else if (level === "warn") console.warn(prefix, status);
   else if (level === "error") console.error(prefix, status);
   else console.warn(prefix, "unknown log level:", level);
 }

@@ -1,8 +1,8 @@
 import { Glob } from "bun";
-import { dirname, join, relative } from "node:path";
+import { dirname, join } from "path";
 
 const INPUT_DIR = "fonts";
-const OUTPUT_DIR = "dist/fonts_woff2_converted";
+const OUTPUT_DIR = "dist/fonts_woff2_converted/";
 
 // Includes:
 // - Basic Latin

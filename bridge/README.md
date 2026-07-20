@@ -4,6 +4,8 @@
 
 ## 🔧 To clarify / questions
 
+Add support of gzip files (".gz") with "Accept-Encoding: gzip, br" in header
+
 Test debuggage avec point d'arrêt dans script python du bridge
 
 Refactor project structure:

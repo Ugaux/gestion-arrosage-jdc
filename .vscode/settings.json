@@ -13,17 +13,27 @@
     "**/.vscode": true,
     "**/.clang-format": true
   },
-  "python-envs.defaultEnvManager": "ms-python.python:venv",
+  "python.terminal.activateEnvironment": false,
   "python.defaultInterpreterPath": "${workspaceFolder}/bridge/.venv/Scripts/python.exe",
+  "html.format.unformattedContentDelimiter": "<!--noformat-->",
+  "html.format.contentUnformatted": "svg",
   "emeraldwalk.runonsave": {
     "commands": [
       {
         "match": "webui[\\\\/]src[\\\\/]assets[\\\\/]css[\\\\/].*\\.css$",
-        "cmd": "bun run --cwd ./webui dev-bundle-css"
+        "cmd": "bun run --cwd ./webui bundle-css"
       },
       {
         "match": "webui[\\\\/]src[\\\\/]assets[\\\\/]js[\\\\/].*\\.js$",
-        "cmd": "bun run --cwd ./webui dev-bundle-js"
+        "cmd": "bun run --cwd ./webui bundle-js"
+      },
+      {
+        "match": "webui[\\\\/]src[\\\\/]build.json$",
+        "cmd": "bun run --cwd ./webui bundle-js"
+      },
+      {
+        "match": "webui[\\\\/]src[\\\\/]index.html$",
+        "cmd": "bun run --cwd ./webui bundle-html"
       }
     ]
   }
