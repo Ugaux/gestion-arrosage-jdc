@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ****************** ESP32: FIRWMARE SIDE ****************** //
+    {
+      "label": "🔨 esp32-fm: build debug",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["run", "-e", "ESP32-debug"]
+    },
+    {
+      "label": "⬆️ esp32-fm: upload debug (USB)",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["run", "-e", "ESP32-debug", "--target", "upload"]
+    },
+    {
+      "label": "🔨 esp32-fm: build release",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["run", "-e", "ESP32-release"]
+    },
+    {
+      "label": "⬆️ esp32-fm: upload release (USB)",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["run", "-e", "ESP32-release", "--target", "upload"]
+    },
+    {
+      "label": "⬆️ esp32-fm: upload release (OTA)",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["run", "-e", "ESP32-release-ota", "--target", "upload"]
+    }
+  ]
+}

@@ -7,10 +7,8 @@
     "**/.clang-format": true
   },
   "search.exclude": {
-    "**/README.md": true,
     "**/.pio": true,
     "**/.git": true,
-    "**/.vscode": true,
     "**/.clang-format": true
   },
   "python.terminal.activateEnvironment": false,
