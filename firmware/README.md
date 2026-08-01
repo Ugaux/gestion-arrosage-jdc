@@ -1,6 +1,152 @@
-# Tips
+# 📖 Documentation
+
+## Websocket tips
 
 Use the ArduinoJson Assitant v7 at https://arduinojson.org/v7/assistant/#/step1
+
+## API definition
+
+### calls
+
+/api/status
+/api/cmd
+/api/version
+
+### health response
+
+```JSON
+"wifi": {
+  "connected": true,
+  "rssi": -62,
+  "ip": "192.168.1.42"
+},
+```
+
+```JSON
+"hardware": {
+  "valves": {
+    "1": "ok",
+    "2": "ok",
+    "3": "fault"
+  }
+},
+```
+
+In case the schedule is computed on an external server and sent to ESP32 periodically, the following could be added to API health call:
+
+```JSON
+{
+  "last_schedule_sync": "2026-06-09T10:15:00Z",
+  "schedule_sync_age_s": 12,
+  "schedule_version": 42,
+}
+```
+
+## schedule.ini entry format
+
+```ini
+; *********************************************************************
+; *********************** Schedule entry format ***********************
+; *********************************************************************
+;
+; Each [schedule.<index>] section defines one watering schedule.
+; <index> is a sequential integer used only by the parser.
+; Parsing stops at the first missing index.
+;
+; Keys:
+;   id=<UUID>               Version 4 UUID (RFC 4122)
+;   valve=<ID number>       Valve to control
+;   name=<text>             Display name
+;   def=HH:MM,duration,onlyIfDrySoil,frequency[-days]
+;
+; The def value is a comma-separated list with fields:
+; HH              hour (00-23)
+; MM              minutes (00-59)
+; duration        Watering duration in minutes (1-255)
+; onlyIfDrySoil   0 = always water
+;                 1 = water only if soil is dry
+; frequency is one of:
+;   * = every day
+;   e = even days of the month (2, 4, 6, ..., 30)
+;   o = odd days of the month (1, 3, 5, ..., 31)
+;   c = custom days (requires the optional "-days" suffix)
+; days:
+;   Used only when frequency = c.
+;   Specify one or more weekdays as a bitmask by OR-ing the values:
+;     Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64
+;   e.g. Mon|Wed|Fri|Sat = 1+4+16+32 = 53
+;
+; Example:
+;
+; [schedule.11]
+; id=e27eb9df-f08d-4f88-84fb-a7a553dbbc83
+; valve=1
+; name=Morning
+; def=22:00,30,0,c-53  (=> runs every monday, wednesday, friday and
+;                       and saturday at 22:00 for 30 minutes,
+;                       regardless of soil moisture.)
+```
+
+## ESP32 pinout
+
+Expander
+
+- _IOExpander0_: relay 0
+- _IOExpander1_: relay 1
+- _IOExpander2_: relay 2
+- _IOExpander3_: relay 3
+- _IOExpander4_: relay 4
+- _IOExpander5_: relay 5
+- _IOExpander6_: relay 6
+- _IOExpander7_: relay 7
+
+Watchdog
+
+- _!WDO_: LED verte (status)
+- _RST_ : No connected
+- _!RST_ : ESP32 EN pin with pull-up
+
+Left side
+
+- _GPIO36_: courant pompe arrosage input - **ADC1**
+- _GPIO39_: flow sensor input - **ADC1**
+- _GPIO34_: soil moisture sensor input - **ADC1**
+- _GPIO35_: présence arrivée eau remplissage cuve input - **ADC1**
+- _GPIO32_: 433Hz radio tx output - **ADC1**
+- _GPIO33_: **_UNUSED_** - **ADC1**
+- _GPIO25_: Watchdog WDI - **ADC1**
+- _GPIO26_: LED bleu/orange (arrosage en cours)
+- _GPIO27_: LED rouge (erreur fonctionnelle)
+- _GPIO14_: mosfet (LED bouton arrosage à la main)
+- _GPIO13_: mosfet (vanne 12v arrosage à la main)
+
+Right side
+
+- _GPIO23_: bouton arrosage à la main input
+- _GPIO22_ (sda): RTC i2c
+- _GPIO22_ (sda): IO Expander i2c
+- _GPIO21_ (scl): RTC i2c
+- _GPIO21_ (scl): IO Expander i2c
+- _GPIO19_: afficheur 7 segments dio
+- _GPIO18_: afficheur 7 segments clk
+- _GPIO17_ (tx2): cuve niv haut input
+- _GPIO16_ (rx2): cuve niv bas input
+
+## Compilation rapide avec WSL et Ubuntu 24.04.01 LTS
+
+`Prend seulement une dizaine de seconde contre facilement 1min10 sur Windows avec l'IDE d'Arduino`
+
+Commandes :
+
+```
+$ sudo apt update
+$ sudo apt upgrade
+$ sudo snap install arduino-cli
+$ sudo apt install libstdc++6
+$ sudo apt install python-is-python3
+$ arduino-cli board details -b esp32:esp32:esp32da
+$ arduino-cli compile -v ~/gestion_arrosage_jdc --build-path ~/gestion_arrosage_jdc/build
+```
 
 # ⚙️ Tasks
 
@@ -18,11 +164,113 @@ Use the ArduinoJson Assitant v7 at https://arduinojson.org/v7/assistant/#/step1
 
 ## 🔧 To clarify / questions
 
-Features importantes :
+class errorManager ? gere les leds du boitier et les faults string
 
+Wire.begin() ?
+augmenter clock i2c avec Wire.setClock(400000);
+
+### Refactor complet du code pour enlever inter-dépendances et ajout :
+
+- Remplacer class statique Way actuelle par WayManager et fonctionnera comme SensorManager passée par ref dans begin() de WebsocketServer (cf.fichier exemple dans dossier `Future refactor`)
+- possibilité d'avoir un way non rattaché à une zone pour éviter un nommage étrange
+- better config file format (JSON?) and structure (cf. folder in `doc`)
+- codage en natif sur windows avec unit testing
+- debug dans platform IO et release ensuite
+- OTA upload
+
+Bugfix:
+
+- Pb vanne si pas de planning de fait
+- Loop main par rapport à 0 de chaque minute et non random
+- Vérif dans watering.cpp : "if (at + (m_duration \* 60)" et "if (at + 10 < now)"
+
+### Features importantes
+
+- _ID ON ERROR FOR DELETION IF MULTIPLE PRESS OF CLEAR AT SAME TIME_
+- Utiliser nvs pour stocker pump cycles et ajouter une date pour savoir depuis quand ça incrémente (commissioningTimeSec), et pour last command et last schedule update et last config modified ... + ne pas écraser lors d'un upload firmware et littlefs
+- Quand activation manuelle de la vanne dans settings, la fermer automatiquement après un timeout
+  => Dépend de comment c'est géré par rgodin
+
+### Serveur
+
+- /api/… returns first (keep at least API call for device status (GET) and to reset (POST) device with CURL command and one/two other relevant calls)
+- all others url paths return index.html
+  The index.html handles "Page Not Found"
+- Check si quand esp est down dans console log je vois websocket error
+- on config change, first do checks if config is valid (like maximum size check, valid INI syntax check or required sections/keys check), if so update last modified to current time + faire suivant pour éviter qu'une perte de courant corrompe les données :
+- envoyer ack que au client specifique :
+
+```
+Client A                 ESP32                  Client B
+   |                       |                       |
+   |--- toggleValve ------>|                       |
+   |                       |                       |
+   |<-- ACK success -------|                       |
+   |                       |                       |
+   |<---- valveChanged -------------------------->|
+```
+
+### ini save()
+
+LittleFS is explicitly designed to be fail-safe. Its documentation states that
+"All POSIX operations, such as remove and rename, are atomic, even in the event of power-loss."
+
+config.ini → active configuration
+config.ini.tmp → incomplete update in progress
+
+```
+Validate config object
+  |
+  |-> Failed -> Return error
+  |
+  v
+Write in settings.ini.tmp
+(checks all write/flush/close errors)
+  |
+  |-> Failed -> Delete .tmp -> Return error
+  |
+  v
+Rename settings.ini.tmp in settings.ini
+(overwrites old settings.ini)
+  |
+  |-> Failed -> Delete .tmp -> Return error
+  |
+  v
+Done
+```
+
+Then on boot:
+if settings.ini exists and is valid:
+use it
+delete stale settings.ini.tmp (if present)
+else:
+no valid configuration available
+
+Note: avoir même mécanisme pour aussi schedules.ini
+
+### Hand watering
+
+- Ajout afficheur à segments
+- Timing drift in main loop avec afficheur 7 segments pour arrosage à la main
+- Ajout si appuie successif dans les 5 1ère secondes, augmenter temps total (commencer avec 10min, puis 20min, ...)
+- Short press/release pour activation vanne arrosage à la main, and for really short press/release or long press/release do nothing (so it act as a cancel).
+
+### WiFi
+
+- How to detect Access Point failure on ESP32?
+- Sleep mode when no one connected
+- Captive portal en mode AP ? (cf. dossier dans `doc`)
+- Captive portal qui demande de rien faire si pas sûr, avec lien pour visiter le site une fois sortie du portail
+
+### mix
+
+- rename Watering in Schedule (peut etre pas finalement car groupe auto et manual)
+- rename ConfigLoader in IniSettings (pas besoin en fait cest le parseur de ini dans dossier config et il a obtenu les infos de settings.ini)
+- rename spiffsinifile in littlefsinifile (et fichiers de descriptions à aussi modifier)
+- change for pragma once everywhere + commentaire du nom du fichier actuel en haut ex: "// Settings.h"
+- Debug generalisé et false si release
 - Use tasks for building + check si upload va aussi faire un build avec ma task custom "upload" -> en fct ajouter task build ou non dans full deploy
   (pio run -e ESP32-release --target upload)
-- Conversion code en WS/API pour dev web plus facile (avec esp connecté en wifi)
 - Enable brownout detector
 - Pins no utilisés en tant qu'output à low + qu'en est-il des input only ?
 - Ajout hand watering
@@ -35,48 +283,24 @@ Features importantes :
 - Stocker l'état de la cuve pour que si l'esp s'éteint, au redémarrage le remplissage continuer
 - Réduire envoi radio avec biblioteque ([RCSwitchRmt](https://github.com/Upartech/RCSwitchRmt/tree/main) qui a send non bloquant) pr code papa car ajoute pb de reactivité lors d'un appui sur bouton avec arrosage en cours (seulement besoin d'envoyer 3-5 commandes, pas besoin de le faire pdt 10ms) https://chatgpt.com/c/682541fa-2364-800e-8035-e06e5f3cb1cc
 - mDNS pour accès avec http://arrosage.local
+- use .csv for tailles partitions esp32 (à ajouter dans "platformio.ini") ? cf. fichier "huge_app.csv" de rgodin976
 
-Bugfix :
+## Next steps
 
-- Pb vanne si pas de planning de fait
-- Loop main par rapport à 0 de chaque minute et non random
-- Vérif dans watering.cpp : "if (at + (m_duration \* 60)" et "if (at + 10 < now)"
+API calls implementation
 
-### Others
+How to turn ESP32 safely off?
 
-How to turn ESP32 safely off ?
-
-Hand watering:
-
-- Ajout afficheur à segments
-- Timing drift in main loop avec afficheur 7 segments pour arrosage à la main
-- Ajout si appuie successif dans les 5 1ère secondes, augmenter temps total (commencer avec 10min, puis 20min, ...)
-- Short press/release pour activation vanne arrosage à la main, and for really short press/release or long press/release do nothing (so it act as a cancel).
-
-Robustesse data capteurs :
+### Robustesse data capteurs
 
 - Calibrate ADC1 avec Platform IO
 - Ajout check si capteur connectés ou valeurs ok + ajout filtrage sur capteurs pour lisser valeurs :
   - Detection jump anormaux sur capteurs dont celui de humidité (de 40% à 90% par exemple) avec filtres comme median/mode/hampel/velocity-based
   - Fallback models when data is missing
 - Ajout limites pour tout les capteurs et si en dehors mettre message défaut capteurs
+- seulement push valeurs des capteurs si elles ont changé (et pas plus de 2x fois par seconde)
 
-WiFi :
-
-- How to detect Access Point failure on ESP32?
-- Sleep mode when no one connected
-- Captive portal en mode AP ? (cf. dossier dans `doc`)
-- Captive portal qui demande de rien faire si pas sûr, avec lien pour visiter le site une fois sortie du portail
-
-Refactor complet du code pour enlever inter-dépendances et ajout :
-
-- possibilité d'avoir un way non rattaché à une zone pour éviter un nommage étrange
-- better config file format (JSON?) and structure (cf. folder in `doc`)
-- codage en natif sur windows avec unit testing
-- debug dans platform IO et release ensuite
-- OTA upload
-
-Logique cuve avec nouveau capteur distance à ultrason :
+### Logique cuve (avec nouveau capteur distance à ultrason)
 
 - Cuve vide, niv faible, niv moyen, niv haut et cuve pleine (avec 4 capteurs, et arrosage qui se coupe qd cuve vide) + check que pompe remplissage a un débit suffisant pour que la cuve n'atteigne jamais le niveau vide (ou après un long moment) lorsque arrosage est à son débit max -> faire calcul avec Bernoulli
 - Suspension arrosage quand cuve vide jusqu'à faible (environ 2 bar de pertes de charge sur tuyau remplissage cuve, donc débit plus faible que débit pompe arrosage, la pompe va s'éteindre et s'allumer souvent si fonctionnement proche des 4600 L/h à cause du fait que la cuve va se vider plus vite qu'elle se remplie et va trigger le niv bas) + suspension timer de remplissage cuve jusqu'à que arrosage soit fini (pour avoir une erreur si le tuyau de remplissage n'est pas dans la cuve)
@@ -265,102 +489,3 @@ https://www.yardian.com/blogs/articles/how-smart-watering-works/ :
 - Permanent Wilting Point (PWP)
 - Plant Available Water (PAW)
 - Maximum Allowable Depletion (MAD)
-
-# API
-
-## calls
-
-/api/status
-/api/cmd
-/api/version
-
-## health response
-
-```JSON
-"wifi": {
-  "connected": true,
-  "rssi": -62,
-  "ip": "192.168.1.42"
-},
-```
-
-```JSON
-"hardware": {
-  "valves": {
-    "1": "ok",
-    "2": "ok",
-    "3": "fault"
-  }
-},
-```
-
-In case the schedule is computed on an external server and sent to ESP32 periodically, the following could be added to API health call:
-
-```JSON
-{
-  "last_schedule_sync": "2026-06-09T10:15:00Z",
-  "schedule_sync_age_s": 12,
-  "schedule_version": 42,
-}
-```
-
-# ESP32 pinout
-
-Expander
-
-- _IOExpander0_: relay 0
-- _IOExpander1_: relay 1
-- _IOExpander2_: relay 2
-- _IOExpander3_: relay 3
-- _IOExpander4_: relay 4
-- _IOExpander5_: relay 5
-- _IOExpander6_: relay 6
-- _IOExpander7_: relay 7
-
-Watchdog
-
-- _!WDO_: LED verte (status)
-- _RST_ : No connected
-- _!RST_ : ESP32 EN pin with pull-up
-
-Left side
-
-- _GPIO36_: courant pompe arrosage input - **ADC1**
-- _GPIO39_: flow sensor input - **ADC1**
-- _GPIO34_: soil moisture sensor input - **ADC1**
-- _GPIO35_: présence arrivée eau remplissage cuve input - **ADC1**
-- _GPIO32_: 433Hz radio tx output - **ADC1**
-- _GPIO33_: **_UNUSED_** - **ADC1**
-- _GPIO25_: Watchdog WDI - **ADC1**
-- _GPIO26_: LED bleu/orange (arrosage en cours)
-- _GPIO27_: LED rouge (erreur fonctionnelle)
-- _GPIO14_: mosfet (LED bouton arrosage à la main)
-- _GPIO13_: mosfet (vanne 12v arrosage à la main)
-
-Right side
-
-- _GPIO23_: bouton arrosage à la main input
-- _GPIO22_ (sda): RTC i2c
-- _GPIO22_ (sda): IO Expander i2c
-- _GPIO21_ (scl): RTC i2c
-- _GPIO21_ (scl): IO Expander i2c
-- _GPIO19_: afficheur 7 segments dio
-- _GPIO18_: afficheur 7 segments clk
-- _GPIO17_ (tx2): cuve niv haut input
-- _GPIO16_ (rx2): cuve niv bas input
-
-# Compilation rapide avec WSL et Ubuntu 24.04.01 LTS
-
-`Prend seulement une dizaine de seconde contre facilement 1min10 sur Windows avec l'IDE d'Arduino`
-
-Commandes :
-
-```
-$ sudo apt update
-$ sudo apt upgrade
-$ sudo snap install arduino-cli
-$ sudo apt install libstdc++6
-$ sudo apt install python-is-python3
-$ arduino-cli board details -b esp32:esp32:esp32da
-$ arduino-cli compile -v ~/gestion_arrosage_jdc --build-path ~/gestion_arrosage_jdc/build
-```

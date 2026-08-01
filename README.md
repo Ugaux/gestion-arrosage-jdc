@@ -1,4 +1,4 @@
-# Description projet
+# 📋 Description projet
 
 Code fonctionnant sur un ESP32 permettant la gestion de l'arrosage pour le Jardin du Ciel à Vitabox (Algolsheim, FR).
 
@@ -19,11 +19,13 @@ Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à 
 
 ![Alt](firmware/doc/usable_tasks.png)
 
-# Fast web dev
+# 📖 Documentation
+
+## Fast web dev
 
 Quick setup for developing and testing the web interface locally.
 
-## Prerequisites
+### Prerequisites
 
 Create the virtual environment and install all python dependencies:
 
@@ -35,14 +37,14 @@ bun run --cwd ./webui build-app
 
 `bun` toolkit is required, install it from [here](https://bun.com/docs/installation).
 
-## 1. Start the server
+### 1. Start the server
 
 ```bash
 cd bridge/scripts
 cls && uv run ./start_bridge.py [--mock_esp_api] [--dev_mode]
 ```
 
-### Options
+#### Options
 
 - `--mock_esp_api`  
   Use a fake API for frontend-only development. requests are sent to the ESP32 API using the URL defined in `/server/mock/config.py`.
@@ -51,7 +53,7 @@ cls && uv run ./start_bridge.py [--mock_esp_api] [--dev_mode]
 
 ---
 
-## 2. Development mode
+### 2. Development mode
 
 When using `--dev_mode`, start the file watcher beforehand in a separate terminal with:
 
@@ -69,7 +71,7 @@ This enables:
 
 ---
 
-## 3. Development workflow
+### 3. Development workflow
 
 Edit the following files:
 
@@ -78,7 +80,7 @@ Edit the following files:
 ./bridge/start_bridge.py
 ```
 
-### Adding new webfonts
+#### Adding new webfonts
 
 Put the .ttf files that need to be converted in the `webui/fonts` folder and execute in terminal:
 
@@ -94,11 +96,11 @@ You will also have to execute the `copy-assets` bun script with:
 bun run --cwd ./webui copy-assets
 ```
 
-### Adding new images
+#### Adding new images
 
 When adding new images into the `webui/src/assets/img` folder, it is also necessary to run `copy-assets` bun script (follow explanation in [Adding new webfonts](#adding-new-webfonts))
 
-### Tips
+#### Tips
 
 - Keep the Python web architecture consistent with the ESP32 implementation (`WebServer.h/cpp`)
 - Links:
@@ -107,7 +109,7 @@ When adding new images into the `webui/src/assets/img` folder, it is also necess
 
 ---
 
-## 4. Export for production
+### 4. Export for production
 
 Once everything works, try a build (minify+gzip):
 
@@ -119,23 +121,10 @@ Note that it is not required to do before uploading to ESP32 filesystem image, s
 
 ---
 
-## 5. Deploy to ESP32
+### 5. Deploy to ESP32
 
 - Build the filesystem image
 - Upload it to ESP32 using PlatformIO
-
-# ⚙️ Tasks
-
-## ✅ OK
-
-- Restructuration du repo en sous-projets
-
-## 🔧 To clarify / questions
-
-How to handle versionning automatically for all projects? (bridge, firmware, webui, hardware)
-Add automatic tags or commit version when merge to main?
-
-# Notes
 
 ## Versioning
 
@@ -247,11 +236,11 @@ Besoin des 3 systèmes suivants :
 - Contrôleur intelligent utilisant les secondes
 - Ajout arrosage avec tuyau manuel si besoin avec système indépendant du contrôleur intelligent, qui comporte une vanne supplémentaire (à placer en amont du capteur de débit utilisé par le contrôleur, pour ne pas déclencher de fuite par exemple) et un bouton qui déclenche relai en parallèle pour allumer la pompe et qui déclenche un compte à rebours de 30min avec possibilité de réappuyer pour le remettre à 30min. Le bouton se trouve au niveau du branchement du tuyau avec un affichage à segments qui indique le temps restant (étiquette avec texte qui dit « purger le tuyau après utilisation » ou « ranger le tuyau après utilisation »)
 
-# Possible improvements
+## Possible improvements
 
-## Very useful
+### Very useful
 
-### Internet connectiviy
+#### Internet connectiviy
 
 Pour publier des données par Internet, cf. [achat carte sim](https://www.thingsmobile.com/business/shop) et [tuto](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/)
 
@@ -261,11 +250,11 @@ Pour publier des données par Internet, cf. [achat carte sim](https://www.things
 - `wifi esp32 + alertes par sms` <- préference pour celle-ci
 - wifi esp32 uniquement pour debug serial par ex et serveur web qui communique avec esp via carte sim pour toutes les fonctionnalités (permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe)
 
-### Water tank level (replacement)
+#### Water tank level (replacement)
 
 Upgrade the simplest water tank EMPTY/FULL levels with an ultrasonic distance sensor
 
-### LAN (addition by SPI interface + 2 worth considering pins)
+#### LAN (addition by SPI interface + 2 worth considering pins)
 
 ⚠️ Almost all SPI pins (18, 19 and 23) are already in use by some elements such as 7-segment display.
 
@@ -280,11 +269,11 @@ Note for RJ45 LAN module (like ENC28J60 module), there are two additional pins t
 - INT (reduces polling and CPU usage, allow efficient networking)
 - RESET (lets the ESP32 recover the Ethernet controller if it locks up or during startup sequencing)
 
-### Valve solenoid current sensor (addition by new I2C expander)
+#### Valve solenoid current sensor (addition by new I2C expander)
 
 Ajout d'un capteur de courant pr connâitre l'état de santé des solénoïdes des vannes
 
-### Hand watering buzzer (addition by new I2C expander)
+#### Hand watering buzzer (addition by new I2C expander)
 
 Add a buzzer for knowing time left for hand watering
 
@@ -298,7 +287,7 @@ Last 5 seconds → fast beep + LED blinking in sync
 
 Nice to have (peut-être pas utile car trop agressif)
 
-### Weather station (addition by new I2C expander)
+#### Weather station (addition by new I2C expander)
 
 Another external box for weather station (wind speed/direction, air temperature/humidity, rain, ...) with expander by I2C. Add these sensors:
 
@@ -309,7 +298,7 @@ Another external box for weather station (wind speed/direction, air temperature/
 - pluviomètre
 - soil temp ?
 
-## Less useful
+### Less useful
 
 #### Mesh filter pressure sensors differential (addition by new I2C I2C expander)
 
@@ -317,3 +306,14 @@ Ajout de 2 capteurs de pression (avant/après filtre à tamis, qui a tétons 1/4
 
 - seulement utile s'il pose souvent pb en se bouchant, limitant le débit (si les capteurs sont utilisés, alors log la pression et le delta de la pression sous forme de graph dans page history)
 - possible aussi, en fonction de comment il se salit, d'ajouter simplement un préfiltre désableur sur le côté aspiration de la pompe
+
+# ⚙️ Tasks
+
+## ✅ OK
+
+- Restructuration du repo en sous-projets
+
+## 🔧 To clarify / questions
+
+How to handle versionning automatically for all projects? (bridge, firmware, webui, hardware)
+Add automatic tags or commit version when merge to main?
