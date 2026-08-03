@@ -61,7 +61,7 @@
         <mxCell id="TvMTHlzMBWzmEzcwCFCH-19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="IniSchedule" vertex="1">
           <mxGeometry height="60" width="120" x="670" y="380" as="geometry" />
         </mxCell>
-        <mxCell id="TvMTHlzMBWzmEzcwCFCH-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="IniConfig" vertex="1">
+        <mxCell id="TvMTHlzMBWzmEzcwCFCH-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="ConfigLoader" vertex="1">
           <mxGeometry height="60" width="120" x="660" y="280" as="geometry" />
         </mxCell>
         <mxCell id="TvMTHlzMBWzmEzcwCFCH-44" edge="1" parent="1" source="TvMTHlzMBWzmEzcwCFCH-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="TvMTHlzMBWzmEzcwCFCH-21">
