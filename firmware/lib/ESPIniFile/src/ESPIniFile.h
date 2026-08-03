@@ -1,19 +1,18 @@
-#ifndef _SPIFFSINIFILE_H
-#define _SPIFFSINIFILE_H
+#ifndef _ESPINIFILE_H
+#define _ESPINIFILE_H
 
-#define SPIFFSINIFILE_VERSION "1.0.0"
+#define ESPINIFILE_VERSION "1.0.0"
 
 // Maximum length for filename, excluding NULL char
-#define SPIFFSINI_FILE_MAX_FILENAME_LEN 31
+#define ESPINI_FILE_MAX_FILENAME_LEN 31
 
 #include <LittleFS.h>
-#include <FS.h>
 #include <IPAddress.h>
 
 
-class SPIFFSIniFileState;
+class ESPIniFileState;
 
-class SPIFFSIniFile {
+class ESPIniFile {
 public:
 	enum error_t {
 		errorNoError = 0,
@@ -29,10 +28,10 @@ public:
 
 	static const uint8_t maxFilenameLen;
 
-	// Create an SPIFFSIniFile object. It isn't opened until open() is called on it.
-	SPIFFSIniFile(const char* filename, const char* mode = "r",
+	// Create an ESPIniFile object. It isn't opened until open() is called on it.
+	ESPIniFile(const char* filename, const char* mode = "r",
 			bool caseSensitive = false);
-	~SPIFFSIniFile();
+	~ESPIniFile();
 
 	inline bool open(void); // Returns true if open succeeded
 	inline void close(void);
@@ -53,7 +52,7 @@ public:
 	// value: false means continue, true means stop. Call getError() to
 	// find out if any error
 	bool getValue(const char* section, const char* key,
-				  char* buffer, size_t len, SPIFFSIniFileState &state) const;
+				  char* buffer, size_t len, ESPIniFileState &state) const;
 
 	// Get value, as one big task. Return = true means value is present
 	// in buffer
@@ -72,6 +71,10 @@ public:
 	// Get an integer value
 	bool getValue(const char* section, const char* key,
 				  char* buffer, size_t len, int& val) const;
+
+	// Get a uint8_t value
+	bool getValue(const char* section, const char* key,
+				  char* buffer, size_t len, uint8_t& val) const;
 
 	// Get a uint16_t value
 	bool getValue(const char* section, const char* key,
@@ -112,20 +115,20 @@ public:
 protected:
 	// True means stop looking, false means not yet found
 	bool findSection(const char* section, char* buffer, size_t len,
-					 SPIFFSIniFileState &state) const;
+					 ESPIniFileState &state) const;
 	bool findKey(const char* section, const char* key, char* buffer,
-				 size_t len, char** keyptr, SPIFFSIniFileState &state) const;
+				 size_t len, char** keyptr, ESPIniFileState &state) const;
 
 
 private:
-	char _filename[SPIFFSINI_FILE_MAX_FILENAME_LEN];
+	char _filename[ESPINI_FILE_MAX_FILENAME_LEN];
 	const char* _mode;
 	mutable error_t _error;
 	mutable File _file;
 	bool _caseSensitive;
 };
 
-bool SPIFFSIniFile::open(void)
+bool ESPIniFile::open(void)
 {
 	if (_file)
 		_file.close();
@@ -140,42 +143,42 @@ bool SPIFFSIniFile::open(void)
 	}
 }
 
-void SPIFFSIniFile::close(void)
+void ESPIniFile::close(void)
 {
 	if (_file)
 		_file.close();
 }
 
-bool SPIFFSIniFile::isOpen(void) const
+bool ESPIniFile::isOpen(void) const
 {
 	return (_file == true);
 }
 
-SPIFFSIniFile::error_t SPIFFSIniFile::getError(void) const
+ESPIniFile::error_t ESPIniFile::getError(void) const
 {
 	return _error;
 }
 
-void SPIFFSIniFile::clearError(void) const
+void ESPIniFile::clearError(void) const
 {
 	_error = errorNoError;
 }
 
-const char* SPIFFSIniFile::getMode(void) const
+const char* ESPIniFile::getMode(void) const
 {
 	return _mode;
 }
 
-const char* SPIFFSIniFile::getFilename(void) const
+const char* ESPIniFile::getFilename(void) const
 {
 	return _filename;
 }
 
 
 
-class SPIFFSIniFileState {
+class ESPIniFileState {
 public:
-	SPIFFSIniFileState();
+	ESPIniFileState();
 
 private:
 	enum {funcUnset = 0,
@@ -186,7 +189,7 @@ private:
 	uint32_t readLinePosition;
 	uint8_t getValueState;
 
-	friend class SPIFFSIniFile;
+	friend class ESPIniFile;
 };
 
 

@@ -4,38 +4,36 @@
 	Serial baud rate in this example is 9600
 */
 
-#include "FS.h"
-
-#include <SPIFFSIniFile.h>
+#include <ESPIniFile.h>
 
 void printErrorMessage(uint8_t e, bool eol = true)
 {
   switch (e) {
-  case SPIFFSIniFile::errorNoError:
+  case ESPIniFile::errorNoError:
     Serial.print("no error");
     break;
-  case SPIFFSIniFile::errorFileNotFound:
+  case ESPIniFile::errorFileNotFound:
     Serial.print("file not found");
     break;
-  case SPIFFSIniFile::errorFileNotOpen:
+  case ESPIniFile::errorFileNotOpen:
     Serial.print("file not open");
     break;
-  case SPIFFSIniFile::errorBufferTooSmall:
+  case ESPIniFile::errorBufferTooSmall:
     Serial.print("buffer too small");
     break;
-  case SPIFFSIniFile::errorSeekError:
+  case ESPIniFile::errorSeekError:
     Serial.print("seek error");
     break;
-  case SPIFFSIniFile::errorSectionNotFound:
+  case ESPIniFile::errorSectionNotFound:
     Serial.print("section not found");
     break;
-  case SPIFFSIniFile::errorKeyNotFound:
+  case ESPIniFile::errorKeyNotFound:
     Serial.print("key not found");
     break;
-  case SPIFFSIniFile::errorEndOfFile:
+  case ESPIniFile::errorEndOfFile:
     Serial.print("end of file");
     break;
-  case SPIFFSIniFile::errorUnknownError:
+  case ESPIniFile::errorUnknownError:
     Serial.print("unknown error");
     break;
   default:
@@ -55,12 +53,12 @@ void setup()
   const char *filename = "/net.ini";
   Serial.begin(9600);
   
-  //Mount the SPIFFS  
-  if (!SPIFFS.begin())
+  //Mount the LittleFS  
+  if (!LittleFS.begin())
     while (1)
-      Serial.println("SPIFFS.begin() failed");
+      Serial.println("LittleFS.begin() failed");
   
-  SPIFFSIniFile ini(filename);
+  ESPIniFile ini(filename);
   if (!ini.open()) {
     Serial.print("Ini file ");
     Serial.print(filename);

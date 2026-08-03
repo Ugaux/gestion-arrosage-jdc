@@ -1,10 +1,10 @@
-#include "SPIFFSIniFile.h"
+#include "ESPIniFile.h"
 
 #include <string.h>
 
-const uint8_t SPIFFSIniFile::maxFilenameLen = SPIFFSINI_FILE_MAX_FILENAME_LEN;
+const uint8_t ESPIniFile::maxFilenameLen = ESPINI_FILE_MAX_FILENAME_LEN;
 
-SPIFFSIniFile::SPIFFSIniFile(const char* filename, const char* mode,
+ESPIniFile::ESPIniFile(const char* filename, const char* mode,
 				 bool caseSensitive)
 {
 	if (strlen(filename) <= maxFilenameLen)
@@ -15,13 +15,13 @@ SPIFFSIniFile::SPIFFSIniFile(const char* filename, const char* mode,
 	_caseSensitive = caseSensitive;
 }
 
-SPIFFSIniFile::~SPIFFSIniFile()
+ESPIniFile::~ESPIniFile()
 {  
 	if (_file)
 	  _file.close();
 }
 
-bool SPIFFSIniFile::validate(char* buffer, size_t len) const
+bool ESPIniFile::validate(char* buffer, size_t len) const
 {
 	uint32_t pos = 0;
 	error_t err;
@@ -37,8 +37,8 @@ bool SPIFFSIniFile::validate(char* buffer, size_t len) const
 	}
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
-					   char* buffer, size_t len, SPIFFSIniFileState &state) const
+bool ESPIniFile::getValue(const char* section, const char* key,
+					   char* buffer, size_t len, ESPIniFileState &state) const
 {
 	bool done = false;
 	if (!_file) {
@@ -47,21 +47,21 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 	}
 
 	switch (state.getValueState) {
-	case SPIFFSIniFileState::funcUnset:
-		state.getValueState = (section == NULL ? SPIFFSIniFileState::funcFindKey
-							   : SPIFFSIniFileState::funcFindSection);
+	case ESPIniFileState::funcUnset:
+		state.getValueState = (section == NULL ? ESPIniFileState::funcFindKey
+							   : ESPIniFileState::funcFindSection);
 		state.readLinePosition = 0;
 		break;
 
-	case SPIFFSIniFileState::funcFindSection:
+	case ESPIniFileState::funcFindSection:
 		if (findSection(section, buffer, len, state)) {
 			if (_error != errorNoError)
 				return true;
-			state.getValueState = SPIFFSIniFileState::funcFindKey;
+			state.getValueState = ESPIniFileState::funcFindKey;
 		}
 		break;
 
-	case SPIFFSIniFileState::funcFindKey:
+	case ESPIniFileState::funcFindKey:
 		char *cp;
 		if (findKey(section, key, buffer, len, &cp, state)) {
 			if (_error != errorNoError)
@@ -88,17 +88,17 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 	return done;
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len) const
 {
-  SPIFFSIniFileState state;
+  ESPIniFileState state;
 	while (!getValue(section, key, buffer, len, state))
 		;
 	return _error == errorNoError;
 }
 
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, char *value, size_t vlen) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -112,7 +112,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 
 // For true accept: true, yes, 1
 // For false accept: false, no, 0
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, bool& val) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -133,7 +133,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 	return false; // does not match any known strings
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, int& val) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -143,7 +143,17 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 	return true;
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,	\
+bool ESPIniFile::getValue(const char* section, const char* key,
+					   char* buffer, size_t len, uint8_t& val) const
+{
+	long longval;
+	bool r = getValue(section, key, buffer, len, longval);
+	if (r)
+		val = uint8_t(longval);
+	return r;
+}
+
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, uint16_t& val) const
 {
 	long longval;
@@ -153,7 +163,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,	\
 	return r;
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, long& val) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -163,7 +173,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 	return true;
 }
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, unsigned long& val) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -183,7 +193,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 }
 
 
-bool SPIFFSIniFile::getValue(const char* section, const char* key,
+bool ESPIniFile::getValue(const char* section, const char* key,
 					   char* buffer, size_t len, float & val) const
 {
 	if (!getValue(section, key, buffer, len))
@@ -203,7 +213,7 @@ bool SPIFFSIniFile::getValue(const char* section, const char* key,
 }
 
 
-bool SPIFFSIniFile::getIPAddress(const char* section, const char* key,
+bool ESPIniFile::getIPAddress(const char* section, const char* key,
 						   char* buffer, size_t len, uint8_t* ip) const
 {
 	// Need 16 chars minimum: 4 * 3 digits, 3 dots and a null character
@@ -237,7 +247,7 @@ bool SPIFFSIniFile::getIPAddress(const char* section, const char* key,
 
 
 #if defined(ARDUINO) && ARDUINO >= 100
-bool SPIFFSIniFile::getIPAddress(const char* section, const char* key,
+bool ESPIniFile::getIPAddress(const char* section, const char* key,
 						   char* buffer, size_t len, IPAddress& ip) const
 {
 	// Need 16 chars minimum: 4 * 3 digits, 3 dots and a null character
@@ -270,7 +280,7 @@ bool SPIFFSIniFile::getIPAddress(const char* section, const char* key,
 }
 #endif
 
-bool SPIFFSIniFile::getMACAddress(const char* section, const char* key,
+bool ESPIniFile::getMACAddress(const char* section, const char* key,
 							char* buffer, size_t len, uint8_t mac[6]) const
 {
 	// Need 18 chars: 6 * 2 hex digits, 5 : or - and a null char
@@ -309,8 +319,8 @@ bool SPIFFSIniFile::getMACAddress(const char* section, const char* key,
 	return true;
 }
 
-//int8_t SPIFFSIniFile::readLine(File &file, char *buffer, size_t len, uint32_t &pos)
-SPIFFSIniFile::error_t SPIFFSIniFile::readLine(File &file, char *buffer, size_t len, uint32_t &pos)
+//int8_t ESPIniFile::readLine(File &file, char *buffer, size_t len, uint32_t &pos)
+ESPIniFile::error_t ESPIniFile::readLine(File &file, char *buffer, size_t len, uint32_t &pos)
 {
 	if (!file)
 		return errorFileNotOpen;
@@ -357,12 +367,12 @@ SPIFFSIniFile::error_t SPIFFSIniFile::readLine(File &file, char *buffer, size_t 
 	return errorBufferTooSmall;
 }
 
-bool SPIFFSIniFile::isCommentChar(char c)
+bool ESPIniFile::isCommentChar(char c)
 {
 	return (c == ';' || c == '#');
 }
 
-char* SPIFFSIniFile::skipWhiteSpace(char* str)
+char* ESPIniFile::skipWhiteSpace(char* str)
 {
 	char *cp = str;
 	while (isspace(*cp))
@@ -370,22 +380,22 @@ char* SPIFFSIniFile::skipWhiteSpace(char* str)
 	return cp;
 }
 
-void SPIFFSIniFile::removeTrailingWhiteSpace(char* str)
+void ESPIniFile::removeTrailingWhiteSpace(char* str)
 {
 	char *cp = str + strlen(str) - 1;
 	while (cp >= str && isspace(*cp))
 		*cp-- = '\0';
 }
 
-bool SPIFFSIniFile::findSection(const char* section, char* buffer, size_t len,
-						  SPIFFSIniFileState &state) const
+bool ESPIniFile::findSection(const char* section, char* buffer, size_t len,
+						  ESPIniFileState &state) const
 {
 	if (section == NULL) {
 		_error = errorSectionNotFound;
 		return true;
 	}
 
-	error_t err = SPIFFSIniFile::readLine(_file, buffer, len, state.readLinePosition);
+	error_t err = ESPIniFile::readLine(_file, buffer, len, state.readLinePosition);
 
 	if (err != errorNoError && err != errorEndOfFile) {
 		// Signal to caller to stop looking and any error value
@@ -441,16 +451,16 @@ bool SPIFFSIniFile::findSection(const char* section, char* buffer, size_t len,
 
 // From the current file location look for the matching key. If
 // section is non-NULL don't look in the next section
-bool SPIFFSIniFile::findKey(const char* section, const char* key,
+bool ESPIniFile::findKey(const char* section, const char* key,
 					  char* buffer, size_t len, char** keyptr,
-					  SPIFFSIniFileState &state) const
+					  ESPIniFileState &state) const
 {
 	if (key == NULL || *key == '\0') {
 		_error = errorKeyNotFound;
 		return true;
 	}
 
-	error_t err = SPIFFSIniFile::readLine(_file, buffer, len, state.readLinePosition);
+	error_t err = ESPIniFile::readLine(_file, buffer, len, state.readLinePosition);
 	if (err != errorNoError && err != errorEndOfFile) {
 		_error = err;
 		return true;
@@ -503,17 +513,17 @@ bool SPIFFSIniFile::findKey(const char* section, const char* key,
 	return false;
 }
 
-bool SPIFFSIniFile::getCaseSensitive(void) const
+bool ESPIniFile::getCaseSensitive(void) const
 {
 	return _caseSensitive;
 }
 
-void SPIFFSIniFile::setCaseSensitive(bool cs)
+void ESPIniFile::setCaseSensitive(bool cs)
 {
 	_caseSensitive = cs;
 }
 
-SPIFFSIniFileState::SPIFFSIniFileState()
+ESPIniFileState::ESPIniFileState()
 {
 	readLinePosition = 0;
 	getValueState = funcUnset;
