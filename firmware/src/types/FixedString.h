@@ -6,14 +6,14 @@
 #include <cstddef>
 #include <cstdint>
 
-template<uint16_t NChars>
+template<uint16_t N>
 class FixedString {
 public:
-  static constexpr uint16_t Capacity = NChars;
+  static constexpr uint16_t kCapacity = N;
 
   constexpr FixedString(std::string_view s) {
     m_length = static_cast<std::uint16_t>(
-      std::min(s.size(), static_cast<std::size_t>(NChars)));
+      std::min(s.size(), static_cast<std::size_t>(kCapacity)));
 
     for (uint16_t i = 0; i < m_length; ++i)
       m_data[i] = s[i];
@@ -37,7 +37,7 @@ public:
   }
 
 private:
-  std::array<char, NChars + 1> m_data{};
+  std::array<char, kCapacity + 1> m_data{};
 
   uint16_t m_length = 0;
 };

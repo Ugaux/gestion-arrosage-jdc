@@ -3,7 +3,7 @@
 #include <cstdint>
 
 enum class Frequency : uint8_t {
-  EveryDay,
+  EveryDay = 0,
   EvenDays,
   OddDays,
   SpecificDays

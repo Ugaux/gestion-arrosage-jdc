@@ -17,8 +17,8 @@ class CrossAction;
 
 namespace Reflection {
 
-enum class FieldType {
-  Bool,
+enum class FieldType : uint8_t {
+  Bool = 0,
   Int,
   UInt,
   UUID,
@@ -143,13 +143,13 @@ constexpr Field<Parent, Member> makeField(
   };
 }
 
-enum class VisitDecision {
-  Visit,
+enum class VisitDecision : uint8_t {
+  Visit = 0,
   Skip
 };
 
-enum class VisitResult {
-  Traverse,
+enum class VisitResult : uint8_t {
+  Traverse = 0,
   Handled,
   Error
 };
@@ -290,11 +290,11 @@ bool visit(Type& object, Visitor& visitor) {
 // ```
 class PathBuilder {
 public:
-  static constexpr size_t MaxPathLength = 80;  // longest "a.b[2].c." path you'd ever build
-  static constexpr size_t MaxDepth      = 8;   // deepest struct nesting in the schema
+  static constexpr size_t kMaxPathLength = 80;  // longest "a.b[2].c." path you'd ever build
+  static constexpr size_t kMaxDepth      = 8;   // deepest struct nesting in the schema
 
   void enter(std::string_view fieldName) {
-    if (m_depth >= MaxDepth)
+    if (m_depth >= kMaxDepth)
       return;
 
     m_pathLenAtDepth[m_depth++] = m_pathLen;
@@ -307,7 +307,7 @@ public:
   }
 
   void index(size_t index) {
-    if (m_depth >= MaxDepth)
+    if (m_depth >= kMaxDepth)
       return;
 
     m_pathLenAtDepth[m_depth++] = m_pathLen;
@@ -330,26 +330,26 @@ public:
 private:
   template<typename... Args>
   void append(const char* format, Args... args) {
-    if (m_pathLen >= MaxPathLength - 1)
+    if (m_pathLen >= kMaxPathLength - 1)
       return;
 
     size_t written = snprintf(
       m_path.data() + m_pathLen,
-      MaxPathLength - m_pathLen,
+      kMaxPathLength - m_pathLen,
       format,
       args...);
 
     if (written > 0)
       m_pathLen = std::min(
         m_pathLen + written,
-        MaxPathLength - 1);  // clamp: snprintf can report more than it wrote
+        kMaxPathLength - 1);  // clamp: snprintf can report more than it wrote
   }
 
-  std::array<char, MaxPathLength> m_path    = {};
-  size_t                          m_pathLen = 0;
+  std::array<char, kMaxPathLength> m_path    = {};
+  size_t                           m_pathLen = 0;
 
-  size_t m_pathLenAtDepth[MaxDepth] = {};
-  size_t m_depth                    = 0;
+  size_t m_pathLenAtDepth[kMaxDepth] = {};
+  size_t m_depth                     = 0;
 };
 
 }  // namespace Reflection

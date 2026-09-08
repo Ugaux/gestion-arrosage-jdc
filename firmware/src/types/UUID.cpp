@@ -63,7 +63,7 @@ UUID UUID::generate() {
 }
 
 bool UUID::parse(std::string_view in, UUID &out) {
-  if (in.size() != StringLength)
+  if (in.size() != kStringLength)
     return false;
 
   auto *op = out.m_bytes;

@@ -80,7 +80,7 @@ public:
   Iterator end() const;
 
 private:
-  static constexpr uint8_t AllDaysMask = 0x7Fu;
+  static constexpr uint8_t kAllDaysMask = 0x7Fu;
 
   uint8_t m_mask = 0;  // bitmask
 };

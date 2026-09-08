@@ -13,13 +13,13 @@
 //   UUID id;
 // };
 // ```
-template<typename T, uint8_t MaxItems>
+template<typename T, uint8_t N>
 class Collection {
 public:
-  static constexpr uint8_t Capacity = MaxItems;
+  static constexpr uint8_t kCapacity = N;
 
   enum class AddResult : uint8_t {
-    Ok,
+    Ok = 0,
     Full,
     DuplicateId,
   };
@@ -49,7 +49,7 @@ public:
 
   // Adds an item unless the collection is full or its ID is already present.
   AddResult add(const T& item) {
-    if (m_size >= Capacity) return AddResult::Full;
+    if (m_size >= kCapacity) return AddResult::Full;
 
     if (find(item.id)) return AddResult::DuplicateId;
 
@@ -91,6 +91,6 @@ public:
   }
 
 private:
-  std::array<T, MaxItems> m_items{};
-  uint8_t                 m_size = 0;
+  std::array<T, kCapacity> m_items{};
+  uint8_t                  m_size = 0;
 };

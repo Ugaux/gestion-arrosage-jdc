@@ -17,11 +17,11 @@
 class UUID {
 public:
   // 32 characters in 5 sections separated by 4 hyphens '-'
-  static constexpr uint8_t StringLength = 36;
+  static constexpr uint8_t kStringLength = 36;
   // 32 characters in 5 sections separated by 4 hyphens '-' + null terminator
-  static constexpr uint8_t StringSize = StringLength + 1;
+  static constexpr uint8_t kStringSize = kStringLength + 1;
 
-  using String = std::array<char, StringSize>;
+  using String = std::array<char, kStringSize>;
 
   // Same UUID
   bool operator==(const UUID &otherId) const;

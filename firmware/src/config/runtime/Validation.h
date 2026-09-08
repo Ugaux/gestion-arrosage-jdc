@@ -27,10 +27,10 @@ Result normalizeAndValidateSchedules(Config& cfg);
 
 class Result {
 public:
-  static constexpr size_t kMaxError = 120;
+  static constexpr size_t kMaxErrorLength = 120;
 
   enum class Error : uint8_t {
-    MissingAdapterFunction,
+    MissingAdapterFunction = 0,
     UnexpectedValueType,
 
     ValueOutOfRange,
@@ -166,7 +166,7 @@ private:
 
   bool m_ok = true;
 
-  std::array<char, kMaxError> m_msg = {};
+  std::array<char, kMaxErrorLength> m_msg = {};
 
   size_t m_msg_len = 0;
 };
@@ -212,7 +212,7 @@ public:
   using ValueApplyFn = Result (*)(const FieldValidator&, const void*);
 
   enum class Type : uint8_t {
-    Range,
+    Range = 0,
     Length,
   };
 

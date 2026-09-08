@@ -51,7 +51,7 @@ bool WeekDays::isEmpty() const {
 }
 
 bool WeekDays::setMask(uint32_t mask) {
-  if (mask & ~AllDaysMask) {
+  if (mask & ~kAllDaysMask) {
     return false;
   }
 
