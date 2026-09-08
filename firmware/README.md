@@ -1,6 +1,6 @@
 # 📖 Documentation
 
-`For embedded/hardware control code, it is generally advised to choose boring and obvious over clever and compact.`
+> For embedded/hardware control code, it is generally advised to choose boring and obvious over clever and compact.
 
 On every new version:
 

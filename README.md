@@ -1,25 +1,85 @@
-# 📋 Description projet
+# 🌱 Garden Irrigation Controller
 
-Code fonctionnant sur un ESP32 permettant la gestion de l'arrosage pour le Jardin du Ciel à Vitabox (Algolsheim, FR).
+## Project Overview
 
-Fonctionnalitées :
+This project is an **ESP32-based irrigation controller** designed to manage the watering system of our associative garden.
 
-- remplissage automatique de la cuve de 1000L (pilotage pompe par radio 433 MHz)
-- arrosage automatique :
-  - paramétrage du calendrier par interface web ou manuellement par boutons de navigation
-  - pilotage de 8 vannes 24V AC pour choix de la zone
-  - détection de l'humidité du sol pour décision d'arrosage
-  - pilotage pompe par radio 433 MHz
-- sauvegarde de l'heure en cas de coupure de courant (par horloge externe RTC_DS3231)
+The system is designed to operate **independently of the Internet and cloud services**, providing reliable local control with minimal latency and no recurring software or service costs.
 
-Note importante :
-Ne laissez pas une pompe centrifuge fonctionner pendant de longues périodes à débit nul. Dans les systèmes résidentiels, le pressostat arrête la pompe lorsque la pression est élevée, ce qui signifie que le débit est faible ou nul.
+## Features
 
-`Il existe 8 tâches pouvant être lancées depuis VSCode pour simplifier l'utilisation du projet:`
+### Automatic Water Tank Filling
 
-![Alt](firmware/doc/usable_tasks.png)
+- Automatic filling of the **1000-liter water tank**.
+- Pump control via **433 MHz radio**.
+- Autonomous self-contained operation without requiring an Internet connection.
+
+### Automatic Irrigation
+
+The irrigation system provides fully automatic control of the garden watering process:
+
+- A clean and minimalist **web interface** allows users to configure irrigation schedules, monitor the entire system, and access additional controls and information.
+- The system can control **as many irrigation valves as physically supported by the hardware**. It is currently configured to control **8 × 24 V AC valves**, with each valve corresponding to a specific watering zone.
+- **Soil moisture detection** helps determine whether watering is actually necessary.
+- **Pump control via 433 MHz radio**.
+- **Local and autonomous operation**, without relying on a remote server, Internet connection, or cloud service.
+
+### Time Backup
+
+- An external **DS3231 RTC (Real-Time Clock)** keeps track of the time.
+- The irrigation schedule remains accurate even after a **power outage**.
+- The controller can resume normal operation without requiring an Internet connection or time synchronization with an external server.
+
+### Key Advantages
+
+- **Works without Internet** — the system remains fully functional even when the - Internet connection is unavailable.
+- **Low latency** — commands are processed locally without waiting for a remote - server.
+- **No cloud dependency** — the controller does not require a cloud platform or - external backend.
+- **Better privacy** — system data and controls remain local.
+- **Continued operation during Internet outages** — irrigation schedules continue - to run normally.
+- **Long-term maintainability** — fewer external dependencies can make the system - easier to maintain and support over time.
+- **No dedicated mobile app** — no application needs to be installed from the App - Store or Google Play.
+- **No user account** — no registration or login is required.
+- **No subscription** — there are no recurring cloud or software fees.
+- **Browser-based access** — simply open the controller's local web interface in a - browser.
+- **Easy mobile access** — the web interface can be saved as a browser shortcut or installed as a **Progressive Web App (PWA)** for an app-like experience.
+
+In short:
+
+> No app. No account. No subscription. No cloud. Just open the controller in a browser and use it.
+
+## ⚠️ Important Pump Safety Note
+
+**A centrifugal pump should not be operated for extended periods at zero or near-zero flow.**
+
+In typical residential installations, a pressure switch may stop the pump when the system reaches high pressure, which generally corresponds to a very low or zero flow condition.
+
+The irrigation controller should therefore be designed to **avoid running the pump continuously against a closed system** and should include appropriate protection or operating logic to prevent prolonged zero-flow operation.
 
 # 📖 Documentation
+
+## Available VSCode tasks
+
+BRIDGE
+
+```
+bridge: dev live refresh
+bridge: dev (mock)
+bridge: dev (esp32)
+🌍 bridge: live refresh + dev (mock)
+🌍 bridge: live refresh + dev (esp32)
+🌍 bridge: prod
+```
+
+ESP32: FILESYSTEM SIDE
+
+```
+🔨 esp32-fs: deploy webui app
+⬆️ esp32-fs: upload fs image (USB)
+⬆️ esp32-fs: upload fs image (OTA)
+🚀 esp32-fs: deploy fs (USB)
+🚀 esp32-fs: deploy fs (OTA)
+```
 
 ## Fast web dev
 
@@ -90,7 +150,7 @@ bun run --cwd ./webui convert-fonts
 
 Then manually move the desired files into the `webui/src/assets/fonts` folder.
 
-You will also have to execute the `copy-assets` bun script with:
+It is also necessary to execute the `copy-assets` bun script with:
 
 ```bash
 bun run --cwd ./webui copy-assets
@@ -158,10 +218,11 @@ Change api/ws version when:
 - routes change
 - frontend behavior must adapt
 
-(same contract, just more fields)
-field missing -> not supported on this device
-null -> sensor exists but no data
-number -> valid reading
+If it is same contract, with only more fields:
+
+- field missing -> not supported on this device
+- null -> sensor exists but no data
+- number -> valid reading
 
 ## Features souhaitées d'un contrôleur intelligent
 
@@ -198,7 +259,7 @@ Recommended setup (solid and common approach), use:
 Why 12 V instead of 5 V directly:
 
 - Handles cable losses much better over ~1 m
-- Lets you power valves, relays, or pumps directly if needed
+- Allows valves, relays, or pumps to be powered directly if needed
 - More robust overall system design
 
 Why external power is the better choice:
@@ -224,7 +285,100 @@ Si besoin de plus de débit, aller sur un embout rapide grand débit (pour Noém
 
 ## PCB
 
+The 12->5V buck-converter used does not like having a reverse voltage at all (5V from ESP to it OUT+/OUT- pins). Using a USB cable without 5V for communicating with ESP32 while having 12V from external power supply. Even without 12V, never power ESP32 via USB directly if connected to PCB!
+
 Use ferrite bead smd, to suppress high-frequency electromagnetic interference (EMI)
+
+### Note about analog sensors
+
+¨
+Attenuation for adc is tunable in code with analogSetPinAttenuation().
+Can go to as high as 11dB for readings up to 2.9-3.0V.
+0.05V to 0.1V is practically unreliable.
+
+| Attenuation Setting | Parameter Name     | Approx. Measurable Range (ESP32) | Best Use Case                                             |
+| ------------------- | ------------------ | -------------------------------- | --------------------------------------------------------- |
+| 0 dB                | `ADC_ATTEN_DB_0`   | 100 mV – 950 mV                  | High-precision low-voltage sensors. Highest resolution.   |
+| 2.5 dB              | `ADC_ATTEN_DB_2_5` | 100 mV – 1.25 V                  | Slightly extended range for low-voltage signals.          |
+| 6 dB                | `ADC_ATTEN_DB_6`   | 150 mV – 1.75 V                  | Mid-range sensors (e.g., some battery monitors).          |
+| 11 dB               | `ADC_ATTEN_DB_11`  | 150 mV – 2.45 V (up to ~3.1 V\*) | General-purpose 3.3 V logic sensors. Most common setting. |
+
+\*While 11 dB theoretically allows reading up to ~3.9V, accuracy drops significantly above 2.45V due to non-linearity
+
+ADC need calibration for readings to be meaningful and reliable.
+
+#### Note about capacitive soil moisture sensor
+
+What to check for a good capacitive soil sensor:
+https://www.youtube.com/watch?v=IGP38bz-K48
+
+- Presence of 3.3v regulator instead of only resistor
+  => make it stable if source is not
+- Presence of TCL555C or TCL555I instead of NE555 (works only at 4.5-16V, even if some batches actually work at 3.3V)
+  => allow powering at 5V AND 3.3V
+- Correct positionning of via hole, to have the 1M ohm resistor connected to ground
+  => allow output to vary much faster
+
+Measurements done with a sensor that does not have 3.3v regulator, but everything else is ok:
+5V + no load: 1.8V wet / 3.7V dry
+5V with voltage divider of 51k/100k: 1.1v wet / 2.1v dry (aout is now 3.1V instead of supposedly 3.7V due to high impedance)
+3.15V + no load: 0.8V wet / 2.2V dry
+
+#### Actual sensor layout
+
+Ponts diviseurs de tension:
+
+- 51k/100k pour low/high (5V à vide et 4.5V avec pont et 3V vers gpio)
+- 33k/100k pour filling (4.3V à vide et 4V avec pont connecté et 3v vers gpio)
+
+=> agissent comme pull-down si capteurs non branchés (donc pas de pins floating)
+
+Pont de 20k/47k irait pour capteur flow (5V à vide et 4.3V avec pont et 3v vers gpio) mais finalement pas de pont -> 3.3V direct + utilise une pull-up de 47k pour éviter que le pin soit flottant si capteur non branché
+
+Pas de pont non plus pour capteur soil moisture -> 3.3V direct + utilise une pull-down de 300k pour éviter que le pin soit flottant si capteur non branché
+
+Capteur courant OK (1.65V biased, ±1V around bias) -> utilise une résistance de 47k en parallèle du capteur pour éviter que le pin soit flottant si capteur non branché
+
+#### New sensor layout
+
+Avoir un câble shieldé et un condo proche du GPIO pour limiter les interférences.
+
+Utiliser un comparateur logique au lieu de pont pour tous les capteurs digitaux si futur version avec pcb (3.3 V Schmitt-trigger buffer with a suitable input divider/clamp). Ex:
+
+```
+YF-B10
+   │
+   │ 5m cable
+   ▼
+[TVS/protection] ── [RC filter] ── [Schmitt/comparator] ── ESP32
+```
+
+Il existe d'autres versions pour les capteurs XKC-Y25-V et le capteur XKC-Y26-V de la cuve. A la place du "-V", c'est soit "-NPN" ou "-PNP":
+
+- NPN (sinking / open-collector):
+  liquid detected = output is pulled to ground (0V)
+  no liquid detected = output is floating (open circuit)
+- PNP (sourcing / open-collector):
+  liquid detected = output is pulled up to positive supply voltage (Vin)
+  no liquid detected = output is floating (open circuit)
+
+Malheureusement, la logique de détection qui rend robuste le système n'est pas possible avec une autre version que la "-V" pour la capteur de haut-niveau de la cuve:
+
+- Cuve pas pleine -> 5V
+- Cuve pleine OU capteur déconnecté OU capteur cassé\* -> 0V
+
+\*Uniquement si le failure mode maintient effectivement la sortie à l'état bas
+
+| Sensor         | Future output         | ESP32 interface            |
+| -------------- | --------------------- | -------------------------- |
+| `LowLevel`     | "-PNP", source to Vin | GPIO with pull-down        |
+| `HighLevel`    | Same "-V" version     | GPIO with level shifter    |
+| `Filling`      | "-PNP", source to Vin | GPIO with pull-down        |
+| `SoilMoisture` | Analog, high-Z        | **Buffer + scaling**       |
+| `Flow`         | 5 V push-pull         | **Level shifting/scaling** |
+| `PumpCurrent`  | 1.65 V ±1 V           | Direct ADC input           |
+
+Toujours s'assurer que lorsqu'un capteur n'est pas connecté ou pas actif, d'avoir un état fixe avec une résistance pull-up ou pull-down (directement sur output du capteur ou après une étape de scaling par un op-amp par exemple).
 
 ## Solution avec contrôleur existant
 
@@ -240,6 +394,10 @@ Besoin des 3 systèmes suivants :
 
 ### Very useful
 
+#### Reset button
+
+Resets everything to default. Could be used if someone entered an access-point password he cannot remember, while having useAPMode set to true, for example.
+
 #### Internet connectiviy
 
 Pour publier des données par Internet, cf. [achat carte sim](https://www.thingsmobile.com/business/shop) et [tuto](https://randomnerdtutorials.com/esp32-sim800l-publish-data-to-cloud/)
@@ -249,6 +407,8 @@ Pour publier des données par Internet, cf. [achat carte sim](https://www.things
 - juste wifi esp32,
 - `wifi esp32 + alertes par sms` <- préference pour celle-ci
 - wifi esp32 uniquement pour debug serial par ex et serveur web qui communique avec esp via carte sim pour toutes les fonctionnalités (permet de recevoir des notifs par SMS ou eMAIL si défaut rencontré ou même de pouvoir accéder à l'interface de partout avec un serveur web externe)
+
+cf.notes dans README.md de la partie webui à `Convenience`
 
 #### Water tank level (replacement)
 
@@ -269,11 +429,11 @@ Note for RJ45 LAN module (like ENC28J60 module), there are two additional pins t
 - INT (reduces polling and CPU usage, allow efficient networking)
 - RESET (lets the ESP32 recover the Ethernet controller if it locks up or during startup sequencing)
 
-#### Valve solenoid current sensor (addition by new I2C expander)
+#### Valve solenoid current sensor (addition by additional I2C expander)
 
 Ajout d'un capteur de courant pr connâitre l'état de santé des solénoïdes des vannes
 
-#### Hand watering buzzer (addition by new I2C expander)
+#### Hand watering buzzer (addition by additional I2C expander)
 
 Add a buzzer for knowing time left for hand watering
 
@@ -287,7 +447,7 @@ Last 5 seconds → fast beep + LED blinking in sync
 
 Nice to have (peut-être pas utile car trop agressif)
 
-#### Weather station (addition by new I2C expander)
+#### Weather station (addition by additional I2C expander)
 
 Another external box for weather station (wind speed/direction, air temperature/humidity, rain, ...) with expander by I2C. Add these sensors:
 
@@ -300,7 +460,7 @@ Another external box for weather station (wind speed/direction, air temperature/
 
 ### Less useful
 
-#### Mesh filter pressure sensors differential (addition by new I2C I2C expander)
+#### Mesh filter pressure sensors differential (addition by additional I2C I2C expander)
 
 Ajout de 2 capteurs de pression (avant/après filtre à tamis, qui a tétons 1/4" intégrés, cf. marque Azud sur Jardinet) pour savoir qd nettoyer le filtre. Notes :
 
