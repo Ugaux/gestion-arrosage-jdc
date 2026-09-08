@@ -1,0 +1,201 @@
+# UserSettings.yaml
+
+version: 1 # unsigned integer
+
+constants: # Config static constexpr
+  kMaxSchedulePerLine:
+    type: UInt8
+    value: 4
+
+types: # reusable C++ types
+  Zone:
+    id:
+      type: UUID
+      optional: true
+
+    name:
+      type: String
+      default: "NoName"
+      length: [3, 15]
+
+  Line:
+    id:
+      type: UUID
+      optional: true
+
+    zoneId:
+      type: UUID
+
+    name:
+      type: String
+      default: "NoName"
+      length: [3, 15]
+
+    valves:
+      type: Bitset
+      default: 0
+      range: [1, kValveCount]
+      size: kValveCount
+
+  Schedule:
+    crossAction: validateSchedule
+
+    id:
+      type: UUID
+
+    lineId:
+      type: UUID
+
+    enabled:
+      type: Bool
+      default: false
+      optional: true
+
+    name:
+      type: String
+      length: [3, 15]
+      optional: true
+
+    hour:
+      type: UInt8
+      default: 7
+      range: [0, 23]
+
+    minute:
+      type: UInt8
+      default: 30
+      range: [0, 59]
+
+    duration:
+      type: UInt8
+      default: 20
+      range: [1, 45]
+      unit: "minutes"
+
+    onlyIfDrySoil:
+      type: Bool
+      default: false
+
+    frequency:
+      type: Frequency
+      default: Frequency::EveryDay
+
+    days:
+      type: WeekDays
+      default: {}
+      optional: true
+
+structure: # actual Config layout
+  crossAction: normalizeAndValidateSchedules
+
+  userSettings:
+    params:
+      wifi:
+        mdns:
+          type: String
+          default: "jdc-watering"
+          length: [5, 15]
+
+        useAPMode:
+          type: Bool
+          default: true
+
+        station:
+          ssid:
+            type: String
+            default: "YourWifiNetwork"
+            length: [5, 32]
+
+          password:
+            type: String
+            default: "12345678"
+            length: [8, 63]
+            optional: true
+
+        access-point:
+          ssid:
+            type: String
+            default: "WateringController"
+            length: [5, 32]
+
+          password:
+            type: String
+            length: [8, 63]
+            optional: true
+
+      watering:
+        duration:
+          crossAction: validateDuration
+
+          min:
+            type: UInt8
+            default: 1
+            range: [1, 60]
+            unit: "minutes"
+
+          max:
+            type: UInt8
+            default: 40
+            range: [1, 60]
+            unit: "minutes"
+
+          base:
+            type: UInt8
+            default: 15
+            range: [1, 60]
+            unit: "minutes"
+
+          step:
+            type: UInt8
+            default: 5
+            range: [1, 15]
+            unit: "minutes"
+
+        seasonal:
+          factor:
+            type: UInt8
+            default: 100
+            range: [1, 100]
+            unit: "%"
+
+        soil:
+          moisture:
+            threshold:
+              type: UInt8
+              default: 60
+              range: [10, 90]
+              unit: "%"
+
+        pump:
+          flow:
+            crossAction: validatePumpFlow
+
+            min:
+              type: UInt8
+              default: 2
+              range: [2, 200]
+              unit: "L/min"
+
+            max:
+              type: UInt8
+              default: 80
+              range: [2, 200]
+              unit: "L/min"
+
+    wateringModel:
+      crossAction: validateLineZone
+
+      zones:
+        type: Collection
+        of: Zone
+        size: kValveCount
+
+      lines:
+        type: Collection
+        of: Line
+        size: kValveCount
+
+  schedules:
+    type: Collection
+    of: Schedule
+    size: kValveCount*kMaxSchedulePerLine
