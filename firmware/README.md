@@ -1,5 +1,23 @@
 # 📖 Documentation
 
+`For embedded/hardware control code, it is generally advised to choose boring and obvious over clever and compact.`
+
+On every new version:
+
+- Build/upload in release mode
+- Generate dependency graph
+
+## Available VSCode tasks
+
+```
+🧪 esp32-fm: test native
+🔨 esp32-fm: build debug
+⬆️ esp32-fm: upload debug (USB)
+🔨 esp32-fm: build release
+⬆️ esp32-fm: upload release (USB)
+⬆️ esp32-fm: upload release (OTA)
+```
+
 ## Websocket tips
 
 Use the ArduinoJson Assitant v7 at https://arduinojson.org/v7/assistant/#/step1
@@ -49,42 +67,40 @@ In case the schedule is computed on an external server and sent to ESP32 periodi
 ; *********************** Schedule entry format ***********************
 ; *********************************************************************
 ;
-; Each [schedule.<index>] section defines one watering schedule.
-; <index> is a sequential integer used only by the parser.
-; Parsing stops at the first missing index.
+; Each [schedule] section defines one watering schedule.
 ;
 ; Keys:
+;
 ;   id=<UUID>               Version 4 UUID (RFC 4122)
-;   valve=<ID number>       Valve to control
-;   name=<text>             Display name
-;   def=HH:MM,duration,onlyIfDrySoil,frequency[-days]
+;   line=<ID number>        Line it belongs to
+;   name=<text>             Display name (optional)
+;   def=<HH>:<MM>,<duration>,<onlyIfDrySoil>,<frequency>
 ;
 ; The def value is a comma-separated list with fields:
-; HH              hour (00-23)
-; MM              minutes (00-59)
-; duration        Watering duration in minutes (1-255)
-; onlyIfDrySoil   0 = always water
-;                 1 = water only if soil is dry
-; frequency is one of:
-;   * = every day
-;   e = even days of the month (2, 4, 6, ..., 30)
-;   o = odd days of the month (1, 3, 5, ..., 31)
-;   c = custom days (requires the optional "-days" suffix)
-; days:
-;   Used only when frequency = c.
-;   Specify one or more weekdays as a bitmask by OR-ing the values:
-;     Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64
-;   e.g. Mon|Wed|Fri|Sat = 1+4+16+32 = 53
+;
+;   HH              hour of day (00-23)
+;   MM              minute of hour (00-59)
+;   duration        watering duration in minutes (1-255)
+;   onlyIfDrySoil   0 = always water
+;                   1 = water only if soil is dry
+;   frequency is one of:
+;     *          every day
+;     e          even days of the month (2, 4, 6, ..., 30)
+;     o          odd days of the month (1, 3, 5, ..., 31)
+;     s-<mask>   specific weekdays using a bitmask
+;                weekdays are specified by OR-ing the values:
+;                  Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64
+;                e.g. Mon | Wed | Fri | Sat = 1 + 4 + 16 + 32 = 53
 ;
 ; Example:
 ;
-; [schedule.11]
-; id=e27eb9df-f08d-4f88-84fb-a7a553dbbc83
-; valve=1
-; name=Morning
-; def=22:00,30,0,c-53  (=> runs every monday, wednesday, friday and
-;                       and saturday at 22:00 for 30 minutes,
-;                       regardless of soil moisture.)
+;   [schedule]
+;   id=e27eb9df-f08d-4f88-84fb-a7a553dbbc83
+;   line=1
+;   name=Morning
+;   def=22:00,30,0,s-53   (=> runs every monday, wednesday, friday
+;                         and saturday at 22:00 for 30 minutes,
+;                         regardless of soil moisture)
 ```
 
 ## ESP32 pinout
@@ -161,6 +177,7 @@ $ arduino-cli compile -v ~/gestion_arrosage_jdc --build-path ~/gestion_arrosage_
 - Changement design interface web avec websockets basé sur travail de [rgodin974](https://github.com/rgodin974/ESP32_sprinkler_timer/tree/main)
 - Conversion SPIFFS en LittleFS en personnalisation la librairie SPIFFSIniFile
 - Simplification structure de /src
+- mDNS pour accès avec `http://<adresse>.local` au lieu de 10.10.10.1
 
 ## 🔧 To clarify / questions
 
@@ -289,16 +306,40 @@ Note: avoir même mécanisme pour aussi schedules.ini
 
 API calls implementation
 
-How to turn ESP32 safely off?
+OTA upload implementation
 
-### Robustesse data capteurs
+Codage en natif sur windows avec test unitaires
 
-- Calibrate ADC1 avec Platform IO
-- Ajout check si capteur connectés ou valeurs ok + ajout filtrage sur capteurs pour lisser valeurs :
-  - Detection jump anormaux sur capteurs dont celui de humidité (de 40% à 90% par exemple) avec filtres comme median/mode/hampel/velocity-based
-  - Fallback models when data is missing
-- Ajout limites pour tout les capteurs et si en dehors mettre message défaut capteurs
-- seulement push valeurs des capteurs si elles ont changé (et pas plus de 2x fois par seconde)
+### Hand watering
+
+- Ajout afficheur 7 segments et régler problème de timing drift entre le décompte sur l'écran et le main loop
+- Ajout réglage du temps d'arrosage par appuies successifs dans les 5 1ère secondes, (commencer avec 10min, puis 20min, ...)
+
+### Calibrations
+
+- Calibration des gpios (ADC1) avec Platform IO (pour ceux qui en auraient besoin comme le capteur d'humidité du sol et le capteur de courant)
+- Calibration des capteurs p/r à des valeurs données par un autre appareil (multimètre par exemple)
+
+### Security concerns
+
+Handle security concerns as ap/wifi credentials (store them in encrypted storage of ESP32 and transmitted via an encrypted canal, like TLS) -> should absolutely think about security problems if selling this as a product.
+
+During first-time setup, the physical device could display/provide a unique setup code (for example on a label, display, or serial console). The user uses that code to establish trust during provisioning.
+
+Then you can give the ESP a unique certificate/private key.
+
+For a hobby/open-source project, another pragmatic option is:
+
+- HTTP/WS for normal local UI
+- HTTPS/WSS specifically for credential provisioning
+- never expose the ESP's management interface outside the LAN
+- authenticate sensitive operations
+- encrypt stored credentials with NVS encryption
+
+That provides most of the practical benefit without turning the watering controller into a certificate-management project.
+
+If a strong MITM protection with no cloud dependency and no browser certificate warnings is wanting, though, the interesting problem is really how the first trust relationship is established.
+That's the part that should be designed carefully.
 
 ### Logique cuve (avec nouveau capteur distance à ultrason)
 
@@ -394,7 +435,18 @@ Signification :
 
 Led WiFi AP sur boîtier ? Non car la LED de status indique que le hardware propre a l'ESP fonctionne (puce elle-même et wifi). La LED de status allumée indique donc que le système est opérationnel et quand elle est éteinte elle indique un problème (puce cramée, loop frozen, resets en boucle, WiFi AP non opérationnel, ...)
 
-Watchdog resets Suggested action
+Le watchdog coupera la LED de status (avec un MOSFET probablement) en l'absence de heartbeat.
+En fonctionnement normal, la LED est contrôlée par l'ESP32 :
+
+- solid on : système OK
+- blinking : en attente de connexion à la station WiFi
+- pulsing : en attente que l'AP soit opérationnel
+- solid off : système non opérationnel
+
+Le watchdog apporte donc une sécurité supplémentaire lorsque l'ESP32 n'est plus elle-même capable de diagnostiquer ou de signaler son état.
+Ainsi, une LED de status allumée implique que l'ESP32 est toujours en mesure de signaler sa présence au watchdog.
+
+Watchdog resets Suggested action:
 
 - 1 reset Log it only
 - 2 resets within 24 hours. Warning in web UI/logs
@@ -405,26 +457,65 @@ Watchdog resets Suggested action
 
 #### Arrosage manuel
 
-popup lors d'un appuie sur démarrage d'un arrosage manuel pour choix de quoi faire si arrosage auto est en cours ou va clasher prochainement :
+If concurrent watering is enabled and working:
+🟢 Enough flow → start manual watering normally.
+🟡 Insufficient flow (even if 0 L/min) → show dialog.
 
-- start manual immediately :
-  - cancel the current auto watering
-  - continue auto later
-- queue manual later
-  (display resting auto watering duration and manual watering duration for better decision taking)
+E.g. dialog:
 
-class Zone:
-soil_water
-capacity
-depletion
+```
+🟡 Not enough flow available!
+Zone C requires 8 L/min, but only 2 L/min is currently available.
 
-class Scheduler:
-decide_when_to_water()
+What would you like to do?
 
-class Executor:
-manage_flow_and_concurrency()
+Run Zone C now
+  "Shift current watering"
+  -> I want mine now; make room for it. And continue current watering later when flow becomes available.
+  "Start anyway"
+  -> Keep the current watering running and start Zone C. Flow may be lower than expected, so watering may take longer.
+  "Stop current watering"
+  -> Cancel the currently running zones and give Zone C the required flow.
 
-#### Optimized planning execution
+Wait
+  "Queue for later"
+  -> Start Zone C when enough flow becomes available (show in UI "⏳ Zone C — waiting for flow").
+
+"Cancel"
+-> do nothing
+```
+
+If concurrent watering is disabled:
+🟢 Nothing running → start manual watering normally.
+🟡 A watering(s) will run before complete execution of manual watering OR a watering(s) is running → show dialog.
+
+E.g. dialog:
+
+```
+🟡 A watering(s) is already running!
+
+What would you like to do?
+
+Run Zone C now
+  "Shift current watering"
+  -> I want mine now; make room for it.
+  "Start anyway"
+  -> Keep the current watering running and start Zone C.
+  "Stop current watering"
+  -> Cancel the currently running zones.
+
+Wait
+  "Queue for later"
+  -> I can wait. Start Zone C when current/following schedules finishes until a slow with desired duration is available.
+    (display time to wait for better decision taking, like "Starts in ~7 min · expected finish 18:47")
+
+"Cancel"
+-> do nothing
+```
+
+And if the current watering contains a fixed schedule that cannot be moved, the UI can simply disable the "Shift current watering" button with a message "Some current watering cannot be shifted because it is fixed."
+
+#### Planned execution
 
 - Si un créneau est supprimé/modifié pendant un arrosage, le supprime et se ré-adapte avec ce qu'il reste à faire
   Affichage sous forme de tableau fixe avec 1 ligne par vanne ou panneau vertical (https://dev.to/crayoncode/building-a-vertical-calendar-with-html-css-js-2po2) pour avoir toutes les info de visible avec sélection par drop-down ou slideshow ou mosaique de boutons + ajouter une photo par zone
@@ -440,16 +531,72 @@ manage_flow_and_concurrency()
   - If soil is dry BUT it’s raining → ❌ Do not water
   - If soil is moist → ❌ Do not water (regardless of rain)
 
-##### 0. Free overlapping (current)
+Garder le fixed scheduling, et ajouter les autres types d'exécutions par dessus.
+=> All execution types (watering modes) can coexist:
+
+- Manual
+- Scheduled(fixed/flexible)
+- Optimized
+
+Suppose there is:
+
+```
+Fixed schedule:
+Zone A → 06:30–06:50
+
+Morning window optimized:
+Zone B → 20 min
+Zone C → 15 min
+Zone D → 10 min
+Window → 05:00–08:00
+```
+
+The optimizer knows that 06:30–06:50 is unavailable. So it might produce:
+
+```
+05:00  B ───────────────
+05:20  C ──────────
+05:35  D ───────
+             ...
+06:30  A ───────────────  ← manual, fixed
+             ...
+06:50  optimized jobs can continue
+```
+
+The fixed schedule becomes an immovable block, while the optimized schedules fill the available space around it.
+=> Fixed schedules has priority over optimized schedules.
+
+Priority 0. Manual (user can choose what to do if chances of clashing are present)
+Priority 1. Fixed "Start exactly at 18:00."
+Priority 2. Flexible "18:00 is the preferred time. The controller may start earlier or later when that produces a better execution opportunity."
+Priority 3. Optimized "Water during the morning/evening period; optimize the entire group."
+It goes from "I want control" to "help me a little" to "you figure it out."
+
+##### 0. Fixed scheduling (current)
+
+Allowed to overlap.
 
 Aucune vérification n'est faite. En fonction de la plannification des zones, plusieurs vannes peuvent se retrouver à être ouvertes en mm temps, et les zones risquent de ne plus avoir assez de débit.
 
-##### 1. Force one valve at a time
+##### 1. Flexible scheduling
 
-Empêcher plus d'1 vannes à la fois avec algo qui exécute chaque watering successivement
-Limiter la duree d'arrosage à 1h par way
+Timing option:
+Exact — start at the specified time.
+Flexible — start around the specified time to not clash with other schedules (user should not have to specify a time window, maximum delay would be an internal setting)
 
-##### 2. Allow concurrent valves execution
+##### 2. Optimized grouping at sunset/sunrise
+
+Algo exécute chaque watering du jour successivement après heure fixe décidée dans fichier de config, ou heure de levé/couché du soleil
+
+#### Concurrent valves execution
+
+System capability/setting "Concurrent watering": ☑ Enabled
+(either one valve at a time or concurrent when flow allows)
+-> ❌ fixed scheduling intentionally unaffected (always stupid simple)
+
+Note: Concurrent mode available only when flow sensor is installed and all active lines have verified flow characteristics.
+
+##### Old notes
 
 Au lieu d'éxécuter successivement l'arrosage pour chaque voie, le faire de manière concurrente si possible.
 
@@ -475,13 +622,15 @@ Check le nombre max de vannes activables en mm temps, à noter que :
 
 Avoir aussi extinction en différée pour réduction des chocs hydrauliques
 
-#### Execution at sunset/sunrise
+#### Automatic watering requirement
 
-Idem que 1. mais algo exécute chaque watering du jour successivement après heure fixe décidée dans fichier de config, ou heure de levé/couché du soleil
+Allows to get watering duration/frequency automatically computed from evapo-transpiration model (e.g. using a simplified version of FAO-56 Penman–Monteith).
 
-#### Automatic watering duration and frequency computation
-
-Computed from evapo-transpiration model, based on multiple sensors and weather/soil data per way
+Water line/zone option named "Watering requirement": "User defined" or "Automatic"
+"Automatic" option:
+-> only available if there is a weather access, either by local sensors (soil moisture / air humidity / wind speed and direction, ...), by internet, or a combination of both.
+-> disables manual scheduling
+-> requires a deep description of that line/zone with soil/sprinkler/plant/sun-orientation data.
 
 https://www.yardian.com/blogs/articles/how-smart-watering-works/ :
 
