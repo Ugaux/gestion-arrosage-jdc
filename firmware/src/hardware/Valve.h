@@ -1,34 +1,26 @@
-#ifndef _VALVE_H_
-#define _VALVE_H_
+#pragma once
 
-#define OPEN_TIME 20
+#include <cstdint>
+#include <Arduino.h>
 
-#include "core/interfaces/IValve.h"
-#include "hardware/Relay.h"
+class PCF8574;
 
-enum valveState { VALVE_UNKNOWN,
-                  VALVE_IS_CLOSED,
-                  VALVE_IS_OPENING,
-                  VALVE_IS_OPEN,
-                  VALVE_IS_CLOSING };
-
-class Valve : public IValve {
+class Valve {
 public:
-  Valve();
-  static bool   create(const char *def);
-  static Valve *getMainValve(void) { return &m_mainValve; }
-  void          open(void);
-  void          close(void);
-  void          isOpen(void);
-  void          isClosed(void);
-  void          print(void);
-  valveState    getState(void) { return m_state; }
+  Valve(PCF8574& io, uint8_t pin);
+
+  void begin();
+
+  bool open();
+  bool close();
+  bool isOpen() const { return m_opened; };
 
 private:
-  static Valve m_mainValve;
-  Relay       *m_openRelay;
-  Relay       *m_closeRelay;
-  valveState   m_state;
-};
+  static constexpr uint8_t kRelayOn  = LOW;
+  static constexpr uint8_t kRelayOff = HIGH;
 
-#endif
+  PCF8574&      m_io;
+  const uint8_t m_pin;
+
+  bool m_opened = false;
+};
