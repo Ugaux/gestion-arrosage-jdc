@@ -3,6 +3,12 @@
   "tasks": [
     // ****************** ESP32: FIRWMARE SIDE ****************** //
     {
+      "label": "🧪 esp32-fm: test native",
+      "type": "shell",
+      "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
+      "args": ["test", "-e", "Native-test"]
+    },
+    {
       "label": "🔨 esp32-fm: build debug",
       "type": "shell",
       "command": "${env:USERPROFILE}\\.platformio\\penv\\Scripts\\pio.exe",
