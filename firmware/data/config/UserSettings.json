@@ -1,0 +1,68 @@
+{
+  "params": {
+    "wifi": {
+      "useAPMode": true,
+      "station": {
+        "ssid": "MyHomeNetworkWifi",
+        "password": "mynotsostrongpwd"
+      },
+      "access-point": {
+        "ssid": "AccessPointWifi",
+        "password": ""
+      },
+      "mdns": "watering-ui"
+    },
+    "watering": {
+      "duration": {
+        "min": 1,
+        "max": 40,
+        "step": 5,
+        "base": 15
+      },
+      "seasonal": {
+        "factor": 100
+      },
+      "soil": {
+        "moisture": {
+          "threshold": 60
+        }
+      },
+      "pump": {
+        "flow": {
+          "min": 2,
+          "max": 80
+        }
+      }
+    }
+  },
+  "zones": [
+    {
+      "id": "e6d2c9a5-ff4c-48d6-9bb4-cc2c7df9fb74",
+      "name": "General",
+      "lines": [
+        {
+          "name": "Hothouse",
+          "valves": [5, 7]
+        },
+        {
+          "id": "0a47fd50-15f5-4f53-b7cd-a65e49fd6184",
+          "name": "Guillaume Parcel",
+          "valves": [8]
+        }
+      ]
+    },
+    {
+      "name": "Noémie",
+      "lines": [
+        {
+          "name": "Oscillating Sprinkler",
+          "valves": [6]
+        },
+        {
+          "name": "Drippers",
+          "valves": [5]
+        }
+      ]
+    }
+  ]
+}

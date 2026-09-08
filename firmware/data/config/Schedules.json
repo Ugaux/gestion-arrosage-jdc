@@ -1,0 +1,30 @@
+{
+  "schedules": [
+    {
+      "id": "e27eb9df-f08d-4f88-84fb-a7a553dbbc83",
+      "lineId": "e6d2c9a5-ff4c-48d6-9bb4-cc2c7df9fb74",
+      "name": "Morning",
+      "definition": "22:00,30,0,s-53"
+    },
+    {
+      "id": "67c48a50-2802-421b-bbde-e0564e095b18",
+      "lineId": "e6d2c9a5-ff4c-48d6-9bb4-cc2c7df9fb74",
+      "definition": "23:00,10,1,e"
+    },
+    {
+      "id": "76ebce0c-8dbd-4e4a-a30f-883e5acdc15b",
+      "lineId": "0a47fd50-15f5-4f53-b7cd-a65e49fd6184",
+      "definition": "23:00,45,1,o"
+    },
+    {
+      "id": "6ed732d7-a600-4231-a7ad-3dc9d11c552a",
+      "lineId": "0a47fd50-15f5-4f53-b7cd-a65e49fd6184",
+      "definition": "01:00,17,1,s-1"
+    },
+    {
+      "id": "c7c779e5-cc8e-4b81-a556-17ba87a5192d",
+      "lineId": "e6d2c9a5-ff4c-48d6-9bb4-cc2c7df9fb74",
+      "definition": "02:00,1,1,e"
+    }
+  ]
+}
