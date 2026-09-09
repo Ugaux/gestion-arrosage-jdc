@@ -17,7 +17,7 @@ namespace CrossFn {
 Result validatePumpFlow(Config::UserSettings::Params::Watering::Pump::Flow& cfg);
 Result validateDuration(Config::UserSettings::Params::Watering::Duration& cfg);
 
-Result validateLineZone(Config::UserSettings::WateringModel& cfg);
+Result validateLine(Config::UserSettings::WateringModel& cfg);
 
 Result validateSchedule(Config::Schedule& cfg);
 // Filters schedules that point to non-existing lines
@@ -33,9 +33,9 @@ public:
     MissingAdapterFunction = 0,
     UnexpectedValueType,
 
+    Duplicate,
     ValueOutOfRange,
     LengthOutOfRange,
-    DuplicateId,
     InvalidReference,
     OperationFailed,
     UnsupportedValue,
@@ -72,6 +72,9 @@ private:
   static const char* message(Error e) {
     switch (e) {
 
+      case Error::Duplicate:
+        return "duplicate";
+
       case Error::MissingAdapterFunction:
         return "missing validator adapter function";
 
@@ -83,9 +86,6 @@ private:
 
       case Error::LengthOutOfRange:
         return "length out of range";
-
-      case Error::DuplicateId:
-        return "duplicate id";
 
       case Error::InvalidReference:
         return "invalid reference";

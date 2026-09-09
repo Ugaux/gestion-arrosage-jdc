@@ -4,9 +4,9 @@
 #include <array>
 #include <cstdint>
 #include "Constants.h"
+#include "types/UUID.h"
 #include "types/Collection.h"
 #include "types/FixedString.h"
-#include "types/UUID.h"
 #include "types/Frequency.h"
 #include "types/Weekdays.h"
 
@@ -22,7 +22,8 @@ struct Config {
     UUID id;
     UUID zoneId;
     FixedString<15> name = "NoName";
-    std::bitset<kValveCount> valves = 0;
+    using ValveSet = std::bitset<kValveCount>;
+    ValveSet valves = 0;
   };
 
   struct Schedule {

@@ -183,7 +183,7 @@ structure: # actual Config layout
               unit: "L/min"
 
     wateringModel:
-      crossAction: validateLineZone
+      crossAction: validateLine
 
       zones:
         type: Collection

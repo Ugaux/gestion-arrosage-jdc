@@ -61,8 +61,18 @@ def render_node(
         ]
 
     else:
+        lines = []
+        if node.type == "Bitset":
+            if struct_name[-1] == "s":
+                new_struct_name = struct_name[:-1]
+            else:
+                new_struct_name = struct_name
+            type = f"{new_struct_name}Set"
+            lines.append(f"{pad}using {type} = {node.cpp_type_expression};")
+        else:
+            type = f"{node.cpp_type_expression}"
         unit_comment = f"  // in {node.unit}" if node.unit else ""
-        lines = [f"{pad}{node.cpp_type_expression} {instance_name}{node.cpp_default};{unit_comment}"]
+        lines.append(f"{pad}{type} {instance_name}{node.cpp_default};{unit_comment}")
 
     return lines
 
@@ -116,9 +126,9 @@ def render_header(
         #include <array>
         #include <cstdint>
         #include "Constants.h"
+        #include "types/UUID.h"
         #include "types/Collection.h"
         #include "types/FixedString.h"
-        #include "types/UUID.h"
         #include "types/Frequency.h"
         #include "types/Weekdays.h"
 

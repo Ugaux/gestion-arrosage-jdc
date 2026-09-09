@@ -238,7 +238,7 @@ inline constexpr Validation::CrossAction
   ConfigUserSettingsWateringModel_CrossValidator{
     &Validation::crossAdapter<
       Config::UserSettings::WateringModel,
-      Validation::CrossFn::validateLineZone>
+      Validation::CrossFn::validateLine>
   };
 
 // ============================================================

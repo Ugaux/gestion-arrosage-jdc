@@ -37,21 +37,39 @@ Result validateDuration(Config::UserSettings::Params::Watering::Duration& cfg) {
   return {};
 }
 
-Result validateLineZone(Config::UserSettings::WateringModel& cfg) {
+Result validateLine(Config::UserSettings::WateringModel& cfg) {
 
   auto& zones = cfg.zones;
   auto& lines = cfg.lines;
 
   for (uint8_t i = 0; i < lines.size(); i++) {
-    auto& line = lines[i];
 
-    if (!zones.find(line.zoneId)) {
-      auto id = line.id.unparse();
+    if (!zones.find(lines[i].zoneId)) {
+      auto id = lines[i].id.unparse();
       return Result(
         Result::Error::InvalidReference,
         "line '%.*s' points to a non-existing zone",
         static_cast<int>(id.size()), id.data());
     }
+  }
+
+  Config::Line::ValveSet seenValves;
+
+  for (uint8_t i = 0; i < lines.size(); i++) {
+    const auto duplicatedValves = seenValves & lines[i].valves;
+
+    if (duplicatedValves.any()) {
+      for (size_t valve = 0; valve < duplicatedValves.size(); valve++) {
+        if (duplicatedValves.test(valve)) {
+          return Result(
+            Result::Error::Duplicate,
+            "valve %zu is already selected",
+            valve + 1);
+        }
+      }
+    }
+
+    seenValves |= lines[i].valves;
   }
 
   return {};
@@ -112,18 +130,43 @@ Result normalizeAndValidateSchedules(Config& cfg) {
     }
   }
 
-  // Validate
+  // Validate line ID
 
   for (uint8_t i = 0; i < schedules.size(); i++) {
 
-    auto& schedule = schedules[i];
-
-    if (!lines.find(schedule.lineId)) {
-      auto id = schedule.id.unparse();
+    if (!lines.find(schedules[i].lineId)) {
+      auto id = schedules[i].id.unparse();
       return Result(
         Result::Error::InvalidReference,
         "schedule '%.*s' points to a non-existing line",
         static_cast<int>(id.size()), id.data());
+    }
+  }
+
+  // Validate max schedules per line
+
+  std::array< uint8_t,
+              Config::UserSettings::WateringModel::
+                LineCollection::kCapacity>
+    scheduleCounts{};
+
+  for (uint8_t i = 0; i < schedules.size(); i++) {
+
+    for (uint8_t j = 0; j < lines.size(); j++) {
+
+      if (schedules[i].lineId == lines[j].id) {
+
+        if (++scheduleCounts[j] > Config::kMaxSchedulePerLine) {
+          auto id = lines[j].id.unparse();
+          return Result(
+            Result::Error::UnsupportedValue,
+            "line '%.*s' has too many schedules (max %d)",
+            static_cast<int>(id.size()), id.data(),
+            Config::kMaxSchedulePerLine);
+        }
+
+        break;
+      }
     }
   }
 
