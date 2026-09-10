@@ -135,20 +135,18 @@ structure: # actual Config layout
 
           max:
             type: UInt8
-            default: 40
+            default: 45
             range: [1, 60]
             unit: "minutes"
 
           base:
             type: UInt8
             default: 15
-            range: [1, 60]
             unit: "minutes"
 
           step:
             type: UInt8
             default: 5
-            range: [1, 15]
             unit: "minutes"
 
         seasonal:
@@ -183,7 +181,7 @@ structure: # actual Config layout
               unit: "L/min"
 
     wateringModel:
-      crossAction: validateLine
+      crossAction: validateLines
 
       zones:
         type: Collection

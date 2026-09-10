@@ -62,7 +62,7 @@ struct Config {
 
         struct Duration {
           uint8_t min = 1;  // in minutes
-          uint8_t max = 40;  // in minutes
+          uint8_t max = 45;  // in minutes
           uint8_t base = 15;  // in minutes
           uint8_t step = 5;  // in minutes
         } duration;

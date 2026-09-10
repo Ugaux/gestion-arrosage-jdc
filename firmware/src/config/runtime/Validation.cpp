@@ -7,9 +7,10 @@ namespace CrossFn {
 Result validatePumpFlow(Config::UserSettings::Params::Watering::Pump::Flow& cfg) {
 
   if (cfg.min >= cfg.max)
-    return Result(Result::Error::UnsupportedValue,
-                  "pump flow min/max (should have min:%u<max:%u)",
-                  cfg.min, cfg.max);
+    return Result(
+      Error::UnsupportedValue,
+      "value must be less than max=%u, got %u",
+      cfg.max, cfg.min);
 
   return {};
 }
@@ -18,39 +19,36 @@ Result validateDuration(Config::UserSettings::Params::Watering::Duration& cfg) {
 
   if (cfg.min >= cfg.max)
     return Result(
-      Result::Error::UnsupportedValue,
-      "duration min/max (should have min:%u<max:%u)",
-      cfg.min, cfg.max);
+      Error::UnsupportedValue,
+      "value must be less than max=%u, got %u",
+      cfg.max, cfg.min);
 
-  if (cfg.step == 0 || cfg.step > (cfg.max - cfg.min))
+  if (cfg.base < cfg.min || cfg.base > cfg.max)
     return Result(
-      Result::Error::UnsupportedValue,
-      "duration step (should have 0<step:%u<=%u)",
-      cfg.step, cfg.max - cfg.min);
+      Error::UnsupportedValue,
+      "value must be between min=%d and max=%d, got %u",
+      cfg.min, cfg.max, cfg.base);
 
-  if (cfg.base < cfg.min || cfg.max < cfg.base)
+  if (cfg.step <= 0 || cfg.step > (cfg.max - cfg.min))
     return Result(
-      Result::Error::UnsupportedValue,
-      "duration base (should have min<=%u<=max)",
-      cfg.base);
+      Error::UnsupportedValue,
+      "value must be > 0 and <= max-min=%u, got %u",
+      cfg.max - cfg.min, cfg.step);
 
   return {};
 }
 
-Result validateLine(Config::UserSettings::WateringModel& cfg) {
+Result validateLines(Config::UserSettings::WateringModel& cfg) {
 
   auto& zones = cfg.zones;
   auto& lines = cfg.lines;
 
   for (uint8_t i = 0; i < lines.size(); i++) {
 
-    if (!zones.find(lines[i].zoneId)) {
-      auto id = lines[i].id.unparse();
+    if (!zones.find(lines[i].zoneId))
       return Result(
-        Result::Error::InvalidReference,
-        "line '%.*s' points to a non-existing zone",
-        static_cast<int>(id.size()), id.data());
-    }
+        Error::InvalidReference,
+        "lines[%u] points to a non-existing zone", i);
   }
 
   Config::Line::ValveSet seenValves;
@@ -62,9 +60,10 @@ Result validateLine(Config::UserSettings::WateringModel& cfg) {
       for (size_t valve = 0; valve < duplicatedValves.size(); valve++) {
         if (duplicatedValves.test(valve)) {
           return Result(
-            Result::Error::Duplicate,
-            "valve %zu is already selected",
-            valve + 1);
+            Error::DuplicateValue,
+            "lines[%u] uses valve %zu, which"
+            " is already used by another line",
+            i, valve + 1);
         }
       }
     }
@@ -77,8 +76,6 @@ Result validateLine(Config::UserSettings::WateringModel& cfg) {
 
 Result validateSchedule(Config::Schedule& cfg) {
 
-  auto id = cfg.id.unparse();
-
   const bool hasDays = !cfg.days.isEmpty();
 
   switch (cfg.frequency) {
@@ -87,18 +84,14 @@ Result validateSchedule(Config::Schedule& cfg) {
     case Frequency::OddDays:
       if (hasDays)
         return Result(
-          Result::Error::UnsupportedValue,
-          "schedule '%.*s' has days without"
-          " the specific days frequency",
-          static_cast<int>(id.size()), id.data());
+          Error::UnsupportedValue,
+          "contains days without specific days frequency");
       break;
     case Frequency::SpecificDays:
       if (!hasDays)
         return Result(
-          Result::Error::UnsupportedValue,
-          "schedule '%.*s' has the specific"
-          " days frequency but no days",
-          static_cast<int>(id.size()), id.data());
+          Error::UnsupportedValue,
+          "has specific days frequency but contains no days");
       break;
   }
 
@@ -110,7 +103,7 @@ Result normalizeAndValidateSchedules(Config& cfg) {
   auto& lines     = cfg.userSettings.wateringModel.lines;
   auto& schedules = cfg.schedules;
 
-  // Normalize
+  // Normalize (filters schedules that point to non-existing lines)
   //
   // Don't increment after removal: removeAt() swaps the last element into
   // the current index. Re-check that index, while size() reflects the removal.
@@ -120,13 +113,10 @@ Result normalizeAndValidateSchedules(Config& cfg) {
     if (lines.find(schedules[i].lineId))
       i++;
     else {
-      if (!schedules.removeAt(i)) {
-        auto id = schedules[i].id.unparse();
+      if (!schedules.removeAt(i))
         return Result(
-          Result::Error::OperationFailed,
-          "schedule '%.*s' could not be removed",
-          static_cast<int>(id.size()), id.data());
-      }
+          Error::OperationFailed,
+          "schedules[%u] could not be removed", i);
     }
   }
 
@@ -134,13 +124,10 @@ Result normalizeAndValidateSchedules(Config& cfg) {
 
   for (uint8_t i = 0; i < schedules.size(); i++) {
 
-    if (!lines.find(schedules[i].lineId)) {
-      auto id = schedules[i].id.unparse();
+    if (!lines.find(schedules[i].lineId))
       return Result(
-        Result::Error::InvalidReference,
-        "schedule '%.*s' points to a non-existing line",
-        static_cast<int>(id.size()), id.data());
-    }
+        Error::InvalidReference,
+        "schedules[%u] points to a non-existing line", i);
   }
 
   // Validate max schedules per line
@@ -156,14 +143,11 @@ Result normalizeAndValidateSchedules(Config& cfg) {
 
       if (schedules[i].lineId == lines[j].id) {
 
-        if (++scheduleCounts[j] > Config::kMaxSchedulePerLine) {
-          auto id = lines[j].id.unparse();
+        if (++scheduleCounts[j] > Config::kMaxSchedulePerLine)
           return Result(
-            Result::Error::UnsupportedValue,
-            "line '%.*s' has too many schedules (max %d)",
-            static_cast<int>(id.size()), id.data(),
-            Config::kMaxSchedulePerLine);
-        }
+            Error::UnsupportedValue,
+            "lines[%u] should have at most %u schedules, got %u",
+            j, Config::kMaxSchedulePerLine, scheduleCounts[j]);
 
         break;
       }

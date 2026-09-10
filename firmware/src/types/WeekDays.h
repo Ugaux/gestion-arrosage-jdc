@@ -47,12 +47,12 @@ public:
   // e.g. set(WeekDay::Monday | WeekDay::Friday | WeekDay::Sunday)
   void set(const WeekDays& days);
 
-  void clear();
+  bool set(uint32_t mask);
+
+  uint8_t mask() const { return m_mask; }
 
   bool isEmpty() const;
-
-  bool    setMask(uint32_t mask);
-  uint8_t mask() const { return m_mask; }
+  void clear();
 
   class Iterator {
   public:

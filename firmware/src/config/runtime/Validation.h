@@ -6,170 +6,24 @@
 #include <ArduinoJson.h>
 #include "config/generated/Config.h"
 #include "config/runtime/Reflection.h"
+#include "config/runtime/ValidationResult.h"
 
 // validators + validation traversal
 namespace Validation {
 
-class Result;
+using Result = ::Result<Error>;
 
 namespace CrossFn {
 
 Result validatePumpFlow(Config::UserSettings::Params::Watering::Pump::Flow& cfg);
 Result validateDuration(Config::UserSettings::Params::Watering::Duration& cfg);
 
-Result validateLine(Config::UserSettings::WateringModel& cfg);
+Result validateLines(Config::UserSettings::WateringModel& cfg);
 
 Result validateSchedule(Config::Schedule& cfg);
-// Filters schedules that point to non-existing lines
 Result normalizeAndValidateSchedules(Config& cfg);
 
 }  // namespace CrossFn
-
-class Result {
-public:
-  static constexpr size_t kMaxErrorLength = 120;
-
-  enum class Error : uint8_t {
-    MissingAdapterFunction = 0,
-    UnexpectedValueType,
-
-    Duplicate,
-    ValueOutOfRange,
-    LengthOutOfRange,
-    InvalidReference,
-    OperationFailed,
-    UnsupportedValue,
-  };
-
-  Result() = default;
-
-  explicit Result(Error e) {
-    set(e, "");
-  }
-
-  template<typename... Args>
-  Result(Error e, const char* fmt, Args... args) {
-    set(e, fmt, args...);
-  }
-
-  bool ok() const {
-    return m_ok;
-  }
-
-  explicit operator bool() const {
-    return ok();
-  }
-
-  Error error() const {
-    return m_error;
-  }
-
-  std::string_view message() const {
-    return { m_msg.data(), m_msg_len };
-  }
-
-private:
-  static const char* message(Error e) {
-    switch (e) {
-
-      case Error::Duplicate:
-        return "duplicate";
-
-      case Error::MissingAdapterFunction:
-        return "missing validator adapter function";
-
-      case Error::UnexpectedValueType:
-        return "unexpected value type";
-
-      case Error::ValueOutOfRange:
-        return "value out of range";
-
-      case Error::LengthOutOfRange:
-        return "length out of range";
-
-      case Error::InvalidReference:
-        return "invalid reference";
-
-      case Error::OperationFailed:
-        return "operation failed";
-
-      case Error::UnsupportedValue:
-        return "unsupported value";
-    }
-
-    return "unknown error";
-  }
-
-  template<typename... Args>
-  void set(Error err, const char* fmt, Args... args) {
-    m_ok    = false;
-    m_error = err;
-
-    const int written = snprintf(
-      m_msg.data(),
-      m_msg.size(),
-      "%s%s",
-      message(err), fmt[0] == '\0' ? "" : ": ");
-
-    if (written < 0) {
-      m_msg_len = 0;
-      return;
-    }
-
-    m_msg_len = std::min(
-      static_cast<size_t>(written),
-      m_msg.size() - 1);
-
-    const int detail = snprintf(
-      m_msg.data() + m_msg_len,
-      m_msg.size() - m_msg_len,
-      fmt,
-      args...);
-
-    if (detail < 0)
-      return;
-
-    const size_t detailSize = static_cast<size_t>(detail);
-
-    if (detailSize < m_msg.size() - m_msg_len) {
-      m_msg_len += detailSize;
-      return;
-    }
-
-    const size_t truncated =
-      detailSize - (m_msg.size() - m_msg_len - 1);
-
-    const size_t suffixLen =
-      static_cast<size_t>(
-        snprintf(
-          nullptr,
-          0,
-          " (%zu)",
-          truncated));
-
-    // Keep as much of the existing message as possible.
-    const size_t keep =
-      m_msg.size() - 1 - suffixLen;
-
-    m_msg[keep] = '\0';
-
-    snprintf(
-      m_msg.data() + keep,
-      m_msg.size() - keep,
-      " (%zu)",
-      truncated);
-
-    m_msg_len = keep + suffixLen;
-  }
-
-  Error m_error{};
-
-  bool m_ok = true;
-
-  std::array<char, kMaxErrorLength> m_msg = {};
-
-  size_t m_msg_len = 0;
-};
 
 namespace Detail {
 
@@ -180,19 +34,19 @@ public:
     Result (*)(void*);
 
   constexpr explicit CrossActionBase(ApplyFn fn)
-    : m_apply(fn) {}
+    : m_crossApply(fn) {}
 
   template<typename T>
   Result cross(T& value) const {
 
-    if (!m_apply)
-      return Result(Result::Error::MissingAdapterFunction);
+    if (!m_crossApply)
+      return Result(Error::MissingAdapterFunction);
 
-    return m_apply(&value);
+    return m_crossApply(&value);
   }
 
 private:
-  ApplyFn m_apply = nullptr;
+  ApplyFn m_crossApply = nullptr;
 };
 
 }  // namespace Detail
@@ -241,7 +95,7 @@ public:
   Result validate(const T& value) const {
 
     if (!m_valueApply)
-      return Result(Result::Error::MissingAdapterFunction);
+      return Result(Error::MissingAdapterFunction);
 
     return m_valueApply(*this, &value);
   }
@@ -256,7 +110,7 @@ public:
       case Type::Range:
         {
           if (!json.is<int32_t>())
-            return Result(Result::Error::UnexpectedValueType);
+            return Result(Error::UnexpectedValueType);
 
           const int32_t value = json.as<int32_t>();
           return validateRange(value);
@@ -265,7 +119,7 @@ public:
       case Type::Length:
         {
           if (!json.is<const char*>())
-            return Result(Result::Error::UnexpectedValueType);
+            return Result(Error::UnexpectedValueType);
 
           const char* value = json.as<const char*>();
           return validateLength(value);
@@ -285,8 +139,8 @@ public:
       return {};
 
     return Result(
-      Result::Error::ValueOutOfRange,
-      "must be %d..%d, got %d",
+      Error::ValueOutOfRange,
+      "value must be between min=%d and max=%d, got %d",
       range.min, range.max, value);
   }
 
@@ -298,8 +152,8 @@ public:
       return {};
 
     return Result(
-      Result::Error::LengthOutOfRange,
-      "must be %u..%u, got %zu",
+      Error::LengthOutOfRange,
+      "length must be between min=%u and max=%u, got %zu",
       length.min, length.max, len);
   }
 
@@ -341,23 +195,20 @@ Result lengthAdapter(const FieldValidator& validator, const void* self) {
 
 class ValidationVisitor {
 public:
-  const Validation::Result result() const {
+  const Result result() const {
     return m_result;
-  }
-
-  std::string_view path() const {
-    return m_pathBuilder.view();
   }
 
   template<typename Parent, typename Member>
   Reflection::VisitResult enter(const Reflection::Field<Parent, Member>& field, Member&) {
-    m_pathBuilder.enter(field.name);
 
+    m_pathBuilder.enter(field.name);
     return Reflection::VisitResult::Traverse;
   }
 
   template<typename Parent, typename Member>
   bool field(const Reflection::Field<Parent, Member>& field, Member& value) {
+
     m_pathBuilder.enter(field.name);
 
     if (!field.optional || !isDefaultValue(value)) {
@@ -371,6 +222,7 @@ public:
 
   template<typename Parent, typename Member>
   bool leave(const Reflection::Field<Parent, Member>&, Member&) {
+
     m_pathBuilder.leave();
     return true;
   }
@@ -378,13 +230,13 @@ public:
   template<typename Type>
   bool schema(Type& value) {
 
-    const auto* action =
+    const auto* crossAction =
       Reflection::Schema<Type>::crossAction;
 
-    if (!action) return true;
+    if (!crossAction)
+      return true;
 
-    m_result = action->cross(value);
-    return static_cast<bool>(m_result);
+    return checkValidationResult(crossAction->cross(value));
   }
 
 private:
@@ -407,21 +259,25 @@ private:
     if (!fieldValidator)
       return true;
 
-    m_result = fieldValidator->validate(value);
-    return static_cast<bool>(m_result);
+    return checkValidationResult(fieldValidator->validate(value));
   }
 
   template<typename T>
   bool isDefaultValue(const T& value) const {
+
     if constexpr (Reflection::is_collection_v<Reflection::Unqualified<T>>
                   || Reflection::is_fixedstring_v<Reflection::Unqualified<T>>)
       return value.size() == 0;
-    else
+    else  // required for compilation to succeed
       return value == T{};
   }
 
-  Validation::Result m_result;
+  bool checkValidationResult(Result result) {
+    m_result = result.withPath(m_pathBuilder.view());
+    return static_cast<bool>(m_result);
+  }
 
+  Result                  m_result;
   Reflection::PathBuilder m_pathBuilder;
 };
 

@@ -163,22 +163,6 @@ inline constexpr Validation::FieldValidator
       .min = 1, .max = 60 },
   };
 
-inline constexpr Validation::FieldValidator
-  ConfigUserSettingsParamsWateringDurationBase_FieldValidator{
-    &Validation::rangeAdapter<
-      decltype(Config::UserSettings::Params::Watering::Duration::base)>,
-    Validation::FieldValidator::RangeData{
-      .min = 1, .max = 60 },
-  };
-
-inline constexpr Validation::FieldValidator
-  ConfigUserSettingsParamsWateringDurationStep_FieldValidator{
-    &Validation::rangeAdapter<
-      decltype(Config::UserSettings::Params::Watering::Duration::step)>,
-    Validation::FieldValidator::RangeData{
-      .min = 1, .max = 15 },
-  };
-
 // ============================================================
 // Config::UserSettings::Params::Watering::Seasonal
 // ============================================================
@@ -238,7 +222,7 @@ inline constexpr Validation::CrossAction
   ConfigUserSettingsWateringModel_CrossValidator{
     &Validation::crossAdapter<
       Config::UserSettings::WateringModel,
-      Validation::CrossFn::validateLine>
+      Validation::CrossFn::validateLines>
   };
 
 // ============================================================
@@ -506,14 +490,14 @@ struct Schema<Config::UserSettings::Params::Watering::Duration> {
     makeField(
       &Config::UserSettings::Params::Watering::Duration::base,
       "base",
-      &kReflection::ConfigUserSettingsParamsWateringDurationBase_FieldValidator,
+      nullptr,
       "minutes",
       false),
 
     makeField(
       &Config::UserSettings::Params::Watering::Duration::step,
       "step",
-      &kReflection::ConfigUserSettingsParamsWateringDurationStep_FieldValidator,
+      nullptr,
       "minutes",
       false),
   };

@@ -3,6 +3,7 @@
 #include <tuple>
 #include <string_view>
 #include <type_traits>
+#include "Constants.h"
 #include "types/UUID.h"
 #include "types/Collection.h"
 #include "types/FixedString.h"
@@ -290,11 +291,8 @@ bool visit(Type& object, Visitor& visitor) {
 // ```
 class PathBuilder {
 public:
-  static constexpr size_t kMaxPathLength = 80;  // longest "a.b[2].c." path you'd ever build
-  static constexpr size_t kMaxDepth      = 8;   // deepest struct nesting in the schema
-
   void enter(std::string_view fieldName) {
-    if (m_depth >= kMaxDepth)
+    if (m_depth >= SchemaLimits::kMaxDepth)
       return;
 
     m_pathLenAtDepth[m_depth++] = m_pathLen;
@@ -307,7 +305,7 @@ public:
   }
 
   void index(size_t index) {
-    if (m_depth >= kMaxDepth)
+    if (m_depth >= SchemaLimits::kMaxDepth)
       return;
 
     m_pathLenAtDepth[m_depth++] = m_pathLen;
@@ -330,26 +328,26 @@ public:
 private:
   template<typename... Args>
   void append(const char* format, Args... args) {
-    if (m_pathLen >= kMaxPathLength - 1)
+    if (m_pathLen >= SchemaLimits::kMaxPathLength - 1)
       return;
 
     size_t written = snprintf(
       m_path.data() + m_pathLen,
-      kMaxPathLength - m_pathLen,
+      SchemaLimits::kMaxPathLength - m_pathLen,
       format,
       args...);
 
     if (written > 0)
       m_pathLen = std::min(
         m_pathLen + written,
-        kMaxPathLength - 1);  // clamp: snprintf can report more than it wrote
+        SchemaLimits::kMaxPathLength - 1);  // clamp: snprintf can report more than it wrote
   }
 
-  std::array<char, kMaxPathLength> m_path    = {};
-  size_t                           m_pathLen = 0;
+  std::array<char, SchemaLimits::kMaxPathLength> m_path    = {};
+  size_t                                         m_pathLen = 0;
 
-  size_t m_pathLenAtDepth[kMaxDepth] = {};
-  size_t m_depth                     = 0;
+  size_t m_pathLenAtDepth[SchemaLimits::kMaxDepth] = {};
+  size_t m_depth                                   = 0;
 };
 
 }  // namespace Reflection
