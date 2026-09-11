@@ -46,6 +46,14 @@ public:
     }
     return nullptr;
   }
+  /// Returns the index of the item with the given ID.
+  /// Returns m_size if no item with the given ID was found.
+  uint8_t index(const UUID& id) const {
+    for (uint8_t i = 0; i < m_size; i++) {
+      if (m_items[i].id == id) return i;
+    }
+    return m_size;
+  }
 
   // Adds an item unless the collection is full or its ID is already present.
   AddResult add(const T& item) {

@@ -186,7 +186,7 @@ void test_cross_validate_duration(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be less than max=6, got 12",
+    "min must be less than max=6, got 12",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -203,7 +203,7 @@ void test_cross_validate_duration(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be > 0 and <= max-min=6, got 0",
+    "step must be > 0 and <= max-min=6, got 0",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -218,7 +218,7 @@ void test_cross_validate_duration(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be > 0 and <= max-min=6, got 7",
+    "step must be > 0 and <= max-min=6, got 7",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -238,7 +238,7 @@ void test_cross_validate_duration(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be between min=6 and max=12, got 5",
+    "base must be between min=6 and max=12, got 5",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -253,7 +253,7 @@ void test_cross_validate_duration(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be between min=6 and max=12, got 13",
+    "base must be between min=6 and max=12, got 13",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -289,7 +289,7 @@ void test_cross_validate_flow(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "value must be less than max=10, got 80",
+    "min must be less than max=10, got 80",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(
@@ -392,7 +392,7 @@ void test_cross_validate_line_valves(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "lines[2] uses valve 6, which is already used by another line",
+    "lines[2]: valve 6 is already used by lines[1]",
     res.message().data(),
     kUnexpectedValidationErrorMessage);
   TEST_ASSERT_TRUE_MESSAGE(

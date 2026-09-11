@@ -15,6 +15,8 @@ enum class WeekDay : uint8_t {
 
 class WeekDays {
 public:
+  static constexpr uint8_t kAllDaysMask = 0x7Fu;
+
   WeekDays()                           = default;
   WeekDays(const WeekDays&)            = default;
   WeekDays& operator=(const WeekDays&) = default;
@@ -80,7 +82,6 @@ public:
   Iterator end() const;
 
 private:
-  static constexpr uint8_t kAllDaysMask = 0x7Fu;
 
   uint8_t m_mask = 0;  // bitmask
 };

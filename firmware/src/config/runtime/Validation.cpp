@@ -9,7 +9,7 @@ Result validatePumpFlow(Config::UserSettings::Params::Watering::Pump::Flow& cfg)
   if (cfg.min >= cfg.max)
     return Result(
       Error::UnsupportedValue,
-      "value must be less than max=%u, got %u",
+      "min must be less than max=%u, got %u",
       cfg.max, cfg.min);
 
   return {};
@@ -20,19 +20,19 @@ Result validateDuration(Config::UserSettings::Params::Watering::Duration& cfg) {
   if (cfg.min >= cfg.max)
     return Result(
       Error::UnsupportedValue,
-      "value must be less than max=%u, got %u",
+      "min must be less than max=%u, got %u",
       cfg.max, cfg.min);
 
   if (cfg.base < cfg.min || cfg.base > cfg.max)
     return Result(
       Error::UnsupportedValue,
-      "value must be between min=%d and max=%d, got %u",
+      "base must be between min=%d and max=%d, got %u",
       cfg.min, cfg.max, cfg.base);
 
   if (cfg.step <= 0 || cfg.step > (cfg.max - cfg.min))
     return Result(
       Error::UnsupportedValue,
-      "value must be > 0 and <= max-min=%u, got %u",
+      "step must be > 0 and <= max-min=%u, got %u",
       cfg.max - cfg.min, cfg.step);
 
   return {};
@@ -51,24 +51,29 @@ Result validateLines(Config::UserSettings::WateringModel& cfg) {
         "lines[%u] points to a non-existing zone", i);
   }
 
-  Config::Line::ValveSet seenValves;
+  Config::Line::ValveSet           seenValves;
+  std::array<uint8_t, kValveCount> valveOwners;
 
-  for (uint8_t i = 0; i < lines.size(); i++) {
-    const auto duplicatedValves = seenValves & lines[i].valves;
+  for (uint8_t lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
+    const auto duplicatedValves = seenValves & lines[lineIdx].valves;
 
     if (duplicatedValves.any()) {
       for (size_t valve = 0; valve < duplicatedValves.size(); valve++) {
         if (duplicatedValves.test(valve)) {
           return Result(
             Error::DuplicateValue,
-            "lines[%u] uses valve %zu, which"
-            " is already used by another line",
-            i, valve + 1);
+            "lines[%u]: valve %zu is already used by lines[%u]",
+            lineIdx, valve + 1, valveOwners[valve]);
         }
       }
     }
 
-    seenValves |= lines[i].valves;
+    for (size_t valve = 0; valve < lines[lineIdx].valves.size(); valve++) {
+      if (lines[lineIdx].valves.test(valve))
+        valveOwners[valve] = lineIdx;
+    }
+
+    seenValves |= lines[lineIdx].valves;
   }
 
   return {};
