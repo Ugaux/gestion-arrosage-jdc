@@ -1,6 +1,6 @@
 #include "JsonDeserializer.h"
 
-JsonDeserializer::Result JsonDeserializer::deserializeWateringModel(
+JsonDeserializer::TraversalResult JsonDeserializer::deserializeWateringModel(
   Config::UserSettings::WateringModel& model) {
 
   const auto zoneArrayKey = "zones";
@@ -11,10 +11,10 @@ JsonDeserializer::Result JsonDeserializer::deserializeWateringModel(
 
   bool skipSchema = false;
 
-  if (Result result = deserialize(
+  if (TraversalResult result = deserialize(
         zoneArrayJson, model.zones,
         Reflection::NoFilter{}, skipSchema,
-        [&](Config::Zone& zone, JsonVariantConst zoneJson, size_t) -> Result {
+        [&](Config::Zone& zone, JsonVariantConst zoneJson, size_t) -> TraversalResult {
           // Because UUID is optional, it is created if it is not present
           if (zone.id.isDefault())
             zone.id = UUID::generate();
@@ -25,10 +25,10 @@ JsonDeserializer::Result JsonDeserializer::deserializeWateringModel(
           JsonVariantConst lineArrayJson =
             zoneJson[lineArrayKey];
 
-          if (Result result = deserialize(
+          if (TraversalResult result = deserialize(
                 lineArrayJson, model.lines,
                 LineJsonFilter{}, skipSchema,
-                [&](Config::Line& line, JsonVariantConst, size_t) -> Result {
+                [&](Config::Line& line, JsonVariantConst, size_t) -> TraversalResult {
                   // Because UUID is optional, create it if it is not present.
                   if (line.id.isDefault())
                     line.id = UUID::generate();
@@ -52,7 +52,7 @@ JsonDeserializer::Result JsonDeserializer::deserializeWateringModel(
   return schema(model);
 }
 
-JsonDeserializer::Result JsonDeserializer::deserializeScheduleDefinition(
+JsonDeserializer::TraversalResult JsonDeserializer::deserializeScheduleDefinition(
   JsonVariantConst json, Config::Schedule& schedule) {
 
   // The other Schedule members come from "definition".
@@ -91,7 +91,7 @@ JsonDeserializer::Result JsonDeserializer::deserializeScheduleDefinition(
     ScheduleJsonFilter{ .inverted = true }, skipSchema);
 }
 
-JsonDeserializer::Result JsonDeserializer::deserializeSchedules(
+JsonDeserializer::TraversalResult JsonDeserializer::deserializeSchedules(
   Config::ScheduleCollection& schedules) {
 
   JsonVariantConst schedulesJson = jsonFor("schedules");
@@ -108,7 +108,7 @@ JsonDeserializer::Result JsonDeserializer::deserializeSchedules(
     });
 }
 
-JsonDeserializer::Result JsonDeserializer::deserialize(
+JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   JsonVariantConst json, WeekDays& value) {
 
   if (!json.is<uint32_t>())
@@ -124,7 +124,7 @@ JsonDeserializer::Result JsonDeserializer::deserialize(
   return {};
 }
 
-JsonDeserializer::Result JsonDeserializer::deserialize(
+JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   JsonVariantConst json, Frequency& value) {
 
   if (!json.is<unsigned char>())
@@ -146,7 +146,7 @@ JsonDeserializer::Result JsonDeserializer::deserialize(
   return {};
 }
 
-JsonDeserializer::Result JsonDeserializer::deserialize(
+JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   JsonVariantConst json, UUID& value) {
   if (!json.is<const char*>())
     return failWrongType(Reflection::FieldType::UUID, json);

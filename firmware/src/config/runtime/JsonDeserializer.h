@@ -76,9 +76,9 @@ private:
 
 class JsonDeserializer {
 public:
-  using Result = Result<Deserialization::Error>;  // required by reflection for traversal
-
-  using VisitResult = Reflection::VisitResult<Result>;
+  // required by reflection for traversal
+  using TraversalResult = Result<Deserialization::Error>;
+  using VisitResult     = Reflection::VisitResult<TraversalResult>;
 
   explicit JsonDeserializer(const JsonDocument& doc) {
     m_stack.push(doc.as<JsonVariantConst>());
@@ -100,7 +100,7 @@ public:
   }
 
   template<typename Parent, typename Member>
-  Result field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  TraversalResult field(const Reflection::Field<Parent, Member>& field, Member& value) {
 
     m_pathBuilder.enter(field.name);
 
@@ -140,7 +140,7 @@ public:
   }
 
   template<typename Parent, typename Member>
-  Result leave(const Reflection::Field<Parent, Member>&, Member&) {
+  TraversalResult leave(const Reflection::Field<Parent, Member>&, Member&) {
 
     m_pathBuilder.leave();
     m_stack.pop();
@@ -148,7 +148,7 @@ public:
   }
 
   template<typename Type>
-  Result schema(Type& value) {
+  TraversalResult schema(Type& value) {
 
     const auto* crossAction =
       Reflection::Schema<Type>::crossAction;
@@ -162,14 +162,14 @@ public:
     return {};
   }
 
-  Result finalize(Result result) {
+  TraversalResult finalize(TraversalResult result) {
     return result.withPath(m_pathBuilder.view());
   }
 
 private:
   // JSON validation
 
-  Result validate(JsonVariantConst json, const Validation::FieldValidator* fieldValidator) {
+  TraversalResult validate(JsonVariantConst json, const Validation::FieldValidator* fieldValidator) {
 
     if (!fieldValidator)
       return {};
@@ -183,21 +183,21 @@ private:
   // Specific mapping
 
   template<typename Filter, typename T>
-  Result deserializeObject(JsonVariantConst json, T& object,
-                           const Filter& filter, bool skipSchema) {
+  TraversalResult deserializeObject(JsonVariantConst json, T& object,
+                                    const Filter& filter, bool skipSchema) {
 
     m_stack.push(json);
-    Result result = Reflection::traverse(
+    TraversalResult result = Reflection::traverse(
       object, *this, filter, skipSchema);
     m_stack.pop();
 
     return result;
   }
 
-  Result deserializeWateringModel(Config::UserSettings::WateringModel& model);
+  TraversalResult deserializeWateringModel(Config::UserSettings::WateringModel& model);
 
-  Result deserializeScheduleDefinition(JsonVariantConst json, Config::Schedule& schedule);
-  Result deserializeSchedules(Config::ScheduleCollection& schedules);
+  TraversalResult deserializeScheduleDefinition(JsonVariantConst json, Config::Schedule& schedule);
+  TraversalResult deserializeSchedules(Config::ScheduleCollection& schedules);
 
   template<typename Member>
   VisitResult tryHandleSpecialCase(Member& value) {
@@ -220,8 +220,8 @@ private:
   // 1:1 mapping
 
   template<typename T, uint8_t N, typename Filter, typename Callback>
-  Result deserialize(JsonVariantConst json, Collection<T, N>& value,
-                     const Filter& filter, bool skipSchema, Callback callback) {
+  TraversalResult deserialize(JsonVariantConst json, Collection<T, N>& value,
+                              const Filter& filter, bool skipSchema, Callback callback) {
     using C = Collection<T, N>;
 
     if (!json.is<JsonArrayConst>())
@@ -261,17 +261,17 @@ private:
   }
 
   template<typename T, uint8_t N>
-  Result deserialize(JsonVariantConst json, Collection<T, N>& value) {
+  TraversalResult deserialize(JsonVariantConst json, Collection<T, N>& value) {
     return deserialize(
       json, value,
       Reflection::NoFilter{}, false,
-      [](T&, JsonVariantConst, size_t) -> Result {
+      [](T&, JsonVariantConst, size_t) -> TraversalResult {
         return {};
       });
   }
 
   template<uint16_t N>
-  Result deserialize(JsonVariantConst json, FixedString<N>& value) {
+  TraversalResult deserialize(JsonVariantConst json, FixedString<N>& value) {
     if (!json.is<const char*>())
       return failWrongType(Reflection::FieldType::String, json);
 
@@ -280,7 +280,7 @@ private:
   }
 
   template<size_t N>
-  Result deserialize(JsonVariantConst json, std::bitset<N>& value) {
+  TraversalResult deserialize(JsonVariantConst json, std::bitset<N>& value) {
     if (!json.is<JsonArrayConst>())
       return failWrongType(Reflection::FieldType::Bitset, json);
 
@@ -302,12 +302,12 @@ private:
     return {};
   }
 
-  Result deserialize(JsonVariantConst json, WeekDays& value);
-  Result deserialize(JsonVariantConst json, Frequency& value);
-  Result deserialize(JsonVariantConst json, UUID& value);
+  TraversalResult deserialize(JsonVariantConst json, WeekDays& value);
+  TraversalResult deserialize(JsonVariantConst json, Frequency& value);
+  TraversalResult deserialize(JsonVariantConst json, UUID& value);
 
   template<typename Type>
-  Result deserialize(JsonVariantConst json, Type& value) {
+  TraversalResult deserialize(JsonVariantConst json, Type& value) {
     using U = Reflection::Unqualified<Type>;
 
     if (Reflection::fieldType<U>() == Reflection::FieldType::Bool) {
@@ -353,29 +353,29 @@ private:
   const char* expectedJsonTypeName(Reflection::FieldType type);
   const char* jsonTypeName(JsonVariantConst json);
 
-  Result failMissing(Reflection::FieldType expectedType) {
+  TraversalResult failMissing(Reflection::FieldType expectedType) {
 
-    return Result(Deserialization::Error::Missing,
-                  "missing key, expected %s",
-                  expectedJsonTypeName(expectedType));
+    return TraversalResult(Deserialization::Error::Missing,
+                           "missing key, expected %s",
+                           expectedJsonTypeName(expectedType));
   }
 
-  Result failWrongType(Reflection::FieldType expectedType,
-                       JsonVariantConst      actual) {
+  TraversalResult failWrongType(Reflection::FieldType expectedType,
+                                JsonVariantConst      actual) {
 
-    return Result(Deserialization::Error::WrongType,
-                  "wrong type, expected %s, got %s",
-                  expectedJsonTypeName(expectedType),
-                  jsonTypeName(actual));
+    return TraversalResult(Deserialization::Error::WrongType,
+                           "wrong type, expected %s, got %s",
+                           expectedJsonTypeName(expectedType),
+                           jsonTypeName(actual));
   }
 
-  Result fail(Deserialization::Error error, Validation::Result result) {
-    return Result(error, result.message());
+  TraversalResult fail(Deserialization::Error error, Validation::Result result) {
+    return TraversalResult(error, result.message());
   }
 
   template<typename... Args>
-  Result fail(Deserialization::Error error, const char* messageFormat, Args... args) {
-    return Result(error, messageFormat, args...);
+  TraversalResult fail(Deserialization::Error error, const char* messageFormat, Args... args) {
+    return TraversalResult(error, messageFormat, args...);
   }
 
   JsonContextStack        m_stack;

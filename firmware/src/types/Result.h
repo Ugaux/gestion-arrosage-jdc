@@ -14,6 +14,10 @@ struct ErrorTraits;
 
 }  // namespace ResultDetail
 
+// Uses ErrorTraits<Error> to generate the default error message.
+// Define a ResultDetail::ErrorTraits specialization for Error when
+// using this constructor. The constructors taking an explicit message
+// do not require an ErrorTraits specialization.
 template<typename Error>
 class [[nodiscard]] Result {
 public:

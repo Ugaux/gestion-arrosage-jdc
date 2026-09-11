@@ -185,19 +185,19 @@ struct NoFilter {
 
 // Forward declaration
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::Result traverse(
+typename Visitor::TraversalResult traverse(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema);
 
 namespace Detail {
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::Result visitFieldImpl(
+typename Visitor::TraversalResult visitFieldImpl(
   const Field<Parent, Member>& field, Member& value,
   Visitor& visitor, const Filter& filter, std::true_type) {
 
-  using Result = typename Visitor::Result;
+  using VisitorResult = typename Visitor::TraversalResult;
 
-  const VisitResult<Result> visitResult =
+  const VisitResult<VisitorResult> visitResult =
     visitor.enter(field, value);
 
   switch (visitResult.decision) {
@@ -211,14 +211,14 @@ typename Visitor::Result visitFieldImpl(
       break;
   }
 
-  if (Result result = traverse(value, visitor, filter, false); !result)
+  if (VisitorResult result = traverse(value, visitor, filter, false); !result)
     return result;
 
   return visitor.leave(field, value);
 }
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::Result visitFieldImpl(
+typename Visitor::TraversalResult visitFieldImpl(
   const Field<Parent, Member>& field, Member& value,
   Visitor& visitor, const Filter&, std::false_type) {
 
@@ -226,7 +226,7 @@ typename Visitor::Result visitFieldImpl(
 }
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::Result visitField(
+typename Visitor::TraversalResult visitField(
   Parent& object, const Field<Parent, Member>& field,
   Visitor& visitor, const Filter& filter) {
 
@@ -249,10 +249,10 @@ typename Visitor::Result visitField(
 // not propagate to nested objects. This allows a caller to skip the schema
 // callback for a specific object while still processing schemas of its descendants.
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::Result traverse(
+typename Visitor::TraversalResult traverse(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
 
-  typename Visitor::Result result{};
+  typename Visitor::TraversalResult result{};
 
   std::apply(
     [&](auto const&... field) {
@@ -282,7 +282,7 @@ typename Visitor::Result traverse(
 
 // `traverse()` overload using the default `NoFilter`.
 template<typename Type, typename Visitor>
-typename Visitor::Result traverse(
+typename Visitor::TraversalResult traverse(
   Type& object, Visitor& visitor) {
 
   return traverse(object, visitor, NoFilter{}, false);
@@ -302,46 +302,22 @@ typename Visitor::Result traverse(
 //
 // Returning `FilterDecision::Skip` skips the field and its value.
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::Result visit(
+typename Visitor::TraversalResult visit(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
 
-  typename Visitor::Result result =
+  typename Visitor::TraversalResult result =
     traverse(object, visitor, filter, skipSchema);
   return visitor.finalize(result);
 }
 
-// #### Traversal
-//
-// `visit()` starts a complete traversal and finalizes the result exactly once.
-// It is the intended entry point for starting a new traversal.
-//
-// `traverse()` continues a traversal without finalizing the result.
-// The filter is propagated to recursive/nested traversal.
-//
-// `schema()` is called after all fields of the current object have been
-// successfully traversed, unless `skipSchema` is true.
-//
-// `skipSchema` applies only to the object currently being traversed. It does
-// not propagate to nested objects. This allows a caller to skip the schema
-// callback for a specific object while still processing schemas of its
-// descendants.
-//
-// `finalize()` is called at the end of the complete traversal. This allows
-// the visitor to perform final processing that depends on the complete
-// traversal, such as saving the final path.
-//
-// This distinction keeps traversal type-agnostic: the traversal engine only
-// knows about reflected fields and the Visitor interface, while visitors may
-// recursively traverse domain-specific types such as collections.
-//
-// When traversal stops with an error, the visitor may leave its traversal state
-// (such as a path) at the point of failure.
-//
 // #### Visitor
 //
 // Any type passed as the Visitor argument must provide:
 //
 // ```cpp
+// using TraversalResult = Result<ErrorType>;
+// using VisitResult = Reflection::VisitResult<TraversalResult>;
+//
 // template<typename Parent, typename Member>
 // VisitResult enter(
 //   const Reflection::Field<Parent, Member>& field,
@@ -362,8 +338,35 @@ typename Visitor::Result visit(
 //
 // Result finalize(Result result);
 // ```
+//
+// `schema()` is called after all fields of the current object have been
+// successfully traversed, unless `skipSchema` is true.
+//
+// `finalize()` is called at the end of the complete traversal. This allows
+// the visitor to perform final processing that depends on the complete
+// traversal, such as saving the final path.
+//
+// #### Traversal
+//
+// `visit()` starts a complete traversal and finalizes the result exactly once.
+// It is the intended entry point for starting a new traversal.
+//
+// `traverse()` continues a traversal without finalizing the result.
+// The filter is propagated to recursive/nested traversal.
+//
+// `skipSchema` applies only to the object currently being traversed. It does
+// not propagate to nested objects. This allows a caller to skip the schema
+// callback for a specific object while still processing schemas of its
+// descendants.
+//
+// This distinction keeps traversal type-agnostic: the traversal engine only
+// knows about reflected fields and the Visitor interface, while visitors may
+// recursively traverse domain-specific types such as collections.
+//
+// When traversal stops with an error, the visitor may leave its traversal state
+// (such as a path) at the point of failure.
 template<typename Type, typename Visitor>
-typename Visitor::Result visit(Type& object, Visitor& visitor) {
+typename Visitor::TraversalResult visit(Type& object, Visitor& visitor) {
 
   return visit(object, visitor, NoFilter{}, false);
 }

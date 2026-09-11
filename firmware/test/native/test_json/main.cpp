@@ -174,14 +174,14 @@ struct ConfigSchedulesOnlyFilter {
 };
 
 template<typename Type, typename Filter>
-JsonDeserializer::Result deserializeInto(const char *json, Type &cfg, const Filter &filter) {
+JsonDeserializer::TraversalResult deserializeInto(const char *json, Type &cfg, const Filter &filter) {
   JsonDocument doc;
 
   DeserializationError err =
     deserializeJson(doc, json);
 
   if (err)
-    return JsonDeserializer::Result(
+    return JsonDeserializer::TraversalResult(
       Deserialization::Error::InvalidJson, "bad JSON: %s", err.c_str());
 
   JsonDeserializer d(doc);
@@ -189,7 +189,7 @@ JsonDeserializer::Result deserializeInto(const char *json, Type &cfg, const Filt
 }
 
 template<typename Type>
-JsonDeserializer::Result deserializeInto(const char *json, Type &cfg) {
+JsonDeserializer::TraversalResult deserializeInto(const char *json, Type &cfg) {
   return deserializeInto(json, cfg, Reflection::NoFilter{});
 }
 

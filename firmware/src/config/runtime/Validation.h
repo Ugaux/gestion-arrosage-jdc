@@ -223,9 +223,9 @@ Result lengthAdapter(const FieldValidator& validator, const void* self) {
 
 class ValidationVisitor {
 public:
-  using Result = Validation::Result;  // required by reflection for traversal
-
-  using VisitResult = Reflection::VisitResult<Result>;
+  // required by reflection for traversal
+  using TraversalResult = Validation::Result;
+  using VisitResult     = Reflection::VisitResult<TraversalResult>;
 
   template<typename Parent, typename Member>
   VisitResult enter(const Reflection::Field<Parent, Member>& field, Member&) {
