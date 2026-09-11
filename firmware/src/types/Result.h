@@ -15,21 +15,27 @@ struct ErrorTraits;
 }  // namespace ResultDetail
 
 template<typename Error>
-class Result {
+class [[nodiscard]] Result {
 public:
   static constexpr size_t kMaxErrorLength = 100;
 
-  Result() = default;
+  Result()
+    : m_ok(true) {}
 
-  explicit Result(Error e)
-    : m_error(e), m_ok(false) {
-    setMessage(errToText(e));
+  explicit Result(Error error)
+    : m_ok(false), m_error(error) {
+    setMessage(errToText(error));
+  }
+
+  explicit Result(Error error, std::string_view message)
+    : m_ok(false), m_error(error) {
+    setMessage(message);
   }
 
   template<typename... Args>
-  Result(Error e, const char* fmt, Args... args)
-    : m_error(e), m_ok(false) {
-    setMessage(fmt, args...);
+  explicit Result(Error error, const char* messageFormat, Args... args)
+    : m_ok(false), m_error(error) {
+    setMessage(messageFormat, args...);
   }
 
   Result withPath(std::string_view path) const {
@@ -53,12 +59,22 @@ public:
   }
 
 private:
-  static const char* errToText(Error e) {
-    return ResultDetail::ErrorTraits<Error>::toText(e);
+  static constexpr const char* errToText(Error error) {
+    return ResultDetail::ErrorTraits<Error>::toText(error);
+  }
+
+  void setMessage(std::string_view message) {
+    const size_t size     = message.size();
+    const size_t copySize = std::min(size, m_msg.size() - 1);
+
+    std::memcpy(m_msg.data(), message.data(), copySize);
+    m_msg[copySize] = '\0';
+
+    m_msg_len = copySize;
   }
 
   template<typename... Args>
-  void setMessage(const char* fmt, Args... args) {
+  void setMessage(const char* messageFormat, Args... args) {
     m_msg_len = 0;
 
     // Format detailed message
@@ -66,7 +82,7 @@ private:
     const int written = snprintf(
       m_msg.data(),
       m_msg.size(),
-      fmt, args...);
+      messageFormat, args...);
 
     if (written < 0)
       return;
@@ -118,13 +134,12 @@ private:
                   nullptr, 0, "(+%zu)", truncated));
   }
 
+  bool m_ok = true;
+
   FixedString<SchemaLimits::kMaxPathLength> m_path;
 
   Error m_error{};
 
-  bool m_ok = true;
-
-  std::array<char, kMaxErrorLength> m_msg = {};
-
-  size_t m_msg_len = 0;
+  std::array<char, kMaxErrorLength> m_msg     = {};
+  size_t                            m_msg_len = 0;
 };

@@ -20,13 +20,13 @@ namespace Reflection {
 
 enum class FieldType : uint8_t {
   Bool = 0,
-  Int,
   UInt,
-  UUID,
+  Int,
   Float,
   String,
-  Weekdays,
+  UUID,
   Bitset,
+  Weekdays,
   Frequency,
   Collection,
   Unknown
@@ -89,26 +89,27 @@ constexpr FieldType fieldType() {
 
   if constexpr (std::is_same_v<U, bool>)
     return FieldType::Bool;
-  else if constexpr (std::is_integral_v<U> && std::is_signed_v<U>)
-    return FieldType::Int;
-  else if constexpr (std::is_integral_v<U> && std::is_unsigned_v<U>)
+  if constexpr (std::is_integral_v<U> && std::is_unsigned_v<U>)
     return FieldType::UInt;
-  else if constexpr (std::is_floating_point_v<U>)
+  if constexpr (std::is_integral_v<U> && std::is_signed_v<U>)
+    return FieldType::Int;
+  if constexpr (std::is_floating_point_v<U>)
     return FieldType::Float;
-  else if constexpr (is_uuid_v<U>)
-    return FieldType::UUID;
-  else if constexpr (is_weekdays_v<U>)
-    return FieldType::Weekdays;
-  else if constexpr (is_collection_v<U>)
-    return FieldType::Collection;
-  else if constexpr (is_bitset_v<U>)
-    return FieldType::Bitset;
-  else if constexpr (is_fixedstring_v<U>)
+
+  if constexpr (is_fixedstring_v<U>)
     return FieldType::String;
-  else if constexpr (is_frequency_v<U>)
+  if constexpr (is_uuid_v<U>)
+    return FieldType::UUID;
+  if constexpr (is_bitset_v<U>)
+    return FieldType::Bitset;
+  if constexpr (is_weekdays_v<U>)
+    return FieldType::Weekdays;
+  if constexpr (is_frequency_v<U>)
     return FieldType::Frequency;
-  else
-    return FieldType::Unknown;
+  if constexpr (is_collection_v<U>)
+    return FieldType::Collection;
+
+  return FieldType::Unknown;
 }
 
 template<typename Type>
@@ -145,136 +146,226 @@ constexpr Field<Parent, Member> makeField(
 }
 
 enum class VisitDecision : uint8_t {
-  Visit = 0,
-  Skip
-};
-
-enum class VisitResult : uint8_t {
   Traverse = 0,
   Handled,
   Error
 };
 
+template<typename Result>
+struct [[nodiscard]] VisitResult {
+  VisitDecision decision;
+  Result        result;
+
+  static VisitResult traverse() {
+    return { VisitDecision::Traverse, {} };
+  }
+
+  static VisitResult handled() {
+    return { VisitDecision::Handled, {} };
+  }
+
+  static VisitResult error(Result result) {
+    return { VisitDecision::Error, std::move(result) };
+  }
+};
+
+enum class FilterDecision : uint8_t {
+  Visit = 0,
+  Skip
+};
+
 struct NoFilter {
-  bool skipSchema = false;
 
   template<typename Parent, typename Member>
-  constexpr VisitDecision operator()(
+  constexpr FilterDecision operator()(
     const Field<Parent, Member>&) const {
-    return VisitDecision::Visit;  // don't skip
+    return FilterDecision::Visit;  // don't skip
   }
 };
 
 // Forward declaration
-template<typename Visitor, typename Type>
-bool visit(Type& object, Visitor& visitor);
+template<typename Type, typename Visitor, typename Filter>
+typename Visitor::Result traverse(
+  Type& object, Visitor& visitor, const Filter& filter, bool skipSchema);
 
 namespace Detail {
 
-template<typename Visitor, typename Parent, typename Member>
-bool visitFieldImpl(Parent&, const Field<Parent, Member>& field, Member& value,
-                    Visitor& visitor, std::true_type) {
+template<typename Parent, typename Member, typename Visitor, typename Filter>
+typename Visitor::Result visitFieldImpl(
+  const Field<Parent, Member>& field, Member& value,
+  Visitor& visitor, const Filter& filter, std::true_type) {
 
-  switch (visitor.enter(field, value)) {
-    case VisitResult::Handled:
-      return true;
+  using Result = typename Visitor::Result;
 
-    case VisitResult::Error:
-      return false;
+  const VisitResult<Result> visitResult =
+    visitor.enter(field, value);
 
-    case VisitResult::Traverse:
+  switch (visitResult.decision) {
+    case VisitDecision::Handled:
+      return visitor.leave(field, value);
+
+    case VisitDecision::Error:
+      return visitResult.result;
+
+    case VisitDecision::Traverse:
       break;
   }
 
-  if (!visit(value, visitor))
-    return false;
+  if (Result result = traverse(value, visitor, filter, false); !result)
+    return result;
 
   return visitor.leave(field, value);
 }
 
-template< typename Visitor, typename Parent, typename Member>
-bool visitFieldImpl(Parent&, const Field<Parent, Member>& field, Member& value,
-                    Visitor& visitor, std::false_type) {
+template<typename Parent, typename Member, typename Visitor, typename Filter>
+typename Visitor::Result visitFieldImpl(
+  const Field<Parent, Member>& field, Member& value,
+  Visitor& visitor, const Filter&, std::false_type) {
 
   return visitor.field(field, value);
 }
 
-template<typename Filter, typename Visitor, typename Parent, typename Member>
-bool visitField(Parent& object, const Field<Parent, Member>& field, Visitor& visitor, const Filter& filter) {
+template<typename Parent, typename Member, typename Visitor, typename Filter>
+typename Visitor::Result visitField(
+  Parent& object, const Field<Parent, Member>& field,
+  Visitor& visitor, const Filter& filter) {
 
-  if (filter(field) == VisitDecision::Skip)
-    return true;
+  if (filter(field) == FilterDecision::Skip)
+    return {};
 
   Member& value = object.*(field.member);
-  return visitFieldImpl(object, field, value, visitor,
-                        std::bool_constant<Schema<Member>::reflected>{});
+
+  return visitFieldImpl(
+    field, value, visitor, filter,
+    std::bool_constant<Schema<Member>::reflected>{});
 }
 
 }  // namespace Detail
 
-// #### Same visitor requirement as the non filtered version:
+// `traverse()` continues a traversal without finalizing the result.
+// See the `visit()` overloads for the full visitor and filter requirements.
 //
-// The filter should be a struct with an `operator()` returning a `Reflection::VisitDecision`.
-//
-// Example:
-// ```cpp
-// struct ExampleFilter {
-//   bool skipSchema = false;
-//
-//   template<typename Parent, typename Member>
-//   Reflection::VisitDecision operator()(
-//     const Reflection::Field<Parent, Member>& field) const {
-//     ...
-//     return Reflection::VisitDecision::Visit;
-//   }
-// };
-// ```
-template<typename Filter, typename Visitor, typename Type>
-bool visit(Type& object, Visitor& visitor, const Filter& filter) {
+// `skipSchema` applies only to the object currently being traversed. It does
+// not propagate to nested objects. This allows a caller to skip the schema
+// callback for a specific object while still processing schemas of its descendants.
+template<typename Type, typename Visitor, typename Filter>
+typename Visitor::Result traverse(
+  Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
 
-  if (!std::apply(
-        [&](auto const&... field) {
-          return (Detail::visitField(object, field, visitor, filter) && ...);
-        },
-        Schema<Type>::fields))
-    return false;
+  typename Visitor::Result result{};
 
-  if (filter.skipSchema)
-    return true;
+  std::apply(
+    [&](auto const&... field) {
+      (
+        [&] {
+          if (!result)
+            return;
+
+          result = Detail::visitField(
+            object,
+            field,
+            visitor,
+            filter);
+        }(),
+        ...);
+    },
+    Schema<Type>::fields);
+
+  if (!result)
+    return result;
+
+  if (skipSchema)
+    return {};
 
   return visitor.schema(object);
 }
 
-// #### Any type passed as the Visitor argument must provide:
+// `traverse()` overload using the default `NoFilter`.
+template<typename Type, typename Visitor>
+typename Visitor::Result traverse(
+  Type& object, Visitor& visitor) {
+
+  return traverse(object, visitor, NoFilter{}, false);
+}
+
+// See the `visit()` overload for the traversal explanation and visitor requirements.
 //
-//  - `template<typename Parent, typename Member>`
-//    `bool enter(const Reflection::Field<Parent, Member>&, Member&);`
-//  - `template<typename Parent, typename Member>`
-//    `bool field(const Reflection::Field<Parent, Member>&, Member&);`
-//  - `template<typename Parent, typename Member>`
-//    `bool leave(const Reflection::Field<Parent, Member>&, Member&);`
-//  - `template<typename Type>`
-//    `bool schema(Type& value);`
+// #### Filter
 //
-// Example:
+// The filter must provide:
+//
 // ```cpp
-// struct ExampleVisitor {
-//   template<typename Parent, typename Member>
-//   bool enter(const Reflection::Field<Parent, Member>& field, Member& value) {...}
-//   template<typename Parent, typename Member>
-//   bool field(const Reflection::Field<Parent, Member>& field, Member& value) {...}
-//   template<typename Parent, typename Member>
-//   bool leave(const Reflection::Field<Parent, Member>& field, Member& value) {...}
-//   template<typename Type>
-//   bool schema(Type& value) {...}
-// };
+//  template<typename Parent, typename Member>
+//  constexpr Reflection::FilterDecision operator()(
+//   const Reflection::Field<Parent, Member>& field) const;
 // ```
-// Returning false stops the traversal. When traversal stops, the visitor
-// may leave its traversal state (such as a path) at the point of failure.
-template<typename Visitor, typename Type>
-bool visit(Type& object, Visitor& visitor) {
-  NoFilter filter;
-  return visit(object, visitor, filter);
+//
+// Returning `FilterDecision::Skip` skips the field and its value.
+template<typename Type, typename Visitor, typename Filter>
+typename Visitor::Result visit(
+  Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
+
+  typename Visitor::Result result =
+    traverse(object, visitor, filter, skipSchema);
+  return visitor.finalize(result);
+}
+
+// #### Traversal
+//
+// `visit()` starts a complete traversal and finalizes the result exactly once.
+// It is the intended entry point for starting a new traversal.
+//
+// `traverse()` continues a traversal without finalizing the result.
+// The filter is propagated to recursive/nested traversal.
+//
+// `schema()` is called after all fields of the current object have been
+// successfully traversed, unless `skipSchema` is true.
+//
+// `skipSchema` applies only to the object currently being traversed. It does
+// not propagate to nested objects. This allows a caller to skip the schema
+// callback for a specific object while still processing schemas of its
+// descendants.
+//
+// `finalize()` is called at the end of the complete traversal. This allows
+// the visitor to perform final processing that depends on the complete
+// traversal, such as saving the final path.
+//
+// This distinction keeps traversal type-agnostic: the traversal engine only
+// knows about reflected fields and the Visitor interface, while visitors may
+// recursively traverse domain-specific types such as collections.
+//
+// When traversal stops with an error, the visitor may leave its traversal state
+// (such as a path) at the point of failure.
+//
+// #### Visitor
+//
+// Any type passed as the Visitor argument must provide:
+//
+// ```cpp
+// template<typename Parent, typename Member>
+// VisitResult enter(
+//   const Reflection::Field<Parent, Member>& field,
+//   Member& value);
+//
+// template<typename Parent, typename Member>
+// Result field(
+//   const Reflection::Field<Parent, Member>& field,
+//   Member& value);
+//
+// template<typename Parent, typename Member>
+// Result leave(
+//   const Reflection::Field<Parent, Member>& field,
+//   Member& value);
+//
+// template<typename Type>
+// Result schema(Type& value);
+//
+// Result finalize(Result result);
+// ```
+template<typename Type, typename Visitor>
+typename Visitor::Result visit(Type& object, Visitor& visitor) {
+
+  return visit(object, visitor, NoFilter{}, false);
 }
 
 // A convenient helper that generates a generic C++ path like `watering.manual.duration.step`.
@@ -284,7 +375,9 @@ bool visit(Type& object, Visitor& visitor) {
 //
 // Example:
 // ```cpp
-// bool ExampleVisitor::enter(const Reflection::Field<Parent, Member>& field, Member& value) {
+// bool ExampleVisitor::enter(
+//   const Reflection::Field<Parent, Member>& field,
+//   Member& value) {
 //   m_pathBuilder.enter(field.name);
 //   ...
 // };

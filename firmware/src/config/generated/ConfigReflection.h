@@ -35,9 +35,9 @@ inline constexpr Validation::FieldValidator
 
 inline constexpr Validation::FieldValidator
   ConfigLineValves_FieldValidator{
-    &Validation::rangeAdapter<
+    &Validation::countAdapter<
       decltype(Config::Line::valves)>,
-    Validation::FieldValidator::RangeData{
+    Validation::FieldValidator::CountData{
       .min = 1, .max = kValveCount },
   };
 

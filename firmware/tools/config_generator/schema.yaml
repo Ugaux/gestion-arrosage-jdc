@@ -34,7 +34,7 @@ types: # reusable C++ types
     valves:
       type: Bitset
       default: 0
-      range: [1, kValveCount]
+      count: [1, kValveCount]
       size: kValveCount
 
   Schedule:

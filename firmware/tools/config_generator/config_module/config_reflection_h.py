@@ -47,7 +47,11 @@ def _field_validator_expr(
 ) -> tuple[str, str] | None:
     """Range/Length self-validator for a leaf field, from its constraint."""
 
-    if node.constraints.range is not None:
+    if node.constraints.count is not None:
+        lo, hi = node.constraints.count
+        kind = "count"
+        payload = f".min = {lo}, .max = {hi}"
+    elif node.constraints.range is not None:
         lo, hi = node.constraints.range
         kind = "range"
         payload = f".min = {lo}, .max = {hi}"

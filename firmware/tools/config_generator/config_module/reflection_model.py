@@ -77,6 +77,7 @@ TypeMap = {
 ConstraintKeys = {
     "length",
     "range",
+    "count",
 }
 
 
@@ -90,6 +91,7 @@ def _to_cpp_type(reflection_type):
 class FieldConstraints(BaseModel):
     length: tuple[int | str, int | str] | None = None
     range: tuple[int | str, int | str] | None = None
+    count: tuple[int | str, int | str] | None = None
 
 
 class NodeModel(BaseModel):

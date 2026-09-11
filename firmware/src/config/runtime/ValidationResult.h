@@ -10,6 +10,7 @@ enum class Error : uint8_t {
   UnexpectedValueType,
 
   DuplicateValue,
+  CountOutOfRange,
   ValueOutOfRange,
   LengthOutOfRange,
   InvalidReference,
@@ -23,7 +24,7 @@ namespace ResultDetail {
 
 template<>
 struct ErrorTraits<Validation::Error> {
-  static const char* toText(Validation::Error e) {
+  static constexpr const char* toText(Validation::Error e) {
     switch (e) {
 
       case Validation::Error::MissingAdapterFunction:
@@ -34,6 +35,9 @@ struct ErrorTraits<Validation::Error> {
 
       case Validation::Error::DuplicateValue:
         return "duplicate value";
+
+      case Validation::Error::CountOutOfRange:
+        return "count out of range";
 
       case Validation::Error::ValueOutOfRange:
         return "value out of range";

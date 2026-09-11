@@ -66,8 +66,13 @@ public:
   using ValueApplyFn = Result (*)(const FieldValidator&, const void*);
 
   enum class Type : uint8_t {
-    Range = 0,
+    Count = 0,
+    Range,
     Length,
+  };
+
+  struct CountData {
+    uint32_t min, max;
   };
 
   struct RangeData {
@@ -75,8 +80,11 @@ public:
   };
 
   struct LengthData {
-    uint16_t min, max;
+    uint32_t min, max;
   };
+
+  constexpr FieldValidator(ValueApplyFn valueFn, CountData data)
+    : count(data), m_type(Type::Count), m_valueApply(valueFn) {}
 
   constexpr FieldValidator(ValueApplyFn valueFn, RangeData data)
     : range(data), m_type(Type::Range), m_valueApply(valueFn) {}
@@ -107,13 +115,20 @@ public:
 
     switch (m_type) {
 
+      case Type::Count:
+        {
+          if (!json.is<JsonArrayConst>())
+            return Result(Error::UnexpectedValueType);
+
+          return validateCount(json.as<JsonArrayConst>().size());
+        }
+
       case Type::Range:
         {
           if (!json.is<int32_t>())
             return Result(Error::UnexpectedValueType);
 
-          const int32_t value = json.as<int32_t>();
-          return validateRange(value);
+          return validateRange(json.as<int32_t>());
         }
 
       case Type::Length:
@@ -121,17 +136,21 @@ public:
           if (!json.is<const char*>())
             return Result(Error::UnexpectedValueType);
 
-          const char* value = json.as<const char*>();
-          return validateLength(value);
+          return validateLength(json.as<const char*>());
         }
     }
 
     return {};
   }
 
-  template<size_t N>
-  Result validateRange(const std::bitset<N>& value) const {
-    return validateRange(static_cast<int32_t>(value.count()));
+  Result validateCount(uint32_t value) const {
+    if (value >= count.min && value <= count.max)
+      return {};
+
+    return Result(
+      Error::CountOutOfRange,
+      "count must be between min=%u and max=%u, got %u",
+      count.min, count.max, value);
   }
 
   Result validateRange(const int32_t& value) const {
@@ -158,6 +177,7 @@ public:
   }
 
   union {
+    CountData  count;
     RangeData  range;
     LengthData length;
   };
@@ -178,6 +198,14 @@ private:
 };
 
 template<typename T>
+Result countAdapter(const FieldValidator& validator, const void* self) {
+
+  const T& value = *static_cast<const T*>(self);
+
+  return validator.validateCount(value.count());
+}
+
+template<typename T>
 Result rangeAdapter(const FieldValidator& validator, const void* self) {
 
   const T& value = *static_cast<const T*>(self);
@@ -195,89 +223,91 @@ Result lengthAdapter(const FieldValidator& validator, const void* self) {
 
 class ValidationVisitor {
 public:
-  const Result result() const {
-    return m_result;
-  }
+  using Result = Validation::Result;  // required by reflection for traversal
+
+  using VisitResult = Reflection::VisitResult<Result>;
 
   template<typename Parent, typename Member>
-  Reflection::VisitResult enter(const Reflection::Field<Parent, Member>& field, Member&) {
+  VisitResult enter(const Reflection::Field<Parent, Member>& field, Member&) {
 
     m_pathBuilder.enter(field.name);
-    return Reflection::VisitResult::Traverse;
+    return VisitResult::traverse();
   }
 
   template<typename Parent, typename Member>
-  bool field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  Result field(const Reflection::Field<Parent, Member>& field, Member& value) {
 
     m_pathBuilder.enter(field.name);
 
     if (!field.optional || !isDefaultValue(value)) {
-      if (!validate(value, field.fieldValidator))
-        return false;
+      if (Result result = validate(value, field.fieldValidator); !result)
+        return result;
     }
 
     m_pathBuilder.leave();
-    return true;
+    return {};
   }
 
   template<typename Parent, typename Member>
-  bool leave(const Reflection::Field<Parent, Member>&, Member&) {
+  Result leave(const Reflection::Field<Parent, Member>&, Member&) {
 
     m_pathBuilder.leave();
-    return true;
+    return {};
   }
 
   template<typename Type>
-  bool schema(Type& value) {
+  Result schema(Type& value) {
 
     const auto* crossAction =
       Reflection::Schema<Type>::crossAction;
 
     if (!crossAction)
-      return true;
+      return {};
 
-    return checkValidationResult(crossAction->cross(value));
+    return crossAction->cross(value);
+  }
+
+  Result finalize(Result result) {
+    return result.withPath(m_pathBuilder.view());
   }
 
 private:
   template<typename T, uint8_t N>
-  bool validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
+  Result validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
 
     for (size_t i = 0; i < value.size(); ++i) {
       m_pathBuilder.index(i);
-      if (!Reflection::visit(value[i], *this))
-        return false;
+      if (Result result = Reflection::traverse(value[i], *this); !result)
+        return result;
       m_pathBuilder.leave();
     }
 
-    return true;
+    return {};
   }
 
   template<typename T>
-  bool validate(const T& value, const Validation::FieldValidator* fieldValidator) {
+  Result validate(const T& value, const Validation::FieldValidator* fieldValidator) {
 
     if (!fieldValidator)
-      return true;
+      return {};
 
-    return checkValidationResult(fieldValidator->validate(value));
+    return fieldValidator->validate(value);
   }
 
   template<typename T>
   bool isDefaultValue(const T& value) const {
 
-    if constexpr (Reflection::is_collection_v<Reflection::Unqualified<T>>
-                  || Reflection::is_fixedstring_v<Reflection::Unqualified<T>>)
+    if constexpr (
+      Reflection::is_collection_v<
+        Reflection::Unqualified<T>>
+      || Reflection::is_fixedstring_v<
+        Reflection::Unqualified<T>>)
       return value.size() == 0;
+
     else  // required for compilation to succeed
       return value == T{};
   }
 
-  bool checkValidationResult(Result result) {
-    m_result = result.withPath(m_pathBuilder.view());
-    return static_cast<bool>(m_result);
-  }
-
-  Result                  m_result;
   Reflection::PathBuilder m_pathBuilder;
 };
 
