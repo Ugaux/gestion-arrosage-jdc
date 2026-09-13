@@ -8,3 +8,7 @@ enum class Frequency : uint8_t {
   OddDays,
   SpecificDays
 };
+
+bool toChar(Frequency freq, unsigned char &c);
+
+bool fromChar(unsigned char c, Frequency &freq);

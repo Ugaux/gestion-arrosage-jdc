@@ -1,8 +1,6 @@
 #include "Validation.h"
 
-namespace Validation {
-
-namespace CrossFn {
+namespace Validation::CrossFn {
 
 Result validatePumpFlow(Config::UserSettings::Params::Watering::Pump::Flow& cfg) {
 
@@ -163,5 +161,3 @@ Result normalizeAndValidateSchedules(Config& cfg) {
 }
 
 }  // namespace CrossFn
-
-}  // namespace Validation

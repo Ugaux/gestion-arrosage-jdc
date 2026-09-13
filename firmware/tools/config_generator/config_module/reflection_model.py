@@ -65,6 +65,7 @@ NameMap = {
 TypeMap = {
     "Bool": "bool",
     "UInt8": "uint8_t",
+    "CharArray": "const char*",
     "UUID": "UUID",
     "Bitset": "std::bitset",
     "Frequency": "Frequency",

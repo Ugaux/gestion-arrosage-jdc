@@ -17,10 +17,8 @@ enum class Error : uint8_t {
 
 }  // namespace Deserialization
 
-namespace ResultDetail {
-
 template<>
-struct ErrorTraits<Deserialization::Error> {
+struct ResultDetail::ErrorTraits<Deserialization::Error> {
   static constexpr const char* toText(Deserialization::Error e) {
     switch (e) {
 
@@ -46,5 +44,3 @@ struct ErrorTraits<Deserialization::Error> {
     return "unknown error";
   }
 };
-
-}  // namespace ResultDetail

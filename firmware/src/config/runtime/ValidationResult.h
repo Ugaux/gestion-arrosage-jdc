@@ -20,10 +20,8 @@ enum class Error : uint8_t {
 
 }  // namespace Validation
 
-namespace ResultDetail {
-
 template<>
-struct ErrorTraits<Validation::Error> {
+struct ResultDetail::ErrorTraits<Validation::Error> {
   static constexpr const char* toText(Validation::Error e) {
     switch (e) {
 
@@ -58,5 +56,3 @@ struct ErrorTraits<Validation::Error> {
     return "unknown error";
   }
 };
-
-}  // namespace ResultDetail

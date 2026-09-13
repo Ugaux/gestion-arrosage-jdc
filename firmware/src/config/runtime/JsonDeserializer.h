@@ -10,7 +10,7 @@
 #include "config/generated/ConfigReflection.h"
 #include "config/runtime/JsonDeserializerResult.h"
 
-struct LineJsonFilter {
+struct LineFilter {
 
   template<typename Parent, typename Member>
   constexpr Reflection::FilterDecision operator()(
@@ -26,7 +26,7 @@ struct LineJsonFilter {
   }
 };
 
-struct ScheduleJsonFilter {
+struct ScheduleFilter {
 
   bool inverted = false;
 
@@ -35,10 +35,12 @@ struct ScheduleJsonFilter {
     const Reflection::Field<Parent, Member>& field) const {
 
     if constexpr (std::is_same_v<Parent, Config::Schedule>) {
+      if (field.name == "enabled")
+        return Reflection::FilterDecision::Skip;
+
       const bool selected =
         field.name == "id"
         || field.name == "lineId"
-        || field.name == "enabled"
         || field.name == "name";
       return selected != inverted
                ? Reflection::FilterDecision::Visit
@@ -49,7 +51,39 @@ struct ScheduleJsonFilter {
   }
 };
 
-class JsonContextStack {
+struct WateringModelOnlyFilter {
+
+  template<typename Parent, typename Member>
+  constexpr Reflection::FilterDecision operator()(
+    const Reflection::Field<Parent, Member>& field) const {
+
+    if constexpr (std::is_same_v<Parent, Config::UserSettings>) {
+      return field.name == "wateringModel"
+               ? Reflection::FilterDecision::Visit
+               : Reflection::FilterDecision::Skip;
+    }
+
+    return Reflection::FilterDecision::Visit;
+  }
+};
+
+struct SchedulesOnlyFilter {
+
+  template<typename Parent, typename Member>
+  constexpr Reflection::FilterDecision operator()(
+    const Reflection::Field<Parent, Member>& field) const {
+
+    if constexpr (std::is_same_v<Parent, Config>) {
+      return field.name == "schedules"
+               ? Reflection::FilterDecision::Visit
+               : Reflection::FilterDecision::Skip;
+    }
+
+    return Reflection::FilterDecision::Visit;
+  }
+};
+
+class JsonConstContextStack {
 public:
   void push(JsonVariantConst v) {
     if (m_top < m_items.size())
@@ -67,10 +101,9 @@ public:
   }
 
 private:
-  std::array<
-    JsonVariantConst,
-    SchemaLimits::kMaxDepth>
-          m_items{};
+  std::array< JsonVariantConst, SchemaLimits::kMaxDepth>
+    m_items{};
+
   uint8_t m_top = 0;
 };
 
@@ -91,9 +124,7 @@ public:
     if (visitResult.decision != Reflection::VisitDecision::Traverse)
       return visitResult;
 
-    JsonVariantConst json = jsonFor(field.name);
-
-    m_stack.push(json);
+    m_stack.push(jsonFor(field.name));
     m_pathBuilder.enter(field.name);
 
     return VisitResult::traverse();
@@ -113,10 +144,14 @@ public:
 
           if (!json.isNull()) {
 
-            if (Result result = deserialize(json, value); !result)
+            if (auto result = deserialize(json, value); !result)
               return result;
 
-            if (Result result = validate(json, field.fieldValidator); !result)
+            // Optional default values are semantically absent.
+            if (Reflection::isAbsent(field, value))
+              break;
+
+            if (auto result = validate(json, field.fieldValidator); !result)
               return result;
 
             break;
@@ -204,12 +239,12 @@ private:
     using T = Reflection::Unqualified<Member>;
 
     if constexpr (std::is_same_v<T, Config::UserSettings::WateringModel>) {
-      if (Result result = deserializeWateringModel(value); !result)
+      if (auto result = deserializeWateringModel(value); !result)
         return VisitResult::error(result);
       return VisitResult::handled();
     }
     if constexpr (std::is_same_v<T, Config::ScheduleCollection>) {
-      if (Result result = deserializeSchedules(value); !result)
+      if (auto result = deserializeSchedules(value); !result)
         return VisitResult::error(result);
       return VisitResult::handled();
     }
@@ -236,10 +271,10 @@ private:
 
       JsonVariantConst jsonChild = jsonArray[i];
 
-      if (Result result = deserializeObject(jsonChild, item, filter, skipSchema); !result)
+      if (auto result = deserializeObject(jsonChild, item, filter, skipSchema); !result)
         return result;
 
-      if (Result result = callback(item, jsonChild, i); !result)
+      if (auto result = callback(item, jsonChild, i); !result)
         return result;
 
       auto collecAddRes = value.add(item);
@@ -272,11 +307,7 @@ private:
 
   template<uint16_t N>
   TraversalResult deserialize(JsonVariantConst json, FixedString<N>& value) {
-    if (!json.is<const char*>())
-      return failWrongType(Reflection::FieldType::String, json);
-
-    value = json.as<const char*>();
-    return {};
+    return readAs<const char*>(json, Reflection::FieldType::String, value);
   }
 
   template<size_t N>
@@ -310,45 +341,32 @@ private:
   TraversalResult deserialize(JsonVariantConst json, Type& value) {
     using U = Reflection::Unqualified<Type>;
 
-    if (Reflection::fieldType<U>() == Reflection::FieldType::Bool) {
-      if (!json.is<bool>())
-        return failWrongType(Reflection::FieldType::Bool, json);
+    if (Reflection::fieldType<U>() == Reflection::FieldType::Bool)
+      return readAs<bool>(json, Reflection::FieldType::Bool, value);
 
-      value = json.as<bool>();
-    }
+    if (Reflection::fieldType<U>() == Reflection::FieldType::Int)
+      return readAs<int32_t>(json, Reflection::FieldType::Int, value);
 
-    else if (Reflection::fieldType<U>() == Reflection::FieldType::Int) {
-      if (!json.is<int32_t>())
-        return failWrongType(Reflection::FieldType::Int, json);
+    if (Reflection::fieldType<U>() == Reflection::FieldType::UInt)
+      return readAs<uint32_t>(json, Reflection::FieldType::UInt, value);
 
-      value = static_cast<U>(json.as<int32_t>());
-    }
+    if (Reflection::fieldType<U>() == Reflection::FieldType::Float)
+      return readAs<float>(json, Reflection::FieldType::Float, value);
 
-    else if (Reflection::fieldType<U>() == Reflection::FieldType::UInt) {
-      if (!json.is<uint32_t>())
-        return failWrongType(Reflection::FieldType::UInt, json);
-
-      value = static_cast<U>(json.as<uint32_t>());
-    }
-
-    else if (Reflection::fieldType<U>() == Reflection::FieldType::Float) {
-      if (!json.is<float>())
-        return failWrongType(Reflection::FieldType::Float, json);
-
-      value = static_cast<U>(json.as<float>());
-    }
-
-    else {
-      if (!json.is<U>())
-        return failWrongType(Reflection::FieldType::Unknown, json);
-
-      value = json.as<U>();
-    }
-
-    return {};
+    return readAs<U>(json, Reflection::FieldType::Unknown, value);
   }
 
   JsonVariantConst jsonFor(std::string_view key);
+
+  template<typename JsonType, typename Type>
+  TraversalResult readAs(JsonVariantConst json, Reflection::FieldType fieldType, Type& value) {
+
+    if (!json.is<JsonType>())
+      return failWrongType(fieldType, json);
+
+    value = static_cast<Type>(json.as<JsonType>());
+    return {};
+  }
 
   const char* expectedJsonTypeName(Reflection::FieldType type);
   const char* jsonTypeName(JsonVariantConst json);
@@ -378,6 +396,6 @@ private:
     return TraversalResult(error, messageFormat, args...);
   }
 
-  JsonContextStack        m_stack;
+  JsonConstContextStack   m_stack;
   Reflection::PathBuilder m_pathBuilder;
 };

@@ -235,12 +235,12 @@ public:
   }
 
   template<typename Parent, typename Member>
-  Result field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  TraversalResult field(const Reflection::Field<Parent, Member>& field, Member& value) {
 
     m_pathBuilder.enter(field.name);
 
-    if (!field.optional || !isDefaultValue(value)) {
-      if (Result result = validate(value, field.fieldValidator); !result)
+    if (!Reflection::isAbsent(field, value)) {
+      if (auto result = validate(value, field.fieldValidator); !result)
         return result;
     }
 
@@ -249,14 +249,14 @@ public:
   }
 
   template<typename Parent, typename Member>
-  Result leave(const Reflection::Field<Parent, Member>&, Member&) {
+  TraversalResult leave(const Reflection::Field<Parent, Member>&, Member&) {
 
     m_pathBuilder.leave();
     return {};
   }
 
   template<typename Type>
-  Result schema(Type& value) {
+  TraversalResult schema(Type& value) {
 
     const auto* crossAction =
       Reflection::Schema<Type>::crossAction;
@@ -267,17 +267,17 @@ public:
     return crossAction->cross(value);
   }
 
-  Result finalize(Result result) {
+  TraversalResult finalize(TraversalResult result) {
     return result.withPath(m_pathBuilder.view());
   }
 
 private:
   template<typename T, uint8_t N>
-  Result validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
+  TraversalResult validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
 
     for (size_t i = 0; i < value.size(); ++i) {
       m_pathBuilder.index(i);
-      if (Result result = Reflection::traverse(value[i], *this); !result)
+      if (auto result = Reflection::traverse(value[i], *this); !result)
         return result;
       m_pathBuilder.leave();
     }
@@ -286,26 +286,12 @@ private:
   }
 
   template<typename T>
-  Result validate(const T& value, const Validation::FieldValidator* fieldValidator) {
+  TraversalResult validate(const T& value, const Validation::FieldValidator* fieldValidator) {
 
     if (!fieldValidator)
       return {};
 
     return fieldValidator->validate(value);
-  }
-
-  template<typename T>
-  bool isDefaultValue(const T& value) const {
-
-    if constexpr (
-      Reflection::is_collection_v<
-        Reflection::Unqualified<T>>
-      || Reflection::is_fixedstring_v<
-        Reflection::Unqualified<T>>)
-      return value.size() == 0;
-
-    else  // required for compilation to succeed
-      return value == T{};
   }
 
   Reflection::PathBuilder m_pathBuilder;

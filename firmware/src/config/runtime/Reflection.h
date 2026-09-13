@@ -145,6 +145,28 @@ constexpr Field<Parent, Member> makeField(
   };
 }
 
+template<typename T>
+constexpr bool isDefaultValue(const T& value) {
+
+  using U = Unqualified<T>;
+
+  if constexpr (
+    is_collection_v<U>
+    || is_fixedstring_v<U>)
+    return value.size() == 0;
+
+  else
+    return value == T{};
+}
+
+template<typename Parent, typename Member>
+constexpr bool isAbsent(
+  const Field<Parent, Member>& field,
+  const Member&                value) {
+
+  return field.optional && isDefaultValue(value);
+}
+
 enum class VisitDecision : uint8_t {
   Traverse = 0,
   Handled,
@@ -202,7 +224,9 @@ typename Visitor::TraversalResult visitFieldImpl(
 
   switch (visitResult.decision) {
     case VisitDecision::Handled:
-      return visitor.leave(field, value);
+      // special-case already consumed this field; nothing
+      // happened in enter(), so no leave() needed to balance it
+      return {};
 
     case VisitDecision::Error:
       return visitResult.result;
@@ -324,19 +348,19 @@ typename Visitor::TraversalResult visit(
 //   Member& value);
 //
 // template<typename Parent, typename Member>
-// Result field(
+// TraversalResult field(
 //   const Reflection::Field<Parent, Member>& field,
 //   Member& value);
 //
 // template<typename Parent, typename Member>
-// Result leave(
+// TraversalResult leave(
 //   const Reflection::Field<Parent, Member>& field,
 //   Member& value);
 //
 // template<typename Type>
-// Result schema(Type& value);
+// TraversalResult schema(Type& value);
 //
-// Result finalize(Result result);
+// TraversalResult finalize(TraversalResult result);
 // ```
 //
 // `schema()` is called after all fields of the current object have been

@@ -6,6 +6,9 @@ constants: # Config static constexpr
   kMaxSchedulePerLine:
     type: UInt8
     value: 4
+  kScheduleDefinition:
+    type: CharArray
+    value: "%d:%d,%d,%d,%c-%u"
 
 types: # reusable C++ types
   Zone:
@@ -49,7 +52,6 @@ types: # reusable C++ types
     enabled:
       type: Bool
       default: false
-      optional: true
 
     name:
       type: String

@@ -12,6 +12,7 @@
 
 struct Config {
   static constexpr uint8_t kMaxSchedulePerLine = 4;
+  static constexpr const char* kScheduleDefinition = "%d:%d,%d,%d,%c-%u";
 
   struct Zone {
     UUID id;

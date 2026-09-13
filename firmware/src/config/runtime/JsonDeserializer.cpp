@@ -27,7 +27,7 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeWateringModel(
 
           if (TraversalResult result = deserialize(
                 lineArrayJson, model.lines,
-                LineJsonFilter{}, skipSchema,
+                LineFilter{}, skipSchema,
                 [&](Config::Line& line, JsonVariantConst, size_t) -> TraversalResult {
                   // Because UUID is optional, create it if it is not present.
                   if (line.id.isDefault())
@@ -61,7 +61,8 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeScheduleDefinitio
   if (!rawDef.is<const char*>())
     return failWrongType(Reflection::FieldType::String, rawDef);
 
-  int32_t       hour, minute;
+  int32_t       hour;
+  int32_t       minute;
   int32_t       duration;
   int32_t       onlyIfDrySoil;
   unsigned char frequency;
@@ -69,26 +70,29 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeScheduleDefinitio
 
   int n = sscanf(
     rawDef,
-    "%d:%d,%d,%d,%c-%u",
-    &hour, &minute,
+    Config::kScheduleDefinition,
+    &hour,
+    &minute,
     &duration,
     &onlyIfDrySoil,
     &frequency,
     &days);
 
   JsonDocument convertedDef;
-  if (n >= 1) convertedDef["hour"] = hour;
-  if (n >= 2) convertedDef["minute"] = minute;
-  if (n >= 3) convertedDef["duration"] = duration;
-  if (n >= 4) convertedDef["onlyIfDrySoil"] = onlyIfDrySoil != 0;
-  if (n >= 5) convertedDef["frequency"] = frequency;
-  if (n >= 6) convertedDef["days"] = days;
+  JsonObject   convertedDefJson = convertedDef.to<JsonObject>();
+
+  if (n >= 1) convertedDefJson["hour"] = hour;
+  if (n >= 2) convertedDefJson["minute"] = minute;
+  if (n >= 3) convertedDefJson["duration"] = duration;
+  if (n >= 4) convertedDefJson["onlyIfDrySoil"] = onlyIfDrySoil != 0;
+  if (n >= 5) convertedDefJson["frequency"] = frequency;
+  if (n >= 6) convertedDefJson["days"] = days;
 
   bool skipSchema = false;
 
   return deserializeObject(
-    convertedDef, schedule,
-    ScheduleJsonFilter{ .inverted = true }, skipSchema);
+    convertedDefJson, schedule,
+    ScheduleFilter{ .inverted = true }, skipSchema);
 }
 
 JsonDeserializer::TraversalResult JsonDeserializer::deserializeSchedules(
@@ -101,7 +105,7 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeSchedules(
   return deserialize(
     schedulesJson,
     schedules,
-    ScheduleJsonFilter{},
+    ScheduleFilter{},
     skipSchema,
     [&](Config::Schedule& schedule, JsonVariantConst scheduleJson, size_t) {
       return deserializeScheduleDefinition(scheduleJson, schedule);
@@ -132,22 +136,17 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
 
   unsigned char c = json.as<unsigned char>();
 
-  switch (c) {
-    case '*': value = Frequency::EveryDay; break;
-    case 'e': value = Frequency::EvenDays; break;
-    case 'o': value = Frequency::OddDays; break;
-    case 's': value = Frequency::SpecificDays; break;
-    default:
-      return fail(Deserialization::Error::InvalidValue,
-                  "must be one of '*', 'e', 'o' or 's', got '%u'",
-                  c);
-  }
+  if (!fromChar(c, value))
+    return fail(Deserialization::Error::InvalidValue,
+                "must be one of '*', 'e', 'o' or 's', got '%u'",
+                c);
 
   return {};
 }
 
 JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   JsonVariantConst json, UUID& value) {
+
   if (!json.is<const char*>())
     return failWrongType(Reflection::FieldType::UUID, json);
 

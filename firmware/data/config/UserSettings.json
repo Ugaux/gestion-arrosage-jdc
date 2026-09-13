@@ -15,7 +15,7 @@
     "watering": {
       "duration": {
         "min": 1,
-        "max": 40,
+        "max": 45,
         "step": 5,
         "base": 15
       },

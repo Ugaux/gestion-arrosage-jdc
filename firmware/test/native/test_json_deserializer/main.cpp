@@ -4,6 +4,7 @@
 #include "config/generated/Config.h"
 #include "config/generated/ConfigReflection.h"
 #include "config/runtime/Validation.h"
+#include "config/runtime/JsonSerializer.h"
 #include "config/runtime/JsonDeserializer.h"
 
 static constexpr char kUnexpectedDeserializationErrorPath[] =
@@ -23,7 +24,7 @@ void tearDown() {}
 // Test data
 // -----------------------------------------------------------------------------
 
-const char *goodUserSettingsJson() {
+const char *goodUserSettingsJsonPretty() {
   return R"JSON({
     "params": {
       "wifi": {
@@ -48,7 +49,19 @@ const char *goodUserSettingsJson() {
   })JSON";
 }
 
-const char *tooManyLinesJson() {
+const char *goodUserSettingsJsonMinified() {
+  return "{\"params\":{\"wifi\":{\"mdns\":\"jdc-watering\",\"useAPMode\":true,"
+         "\"station\":{\"ssid\":\"YourWifiNetwork\",\"password\":\"12345678\"},"
+         "\"access-point\":{\"ssid\":\"WateringController\",\"password\":\"\"}},"
+         "\"watering\":{\"duration\":{\"min\":1,\"max\":45,\"base\":15,\"step\":5},"
+         "\"seasonal\":{\"factor\":100},\"soil\":{\"moisture\":{\"threshold\":60}},"
+         "\"pump\":{\"flow\":{\"min\":2,\"max\":80}}}},"
+         "\"zones\":[{\"id\":\"209c8ed3-e83a-486f-b5b3-c46abb96d10e\","
+         "\"name\":\"My Zone\",\"lines\":[{\"id\":\"a5127d03-ac72-4ca9-905d-f2fc66889e86\","
+         "\"name\":\"My Line\",\"valves\":[1,4]}]}]}";
+}
+
+const char *tooManyLinesJsonPretty() {
   return R"JSON({
     "zones": [
       { "name": "Front Yard", "lines": [ 
@@ -66,7 +79,7 @@ const char *tooManyLinesJson() {
   })JSON";
 }
 
-const char *goodSchedulesJson() {
+const char *goodSchedulesJsonPretty() {
   return R"JSON({
     "schedules": [
       {
@@ -119,7 +132,13 @@ const char *goodSchedulesJson() {
   })JSON";
 }
 
-const char *duplicateIdSchedulesJson() {
+const char *goodSchedulesJsonMinified() {
+  return "{\"schedules\":[{\"id\":\"ce5c41dd-e944-4e66-a1c7-c650eca4931c\","
+         "\"lineId\":\"a5127d03-ac72-4ca9-905d-f2fc66889e86\",\"name\":\"My Schedule\","
+         "\"definition\":\"7:30,20,0,e-0\"}]}";
+}
+
+const char *duplicateIdSchedulesJsonPretty() {
   return R"JSON({
     "schedules": [
       {
@@ -141,40 +160,10 @@ const char *duplicateIdSchedulesJson() {
 // Helpers
 // -----------------------------------------------------------------------------
 
-struct WateringModelOnlyFilter {
-
-  template<typename Parent, typename Member>
-  constexpr Reflection::FilterDecision operator()(
-    const Reflection::Field<Parent, Member> &field) const {
-
-    if constexpr (std::is_same_v<Parent, Config::UserSettings>) {
-      return field.name == "wateringModel"
-               ? Reflection::FilterDecision::Visit
-               : Reflection::FilterDecision::Skip;
-    }
-
-    return Reflection::FilterDecision::Visit;
-  }
-};
-
-struct ConfigSchedulesOnlyFilter {
-
-  template<typename Parent, typename Member>
-  constexpr Reflection::FilterDecision operator()(
-    const Reflection::Field<Parent, Member> &field) const {
-
-    if constexpr (std::is_same_v<Parent, Config>) {
-      return field.name == "schedules"
-               ? Reflection::FilterDecision::Visit
-               : Reflection::FilterDecision::Skip;
-    }
-
-    return Reflection::FilterDecision::Visit;
-  }
-};
-
 template<typename Type, typename Filter>
-JsonDeserializer::TraversalResult deserializeInto(const char *json, Type &cfg, const Filter &filter) {
+JsonDeserializer::TraversalResult deserializeInto(
+  const char *json, Type &cfg, const Filter &filter) {
+
   JsonDocument doc;
 
   DeserializationError err =
@@ -189,8 +178,26 @@ JsonDeserializer::TraversalResult deserializeInto(const char *json, Type &cfg, c
 }
 
 template<typename Type>
-JsonDeserializer::TraversalResult deserializeInto(const char *json, Type &cfg) {
+JsonDeserializer::TraversalResult deserializeInto(
+  const char *json, Type &cfg) {
+
   return deserializeInto(json, cfg, Reflection::NoFilter{});
+}
+
+template<typename Type, typename Filter>
+JsonSerializer::TraversalResult serializeInto(
+  Type &cfg, JsonDocument &doc, const Filter &filter) {
+
+  JsonSerializer s(doc);
+
+  return Reflection::visit(cfg, s, filter, false);
+}
+
+template<typename Type>
+JsonSerializer::TraversalResult serializeInto(
+  Type &cfg, JsonDocument &doc) {
+
+  return serializeInto(cfg, doc, Reflection::NoFilter{});
 }
 
 // #### Usage
@@ -202,13 +209,13 @@ void message_debug(const char *msg) {
 }
 
 // -----------------------------------------------------------------------------
-// Tests
+// Deserialization Tests
 // -----------------------------------------------------------------------------
 
 void test_deserialize_valid_json() {
   Config::UserSettings settings;
 
-  auto res = deserializeInto(goodUserSettingsJson(), settings);
+  auto res = deserializeInto(goodUserSettingsJsonPretty(), settings);
   TEST_ASSERT_TRUE_MESSAGE(
     res.ok(), "The good JSON userSettings should deserialize successfully");
   TEST_ASSERT_TRUE_MESSAGE(
@@ -332,8 +339,8 @@ void test_deserialize_invalid_field() {
 void test_deserialize_bad_collections() {
   Config cfg;
 
-  auto res = deserializeInto(duplicateIdSchedulesJson(), cfg,
-                             ConfigSchedulesOnlyFilter{});
+  auto res = deserializeInto(duplicateIdSchedulesJsonPretty(), cfg,
+                             SchedulesOnlyFilter{});
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     "schedules[1]",
     res.path().data(),
@@ -348,7 +355,7 @@ void test_deserialize_bad_collections() {
 
   Config::UserSettings userSettings;
 
-  res = deserializeInto(tooManyLinesJson(), userSettings,
+  res = deserializeInto(tooManyLinesJsonPretty(), userSettings,
                         WateringModelOnlyFilter{});
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     "zones[0].lines[8]",
@@ -400,11 +407,119 @@ void test_deserialize_cross_validation() {
 }
 
 // -----------------------------------------------------------------------------
+// Round-trip Tests
+// -----------------------------------------------------------------------------
+
+void test_round_trip_userSettings() {
+  Config::UserSettings settings;
+
+  auto deserializeRes = deserializeInto(goodUserSettingsJsonMinified(), settings);
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.ok(), "The good JSON user settings should deserialize successfully");
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.path() == "",
+    "No path should be present if JSON user settings passed deserialization");
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.message() == "",
+    "No error message should be present if JSON user settings passed deserialization");
+
+  TEST_ASSERT_EQUAL_UINT(
+    1, settings.wateringModel.zones.size());
+  TEST_ASSERT_EQUAL_UINT(
+    1, settings.wateringModel.lines.size());
+
+  JsonDocument doc;
+
+  auto serializeRes = serializeInto(settings, doc);
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.ok(), "The user settings should serialize successfully");
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.path() == "",
+    "No path should be present if user settings passed serialization");
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.message() == "",
+    "No error message should be present if user settings passed serialization");
+
+  std::string jsonString;
+  serializeJson(doc, jsonString);  // now reloadable by JsonDeserializer as-is
+  TEST_ASSERT_EQUAL_STRING_MESSAGE(
+    goodUserSettingsJsonMinified(),
+    jsonString.c_str(),
+    "Serialized user settings JSON string should match original JSON");
+}
+
+void test_round_trip_schedules() {
+  using WateringModel = Config::UserSettings::WateringModel;
+
+  Config cfg;
+
+  Config::Zone zone;
+  TEST_ASSERT_TRUE_MESSAGE(
+    UUID::parse("209c8ed3-e83a-486f-b5b3-c46abb96d10e", zone.id),
+    "Zone UUID should have been parsed successfully");
+  zone.name = "My Zone";
+
+  Config::Line line;
+  TEST_ASSERT_TRUE_MESSAGE(
+    UUID::parse("a5127d03-ac72-4ca9-905d-f2fc66889e86", line.id),
+    "Line UUID should have been parsed successfully");
+  line.name = "My Line";
+  line.valves.set(3);
+  line.zoneId = zone.id;
+
+  TEST_ASSERT_TRUE_MESSAGE(
+    cfg.userSettings.wateringModel.zones.add(zone)
+        == WateringModel::ZoneCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.zones.size() == 1,
+    "Zone should have been added successfully");
+  TEST_ASSERT_TRUE_MESSAGE(
+    cfg.userSettings.wateringModel.lines.add(line)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
+    "Line should have been added successfully");
+
+  auto deserializeRes = deserializeInto(
+    goodSchedulesJsonMinified(), cfg, SchedulesOnlyFilter{});
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.ok(), "The good JSON schedules should deserialize successfully");
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.path() == "",
+    "No path should be present if JSON schedules passed deserialization");
+  TEST_ASSERT_TRUE_MESSAGE(
+    deserializeRes.message() == "",
+    "No error message should be present if JSON schedules passed deserialization");
+
+  TEST_ASSERT_EQUAL_UINT(
+    1, cfg.schedules.size());
+
+  JsonDocument doc;
+
+  auto serializeRes = serializeInto(cfg, doc, SchedulesOnlyFilter{});
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.ok(), "The schedules should serialize successfully");
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.path() == "",
+    "No path should be present if schedules passed serialization");
+  TEST_ASSERT_TRUE_MESSAGE(
+    serializeRes.message() == "",
+    "No error message should be present if schedules passed serialization");
+
+  std::string jsonString;
+  serializeJson(doc, jsonString);  // now reloadable by JsonDeserializer as-is
+  TEST_ASSERT_EQUAL_STRING_MESSAGE(
+    goodSchedulesJsonMinified(),
+    jsonString.c_str(),
+    "Serialized schedules JSON string should match original JSON");
+}
+
+// -----------------------------------------------------------------------------
 // Main
 // -----------------------------------------------------------------------------
 
 int main() {
   UNITY_BEGIN();
+
+  // Deserialize
 
   RUN_TEST(test_deserialize_valid_json);
   RUN_TEST(test_deserialize_invalid_json);
@@ -415,6 +530,11 @@ int main() {
   RUN_TEST(test_deserialize_bad_collections);
 
   RUN_TEST(test_deserialize_cross_validation);
+
+  // Round-trip
+
+  RUN_TEST(test_round_trip_userSettings);
+  RUN_TEST(test_round_trip_schedules);
 
   return UNITY_END();
 }

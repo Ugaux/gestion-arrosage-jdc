@@ -326,7 +326,7 @@ struct Schema<Config::Schedule> {
       "enabled",
       nullptr,
       "",
-      true),
+      false),
 
     makeField(
       &Config::Schedule::name,

@@ -69,7 +69,8 @@ void test_validate_string_length(void) {
   auto &mdnsLength =
     kReflection::ConfigUserSettingsParamsWifiMdns_FieldValidator.length;
   const std::string mdnsLengthAssertMsg =
-    "length must be between min=" + std::to_string(mdnsLength.min) + " and max=" + std::to_string(mdnsLength.max) + ", got 2";
+    "length must be between min=" + std::to_string(mdnsLength.min)
+    + " and max=" + std::to_string(mdnsLength.max) + ", got 2";
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     mdnsLengthAssertMsg.c_str(),
     res.message().data(),
@@ -98,7 +99,8 @@ void test_validate_string_length(void) {
   auto &ssidLength =
     kReflection::ConfigUserSettingsParamsWifiStationSsid_FieldValidator.length;
   const std::string ssidLengthAssertMsg =
-    "length must be between min=" + std::to_string(ssidLength.min) + " and max=" + std::to_string(ssidLength.max) + ", got 0";
+    "length must be between min=" + std::to_string(ssidLength.min)
+    + " and max=" + std::to_string(ssidLength.max) + ", got 0";
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     ssidLengthAssertMsg.c_str(),
     res.message().data(),
@@ -129,7 +131,8 @@ void test_validate_integer_range(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   const std::string value1AssertMsg =
-    "value must be between min=" + std::to_string(durationMaxRange.min) + " and max=" + std::to_string(durationMaxRange.max) + ", got 222";
+    "value must be between min=" + std::to_string(durationMaxRange.min)
+    + " and max=" + std::to_string(durationMaxRange.max) + ", got 222";
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     value1AssertMsg.c_str(),
     res.message().data(),
@@ -146,7 +149,10 @@ void test_validate_integer_range(void) {
     res.path().data(),
     kUnexpectedValidationErrorPath);
   const std::string value2AssertMsg =
-    "value must be between min=" + std::to_string(durationMaxRange.min) + " and max=" + std::to_string(durationMaxRange.max) + ", got 0";
+    "value must be between min="
+    + std::to_string(durationMaxRange.min)
+    + " and max=" + std::to_string(durationMaxRange.max)
+    + ", got 0";
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     value2AssertMsg.c_str(),
     res.message().data(),
@@ -175,7 +181,8 @@ void test_cross_validate_duration(void) {
   cfg.userSettings.params.watering.duration.step = 3;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    validateConfig(cfg).ok(), "Duration with min < max should pass validation");
+    validateConfig(cfg).ok(),
+    "Duration with min < max should pass validation");
 
   cfg.userSettings.params.watering.duration.min = 12;
   cfg.userSettings.params.watering.duration.max = 6;
@@ -228,7 +235,8 @@ void test_cross_validate_duration(void) {
   cfg.userSettings.params.watering.duration.step = 6;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    validateConfig(cfg).ok(), "Duration with a step <= max-min should pass validation");
+    validateConfig(cfg).ok(),
+    "Duration with a step <= max-min should pass validation");
 
   cfg.userSettings.params.watering.duration.base = 5;
 
@@ -263,12 +271,14 @@ void test_cross_validate_duration(void) {
   cfg.userSettings.params.watering.duration.base = 6;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    validateConfig(cfg).ok(), "Duration with a base value >= min should pass validation");
+    validateConfig(cfg).ok(),
+    "Duration with a base value >= min should pass validation");
 
   cfg.userSettings.params.watering.duration.base = 12;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    validateConfig(cfg).ok(), "Duration with a base value <= max should pass validation");
+    validateConfig(cfg).ok(),
+    "Duration with a base value <= max should pass validation");
 }
 
 void test_cross_validate_flow(void) {
@@ -278,7 +288,8 @@ void test_cross_validate_flow(void) {
   cfg.userSettings.params.watering.pump.flow.max = 80;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    validateConfig(cfg).ok(), "Flow with min < max should pass validation");
+    validateConfig(cfg).ok(),
+    "Flow with min < max should pass validation");
 
   cfg.userSettings.params.watering.pump.flow.min = 80;
   cfg.userSettings.params.watering.pump.flow.max = 10;
@@ -315,13 +326,19 @@ void test_cross_validate_line_zone(void) {
   line1.zoneId = UUID::generate();
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.zones.add(zone) == WateringModel::ZoneCollection::AddResult::Ok && cfg.userSettings.wateringModel.zones.size() == 1,
+    cfg.userSettings.wateringModel.zones.add(zone)
+        == WateringModel::ZoneCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.zones.size() == 1,
     "Zone should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line0) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 1,
+    cfg.userSettings.wateringModel.lines.add(line0)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
     "Line 0 should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line1) != WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 1,
+    cfg.userSettings.wateringModel.lines.add(line1)
+        != WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
     "Line with existing ID should not be added to config");
 
   TEST_ASSERT_TRUE_MESSAGE(
@@ -330,7 +347,9 @@ void test_cross_validate_line_zone(void) {
 
   line1.id = UUID::generate();
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line1) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 2,
+    cfg.userSettings.wateringModel.lines.add(line1)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 2,
     "Line 1 should have been added successfully");
 
   auto res = validateConfig(cfg);
@@ -369,13 +388,19 @@ void test_cross_validate_line_valves(void) {
   line3.zoneId = zone.id;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.zones.add(zone) == WateringModel::ZoneCollection::AddResult::Ok && cfg.userSettings.wateringModel.zones.size() == 1,
+    cfg.userSettings.wateringModel.zones.add(zone)
+        == WateringModel::ZoneCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.zones.size() == 1,
     "Zone should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line0) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 1,
+    cfg.userSettings.wateringModel.lines.add(line0)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
     "Line 0 should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line1) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 2,
+    cfg.userSettings.wateringModel.lines.add(line1)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 2,
     "Line 1 should have been added successfully");
 
   TEST_ASSERT_TRUE_MESSAGE(
@@ -383,7 +408,9 @@ void test_cross_validate_line_valves(void) {
     "Multiple lines with different valves should pass validation");
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line3) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 3,
+    cfg.userSettings.wateringModel.lines.add(line3)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 3,
     "Line 2 should have been added successfully");
 
   auto res = validateConfig(cfg);
@@ -414,10 +441,14 @@ void test_cross_validate_schedule(void) {
   line.zoneId = zone.id;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.zones.add(zone) == WateringModel::ZoneCollection::AddResult::Ok && cfg.userSettings.wateringModel.zones.size() == 1,
+    cfg.userSettings.wateringModel.zones.add(zone)
+        == WateringModel::ZoneCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.zones.size() == 1,
     "Zone should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 1,
+    cfg.userSettings.wateringModel.lines.add(line)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
     "Line should have been added successfully");
 
   Config::Schedule schedule0;
@@ -437,7 +468,9 @@ void test_cross_validate_schedule(void) {
   schedule2.days      = WeekDay::Monday | WeekDay::Sunday;
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.add(schedule0) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == 1,
+    cfg.schedules.add(schedule0)
+        == Config::ScheduleCollection::AddResult::Ok
+      && cfg.schedules.size() == 1,
     "Schedule 0 should have been added successfully");
 
   TEST_ASSERT_TRUE_MESSAGE(
@@ -446,7 +479,9 @@ void test_cross_validate_schedule(void) {
     " contains days should pass validation");
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.add(schedule1) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == 2,
+    cfg.schedules.add(schedule1)
+        == Config::ScheduleCollection::AddResult::Ok
+      && cfg.schedules.size() == 2,
     "Schedule 1 should have been added successfully");
 
   auto res = validateConfig(cfg);
@@ -463,10 +498,13 @@ void test_cross_validate_schedule(void) {
     "Schedule containing no days with specific frequency should not pass validation");
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.remove(schedule1.id) && cfg.schedules.size() == 1,
+    cfg.schedules.remove(schedule1.id)
+      && cfg.schedules.size() == 1,
     "Schedule 1 should have been removed successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.add(schedule2) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == 2,
+    cfg.schedules.add(schedule2)
+        == Config::ScheduleCollection::AddResult::Ok
+      && cfg.schedules.size() == 2,
     "Schedule 2 should have been added successfully");
 
   res = validateConfig(cfg);
@@ -504,13 +542,19 @@ void test_cross_normalize_and_validate_schedules(void) {
   schedule1.lineId = UUID::generate();
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.zones.add(zone) == WateringModel::ZoneCollection::AddResult::Ok && cfg.userSettings.wateringModel.zones.size() == 1,
+    cfg.userSettings.wateringModel.zones.add(zone)
+        == WateringModel::ZoneCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.zones.size() == 1,
     "Zone should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.userSettings.wateringModel.lines.add(line) == WateringModel::LineCollection::AddResult::Ok && cfg.userSettings.wateringModel.lines.size() == 1,
+    cfg.userSettings.wateringModel.lines.add(line)
+        == WateringModel::LineCollection::AddResult::Ok
+      && cfg.userSettings.wateringModel.lines.size() == 1,
     "Line should have been added successfully");
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.add(schedule0) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == 1,
+    cfg.schedules.add(schedule0)
+        == Config::ScheduleCollection::AddResult::Ok
+      && cfg.schedules.size() == 1,
     "Schedule 1 should have been added successfully");
 
   TEST_ASSERT_TRUE_MESSAGE(
@@ -519,7 +563,9 @@ void test_cross_normalize_and_validate_schedules(void) {
     " should not be normalized and pass validation");
 
   TEST_ASSERT_TRUE_MESSAGE(
-    cfg.schedules.add(schedule1) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == 2,
+    cfg.schedules.add(schedule1)
+        == Config::ScheduleCollection::AddResult::Ok
+      && cfg.schedules.size() == 2,
     "Schedule 2 should have been added successfully");
 
   TEST_ASSERT_TRUE_MESSAGE(
@@ -535,9 +581,12 @@ void test_cross_normalize_and_validate_schedules(void) {
     scheduleForMaxTest.lineId = line.id;
 
     const std::string assertMsg =
-      "Schedule " + std::to_string(currentScheduleIdx + i) + " should have been added successfully";
+      "Schedule " + std::to_string(currentScheduleIdx + i)
+      + " should have been added successfully";
     TEST_ASSERT_TRUE_MESSAGE(
-      cfg.schedules.add(scheduleForMaxTest) == Config::ScheduleCollection::AddResult::Ok && cfg.schedules.size() == ++totalSchedules,
+      cfg.schedules.add(scheduleForMaxTest)
+          == Config::ScheduleCollection::AddResult::Ok
+        && cfg.schedules.size() == ++totalSchedules,
       assertMsg.c_str());
   }
 
@@ -547,7 +596,9 @@ void test_cross_normalize_and_validate_schedules(void) {
     "", res.path().data(),
     kUnexpectedValidationErrorPath);
   const std::string expected =
-    "lines[0] should have at most " + std::to_string(Config::kMaxSchedulePerLine) + " schedules, got " + std::to_string(totalSchedules);
+    "lines[0] should have at most "
+    + std::to_string(Config::kMaxSchedulePerLine)
+    + " schedules, got " + std::to_string(totalSchedules);
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
     expected.c_str(), res.message().data(),
     kUnexpectedValidationErrorMessage);
