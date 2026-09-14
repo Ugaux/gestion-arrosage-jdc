@@ -274,6 +274,8 @@ public:
 private:
   template<typename T, uint8_t N>
   TraversalResult validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
+    //  Keep the collection non-const because Reflection::visit() requires
+    // mutable elements for traversal. Values are only read when validating.
 
     for (size_t i = 0; i < value.size(); ++i) {
       m_pathBuilder.index(i);

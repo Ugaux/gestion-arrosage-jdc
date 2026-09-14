@@ -21,8 +21,6 @@ struct ErrorTraits;
 template<typename Error>
 class [[nodiscard]] Result {
 public:
-  static constexpr size_t kMaxErrorLength = 100;
-
   Result()
     : m_ok(true) {}
 
@@ -144,6 +142,7 @@ private:
 
   Error m_error{};
 
-  std::array<char, kMaxErrorLength> m_msg     = {};
-  size_t                            m_msg_len = 0;
+  std::array<char, SchemaLimits::kMaxErrorMessageLength> m_msg = {};
+
+  size_t m_msg_len = 0;
 };

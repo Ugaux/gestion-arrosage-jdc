@@ -11,4 +11,6 @@ inline constexpr size_t kMaxPathLength = 80;
 // deepest struct nesting in the schema
 inline constexpr size_t kMaxDepth = 8;
 
+inline constexpr size_t kMaxErrorMessageLength = 100;
+
 }  // namespace SchemaLimits

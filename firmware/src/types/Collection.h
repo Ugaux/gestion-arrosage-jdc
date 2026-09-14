@@ -64,7 +64,7 @@ public:
     m_items[m_size++] = item;
     return AddResult::Ok;
   }
-  // Returns false if no item with ID is present.
+  // Returns false if no item with same ID is present.
   bool update(const T& item) {
     for (uint8_t i = 0; i < m_size; ++i) {
       if (m_items[i].id == item.id) {
