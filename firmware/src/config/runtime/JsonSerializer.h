@@ -38,119 +38,121 @@ private:
 
 class JsonSerializer {
 public:
-  // required by reflection for traversal
   using TraversalResult = Result<Serialization::Error>;
-  using VisitResult     = Reflection::VisitResult<TraversalResult>;
+
+  enum class SpecialCaseResult : uint8_t {
+    Continue = 0,
+    Handled
+  };
 
   explicit JsonSerializer(JsonDocument& doc) {
     m_stack.push(doc.to<JsonObject>());
   }
 
-  template<typename Parent, typename Member>
-  VisitResult enter(const Reflection::Field<Parent, Member>& field, Member& value) {
+  const auto& result() const {
+    return m_result;
+  }
 
-    VisitResult visitResult = tryHandleSpecialCase(value);
-    if (visitResult.decision != Reflection::VisitDecision::Traverse)
-      return visitResult;
+  template<typename Parent, typename Member>
+  Reflection::VisitDecision enter(const Reflection::Field<Parent, Member>& field, Member& value) {
+
+    switch (tryHandleSpecialCase(value)) {
+
+      case SpecialCaseResult::Handled:
+        return Reflection::VisitDecision::Skip;
+
+      case SpecialCaseResult::Continue:
+        break;
+    }
 
     m_stack.push(jsonFor(field.name));
     m_pathBuilder.enter(field.name);
 
-    return VisitResult::traverse();
+    return Reflection::VisitDecision::Visit;
   }
 
   template<typename Parent, typename Member>
-  TraversalResult field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  void field(const Reflection::Field<Parent, Member>& field, Member& value) {
 
     m_pathBuilder.enter(field.name);
 
-    VisitResult visitResult = tryHandleSpecialCase(value);
-    switch (visitResult.decision) {
+    switch (tryHandleSpecialCase(value)) {
 
-      case Reflection::VisitDecision::Traverse:
+      case SpecialCaseResult::Handled:
+        if (!m_result)
+          return;
+        break;
+
+      case SpecialCaseResult::Continue:
 
         // Every field's current value is written regardless of field.optional,
         // since JsonDeserializer treats "missing-and-optional" and
         // "present-with-the-default-value" identically on read. This is simpler
         // and still round-trips stably — just occasionally slightly more verbose JSON.
-        if (auto result = serialize(jsonFor(field.name), value); !result)
-          return result;
+        serialize(jsonFor(field.name), value);
+        if (!m_result)
+          return;
 
         break;
-
-      case Reflection::VisitDecision::Handled:
-        break;
-
-      case Reflection::VisitDecision::Error:
-        return visitResult.result;
     }
 
     m_pathBuilder.leave();
-    return {};
   }
 
   template<typename Parent, typename Member>
-  TraversalResult leave(const Reflection::Field<Parent, Member>&, Member&) {
+  void leave(const Reflection::Field<Parent, Member>&, Member&) {
 
     m_pathBuilder.leave();
     m_stack.pop();
-    return {};
   }
 
   // No-op: cross-field validation is a read-side concern (it protects
   // against untrusted input). A Config already in memory is assumed valid,
   // so there's nothing to check when writing it back out.
   template<typename Type>
-  TraversalResult schema(Type&) {
-    return {};
-  }
+  void schema(Type&) {}
 
-  TraversalResult finalize(TraversalResult result) {
-    return result.withPath(m_pathBuilder.view());
+  void finalize() {
+    m_result.setPath(m_pathBuilder.view());
   }
 
 private:
   // Specific mapping
 
   template<typename Filter, typename T>
-  TraversalResult serializeObject(JsonVariant json, T& object,
-                                  const Filter& filter, bool skipSchema) {
+  void serializeObject(JsonVariant json, T& object,
+                       const Filter& filter, bool skipSchema) {
 
     m_stack.push(json);
-    TraversalResult result = Reflection::traverse(
-      object, *this, filter, skipSchema);
+    Reflection::traverse(object, *this, filter, skipSchema);
     m_stack.pop();
-
-    return result;
   }
 
-  TraversalResult serializeWateringModel(Config::UserSettings::WateringModel& model);
+  void serializeWateringModel(Config::UserSettings::WateringModel& model);
 
-  TraversalResult serializeScheduleDefinition(JsonVariant json, Config::Schedule& schedule);
-  TraversalResult serializeSchedules(Config::ScheduleCollection& schedules);
+  void serializeScheduleDefinition(JsonVariant json, Config::Schedule& schedule);
+  void serializeSchedules(Config::ScheduleCollection& schedules);
 
   template<typename Member>
-  VisitResult tryHandleSpecialCase(Member& value) {
+  SpecialCaseResult tryHandleSpecialCase(Member& value) {
     using T = Reflection::Unqualified<Member>;
 
     if constexpr (std::is_same_v<T, Config::UserSettings::WateringModel>) {
-      if (auto result = serializeWateringModel(value); !result)
-        return VisitResult::error(result);
-      return VisitResult::handled();
+      serializeWateringModel(value);
+      return SpecialCaseResult::Handled;
     }
     if constexpr (std::is_same_v<T, Config::ScheduleCollection>) {
-      if (auto result = serializeSchedules(value); !result)
-        return VisitResult::error(result);
-      return VisitResult::handled();
+      serializeSchedules(value);
+      return SpecialCaseResult::Handled;
     }
 
-    return VisitResult::traverse();
+    return SpecialCaseResult::Continue;
   }
 
   // 1:1 mapping
 
   template<typename T, uint8_t N>
-  TraversalResult serialize(JsonVariant json, Collection<T, N>& value) {
+  void serialize(JsonVariant json, Collection<T, N>& value) {
 
     JsonArray jsonArray = json.to<JsonArray>();
 
@@ -159,22 +161,22 @@ private:
 
       JsonVariant itemJson = jsonArray.add<JsonVariant>();
 
-      if (auto result = serializeObject(itemJson, value[i], Reflection::NoFilter{}, true); !result)
-        return result;
+      serializeObject(itemJson, value[i],
+                      Reflection::NoFilter{}, true);
+      if (!m_result)
+        return;
 
       m_pathBuilder.leave();
     }
-
-    return {};
   }
 
   template<uint16_t N>
-  TraversalResult serialize(JsonVariant json, const FixedString<N>& value) {
-    return writeAs<const char*>(json, value.c_str());
+  void serialize(JsonVariant json, const FixedString<N>& value) {
+    writeAs<const char*>(json, value.c_str());
   }
 
   template<size_t N>
-  TraversalResult serialize(JsonVariant json, const std::bitset<N>& value) {
+  void serialize(JsonVariant json, const std::bitset<N>& value) {
 
     JsonArray jsonArray = json.to<JsonArray>();
 
@@ -185,51 +187,50 @@ private:
                       "out of space writing bitset element");
       }
     }
-
-    return {};
   }
 
-  TraversalResult serialize(JsonVariant json, const WeekDays& value);
-  TraversalResult serialize(JsonVariant json, const Frequency& value);
-  TraversalResult serialize(JsonVariant json, const UUID& value);
+  void serialize(JsonVariant json, const WeekDays& value);
+  void serialize(JsonVariant json, const Frequency& value);
+  void serialize(JsonVariant json, const UUID& value);
 
   template<typename Type>
-  TraversalResult serialize(JsonVariant json, const Type& value) {
+  void serialize(JsonVariant json, const Type& value) {
     using U = Reflection::Unqualified<Type>;
 
     if (Reflection::fieldType<U>() == Reflection::FieldType::Bool)
-      return writeAs<bool>(json, value);
+      writeAs<bool>(json, value);
 
-    if (Reflection::fieldType<U>() == Reflection::FieldType::Int)
-      return writeAs<int32_t>(json, value);
+    else if (Reflection::fieldType<U>() == Reflection::FieldType::Int)
+      writeAs<int32_t>(json, value);
 
-    if (Reflection::fieldType<U>() == Reflection::FieldType::UInt)
-      return writeAs<uint32_t>(json, value);
+    else if (Reflection::fieldType<U>() == Reflection::FieldType::UInt)
+      writeAs<uint32_t>(json, value);
 
-    if (Reflection::fieldType<U>() == Reflection::FieldType::Float)
-      return writeAs<float>(json, value);
+    else if (Reflection::fieldType<U>() == Reflection::FieldType::Float)
+      writeAs<float>(json, value);
 
-    return writeAs<U>(json, value);
+    else writeAs<U>(json, value);
   }
 
   JsonVariant jsonFor(std::string_view key);
 
   template<typename JsonType, typename Type>
-  TraversalResult writeAs(JsonVariant json, const Type& value) {
+  void writeAs(JsonVariant json, const Type& value) {
 
     if (!json.set(static_cast<JsonType>(value)))
-      return fail(Serialization::Error::CapacityExceeded,
-                  "out of space writing value%s",
-                  json.isNull() ? " (target was unbound/null)" : "");
-
-    return {};
+      fail(Serialization::Error::CapacityExceeded,
+           "out of space writing value%s",
+           json.isNull() ? " (target was unbound/null)" : "");
   }
 
   template<typename... Args>
-  TraversalResult fail(Serialization::Error error, const char* messageFormat, Args... args) {
-    return TraversalResult(error, messageFormat, args...);
+  void fail(Serialization::Error error, const char* messageFormat, Args... args) {
+
+    m_result = TraversalResult(
+      error, messageFormat, args...);
   }
 
   JsonContextStack        m_stack;
   Reflection::PathBuilder m_pathBuilder;
+  TraversalResult         m_result;
 };

@@ -38,7 +38,8 @@ public:
   static constexpr char kSchedulesDefaultFilename[] = "/config/schedules.json";
   static constexpr char kSchedulesRuntimeFilename[] = "/config/schedules_r.json";
 
-  static constexpr size_t kMaxFileSizeBytes = 2048;
+  static constexpr char   kLittleFsBasePath[] = "/littlefs";
+  static constexpr size_t kMaxFileSizeBytes   = 2048;
 
   using UserSettings       = Config::UserSettings;
   using WifiSettings       = UserSettings::Params::Wifi;

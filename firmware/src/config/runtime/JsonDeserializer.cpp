@@ -1,7 +1,6 @@
 #include "JsonDeserializer.h"
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserializeWateringModel(
-  Config::UserSettings::WateringModel& model) {
+void JsonDeserializer::deserializeWateringModel(Config::UserSettings::WateringModel& model) {
 
   const auto zoneArrayKey = "zones";
   m_pathBuilder.enter(zoneArrayKey);
@@ -11,49 +10,46 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeWateringModel(
 
   bool skipSchema = false;
 
-  if (TraversalResult result = deserialize(
-        zoneArrayJson, model.zones,
-        Reflection::NoFilter{}, skipSchema,
-        [&](Config::Zone& zone, JsonVariantConst zoneJson, size_t) -> TraversalResult {
-          // Because UUID is optional, it is created if it is not present
-          if (zone.id.isDefault())
-            zone.id = UUID::generate();
+  deserialize(
+    zoneArrayJson, model.zones,
+    Reflection::NoFilter{}, skipSchema,
+    [&](Config::Zone& zone, JsonVariantConst zoneJson, size_t) {
+      // Because UUID is optional, it is created if it is not present
+      if (zone.id.isDefault())
+        zone.id = UUID::generate();
 
-          const auto lineArrayKey = "lines";
-          m_pathBuilder.enter(lineArrayKey);
+      const auto lineArrayKey = "lines";
+      m_pathBuilder.enter(lineArrayKey);
 
-          JsonVariantConst lineArrayJson =
-            zoneJson[lineArrayKey];
+      JsonVariantConst lineArrayJson =
+        zoneJson[lineArrayKey];
 
-          if (TraversalResult result = deserialize(
-                lineArrayJson, model.lines,
-                LineFilter{}, skipSchema,
-                [&](Config::Line& line, JsonVariantConst, size_t) -> TraversalResult {
-                  // Because UUID is optional, create it if it is not present.
-                  if (line.id.isDefault())
-                    line.id = UUID::generate();
+      deserialize(
+        lineArrayJson, model.lines,
+        LineFilter{}, skipSchema,
+        [&](Config::Line& line, JsonVariantConst, size_t) {
+          // Because UUID is optional, create it if it is not present.
+          if (line.id.isDefault())
+            line.id = UUID::generate();
 
-                  line.zoneId = zone.id;
-
-                  return {};
-                });
-              !result)
-            return result;
-
-          m_pathBuilder.leave();
-
-          return {};
+          line.zoneId = zone.id;
         });
-      !result)
-    return result;
+
+      if (!m_result)
+        return;
+
+      m_pathBuilder.leave();
+    });
+
+  if (!m_result)
+    return;
 
   m_pathBuilder.leave();
 
-  return schema(model);
+  schema(model);
 }
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserializeScheduleDefinition(
-  JsonVariantConst json, Config::Schedule& schedule) {
+void JsonDeserializer::deserializeScheduleDefinition(JsonVariantConst json, Config::Schedule& schedule) {
 
   // The other Schedule members come from "definition".
   JsonVariantConst rawDef = json["definition"];
@@ -90,30 +86,27 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserializeScheduleDefinitio
 
   bool skipSchema = false;
 
-  return deserializeObject(
-    convertedDefJson, schedule,
-    ScheduleFilter{ .inverted = true }, skipSchema);
+  deserializeObject(convertedDefJson, schedule,
+                    ScheduleFilter{ .inverted = true }, skipSchema);
 }
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserializeSchedules(
-  Config::ScheduleCollection& schedules) {
+void JsonDeserializer::deserializeSchedules(Config::ScheduleCollection& schedules) {
 
   JsonVariantConst schedulesJson = jsonFor("schedules");
 
   bool skipSchema = true;
 
-  return deserialize(
+  deserialize(
     schedulesJson,
     schedules,
     ScheduleFilter{},
     skipSchema,
     [&](Config::Schedule& schedule, JsonVariantConst scheduleJson, size_t) {
-      return deserializeScheduleDefinition(scheduleJson, schedule);
+      deserializeScheduleDefinition(scheduleJson, schedule);
     });
 }
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
-  JsonVariantConst json, WeekDays& value) {
+void JsonDeserializer::deserialize(JsonVariantConst json, WeekDays& value) {
 
   if (!json.is<uint32_t>())
     return failWrongType(Reflection::FieldType::UInt, json);
@@ -121,15 +114,11 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   uint32_t mask = json.as<uint32_t>();
 
   if (!value.set(mask))
-    return fail(Deserialization::Error::InvalidValue,
-                "bitmask must be <= %u, got %u",
-                value.kAllDaysMask, mask);
-
-  return {};
+    fail(Deserialization::Error::InvalidValue,
+         "bitmask must be <= %u, got %u", value.kAllDaysMask, mask);
 }
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
-  JsonVariantConst json, Frequency& value) {
+void JsonDeserializer::deserialize(JsonVariantConst json, Frequency& value) {
 
   if (!json.is<unsigned char>())
     return failWrongType(Reflection::FieldType::Frequency, json);
@@ -137,25 +126,18 @@ JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
   unsigned char c = json.as<unsigned char>();
 
   if (!fromChar(c, value))
-    return fail(Deserialization::Error::InvalidValue,
-                "must be one of '*', 'e', 'o' or 's', got '%u'",
-                c);
-
-  return {};
+    fail(Deserialization::Error::InvalidValue,
+         "must be one of '*', 'e', 'o' or 's', got '%u'", c);
 }
 
-JsonDeserializer::TraversalResult JsonDeserializer::deserialize(
-  JsonVariantConst json, UUID& value) {
+void JsonDeserializer::deserialize(JsonVariantConst json, UUID& value) {
 
   if (!json.is<const char*>())
     return failWrongType(Reflection::FieldType::UUID, json);
 
-  if (!UUID::parse(json.as<const char*>(), value)) {
-    return fail(Deserialization::Error::InvalidValue,
-                "must be UUID version 4 - variant RFC 4122");
-  }
-
-  return {};
+  if (!UUID::parse(json.as<const char*>(), value))
+    fail(Deserialization::Error::InvalidValue,
+         "must be UUID version 4 - variant RFC 4122");
 }
 
 JsonVariantConst JsonDeserializer::jsonFor(std::string_view key) {

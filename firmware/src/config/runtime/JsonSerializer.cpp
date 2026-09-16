@@ -2,8 +2,7 @@
 
 #include "config/runtime/JsonDeserializer.h"
 
-JsonSerializer::TraversalResult JsonSerializer::serializeWateringModel(
-  Config::UserSettings::WateringModel& model) {
+void JsonSerializer::serializeWateringModel(Config::UserSettings::WateringModel& model) {
 
   // Mirrors deserializeWateringModel(): "zones" and "lines" are flattened
   // directly into the enclosing JSON object rather than nested under a
@@ -23,10 +22,10 @@ JsonSerializer::TraversalResult JsonSerializer::serializeWateringModel(
 
     JsonVariant zoneJson = zoneArrayJson.add<JsonVariant>();
 
-    if (TraversalResult result = serializeObject(
-          zoneJson, zone, Reflection::NoFilter{}, true);
-        !result)
-      return result;
+    serializeObject(zoneJson, zone,
+                    Reflection::NoFilter{}, true);
+    if (!m_result)
+      return;
 
     const auto lineArrayKey = "lines";
     m_pathBuilder.enter(lineArrayKey);
@@ -46,10 +45,10 @@ JsonSerializer::TraversalResult JsonSerializer::serializeWateringModel(
 
       // LineFilter skips "zoneId": it's implied by nesting under this
       // zone, same as on the read side.
-      if (TraversalResult result = serializeObject(
-            lineJson, line, LineFilter{}, true);
-          !result)
-        return result;
+      serializeObject(lineJson, line,
+                      LineFilter{}, true);
+      if (!m_result)
+        return;
 
       m_pathBuilder.leave();
       ++lineIndex;
@@ -60,12 +59,9 @@ JsonSerializer::TraversalResult JsonSerializer::serializeWateringModel(
   }
 
   m_pathBuilder.leave();  // "zones"
-
-  return {};
 }
 
-JsonSerializer::TraversalResult JsonSerializer::serializeScheduleDefinition(
-  JsonVariant json, Config::Schedule& schedule) {
+void JsonSerializer::serializeScheduleDefinition(JsonVariant json, Config::Schedule& schedule) {
 
   // Inverse of deserializeScheduleDefinition(): format the schedule's
   // definition fields into the compact string expected by the deserializer.
@@ -91,11 +87,10 @@ JsonSerializer::TraversalResult JsonSerializer::serializeScheduleDefinition(
     return fail(Serialization::Error::CapacityExceeded,
                 "definition string truncated");
 
-  return writeAs<const char*>(json["definition"].to<JsonVariant>(), buf);
+  writeAs<const char*>(json["definition"].to<JsonVariant>(), buf);
 }
 
-JsonSerializer::TraversalResult JsonSerializer::serializeSchedules(
-  Config::ScheduleCollection& schedules) {
+void JsonSerializer::serializeSchedules(Config::ScheduleCollection& schedules) {
 
   JsonArray schedulesJson = jsonFor("schedules").to<JsonArray>();
 
@@ -104,30 +99,25 @@ JsonSerializer::TraversalResult JsonSerializer::serializeSchedules(
 
     JsonVariant scheduleJson = schedulesJson.add<JsonVariant>();
 
-    if (auto result = serializeObject(
-          scheduleJson, schedules[i], ScheduleFilter{}, true);
-        !result)
-      return result;
+    serializeObject(scheduleJson, schedules[i],
+                    ScheduleFilter{}, true);
+    if (!m_result)
+      return;
 
-    if (auto result =
-          serializeScheduleDefinition(scheduleJson, schedules[i]);
-        !result)
-      return result;
+    serializeScheduleDefinition(scheduleJson, schedules[i]);
+    if (!m_result)
+      return;
 
     m_pathBuilder.leave();
   }
-
-  return {};
 }
 
-JsonSerializer::TraversalResult JsonSerializer::serialize(
-  JsonVariant json, const WeekDays& value) {
+void JsonSerializer::serialize(JsonVariant json, const WeekDays& value) {
 
-  return writeAs<uint32_t>(json, value.mask());
+  writeAs<uint32_t>(json, value.mask());
 }
 
-JsonSerializer::TraversalResult JsonSerializer::serialize(
-  JsonVariant json, const Frequency& value) {
+void JsonSerializer::serialize(JsonVariant json, const Frequency& value) {
 
   unsigned char c;
 
@@ -135,14 +125,13 @@ JsonSerializer::TraversalResult JsonSerializer::serialize(
     return fail(Serialization::Error::InvalidValue,
                 "frequency has no known text representation");
 
-  return writeAs<unsigned char>(json, c);
+  writeAs<unsigned char>(json, c);
 }
 
-JsonSerializer::TraversalResult JsonSerializer::serialize(
-  JsonVariant json, const UUID& value) {
+void JsonSerializer::serialize(JsonVariant json, const UUID& value) {
 
   UUID::String buf = value.unparse();
-  return writeAs<const char*>(json, buf.data());
+  writeAs<const char*>(json, buf.data());
 }
 
 JsonVariant JsonSerializer::jsonFor(std::string_view key) {

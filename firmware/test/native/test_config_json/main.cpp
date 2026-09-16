@@ -174,7 +174,8 @@ JsonDeserializer::TraversalResult deserializeInto(
       Deserialization::Error::InvalidJson, "bad JSON: %s", err.c_str());
 
   JsonDeserializer d(doc);
-  return Reflection::visit(cfg, d, filter, false);
+  Reflection::visit(cfg, d, filter, false);
+  return d.result();
 }
 
 template<typename Type>
@@ -189,8 +190,8 @@ JsonSerializer::TraversalResult serializeInto(
   Type &cfg, JsonDocument &doc, const Filter &filter) {
 
   JsonSerializer s(doc);
-
-  return Reflection::visit(cfg, s, filter, false);
+  Reflection::visit(cfg, s, filter, false);
+  return s.result();
 }
 
 template<typename Type>

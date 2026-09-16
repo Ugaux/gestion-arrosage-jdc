@@ -18,7 +18,7 @@ inline constexpr Validation::FieldValidator
     &Validation::lengthAdapter<
       decltype(Config::Zone::name)>,
     Validation::FieldValidator::LengthData{
-      .min = 3, .max = 15 },
+      .min = 3, .max = 25 },
   };
 
 // ============================================================
@@ -30,7 +30,7 @@ inline constexpr Validation::FieldValidator
     &Validation::lengthAdapter<
       decltype(Config::Line::name)>,
     Validation::FieldValidator::LengthData{
-      .min = 3, .max = 15 },
+      .min = 3, .max = 25 },
   };
 
 inline constexpr Validation::FieldValidator
@@ -57,7 +57,7 @@ inline constexpr Validation::FieldValidator
     &Validation::lengthAdapter<
       decltype(Config::Schedule::name)>,
     Validation::FieldValidator::LengthData{
-      .min = 3, .max = 15 },
+      .min = 3, .max = 25 },
   };
 
 inline constexpr Validation::FieldValidator
@@ -133,7 +133,7 @@ inline constexpr Validation::FieldValidator
     &Validation::lengthAdapter<
       decltype(Config::UserSettings::Params::Wifi::mdns)>,
     Validation::FieldValidator::LengthData{
-      .min = 5, .max = 15 },
+      .min = 5, .max = 20 },
   };
 
 // ============================================================

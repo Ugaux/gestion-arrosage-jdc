@@ -23,7 +23,8 @@ void tearDown() {}
 
 Validation::Result validateConfig(Config &cfg) {
   Validation::ValidationVisitor v;
-  return Reflection::visit(cfg, v);
+  Reflection::visit(cfg, v);
+  return v.result();
 }
 
 // -----------------------------------------------------------------------------
@@ -79,10 +80,10 @@ void test_validate_string_length(void) {
     !res.ok() && res.error() == Validation::Error::LengthOutOfRange,
     "A string that is too small should not pass validation");
 
-  cfg.userSettings.params.wifi.mdns = "abcdefghijklmnopqrst";
+  cfg.userSettings.params.wifi.mdns = "abcdefghijklmnopqrstuvwxyz";
 
   TEST_ASSERT_EQUAL_STRING_MESSAGE(
-    "abcdefghijklmno",
+    "abcdefghijklmnopqrst",
     cfg.userSettings.params.wifi.mdns.c_str(),
     "A string should be cropped to its max allowable size");
   TEST_ASSERT_TRUE_MESSAGE(

@@ -103,6 +103,18 @@ In case the schedule is computed on an external server and sent to ESP32 periodi
 ;                         regardless of soil moisture)
 ```
 
+## Config stack sizing
+
+Loop task stack size increased from the default 8192 to 12288 bytes.
+
+ConfigManager::begin() -> loadAll() drives a deep, heavily-templated reflection-based JSON deserialization (Config/Schedule traversal), which was overflowing the 8192-byte default (Guru Meditation: "Stack canary watchpoint triggered (loopTask)" in \_svfprintf_r).
+
+Root cause was a multi-KB `Config candidate` stack allocation in loadAll()/update(), since fixed by moving it to heap (unique_ptr).
+
+Measured high-water mark at 12288 bytes: ~4888 bytes used in the worst case (initial loadAll()), leaving ~7400 bytes (~60%) free margin across begin()/loadAll() and ConfigManager::update() calls.
+
+⚠️ Do not revert to 8192 without re-profiling stack high-water marks.
+
 ## ESP32 pinout
 
 Expander

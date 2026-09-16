@@ -1,6 +1,6 @@
 #include "ConfigManager.h"
 
-#include <unistd.h>
+#include <wchar.h>
 #include <LittleFS.h>
 #include <StreamUtils.h>
 #include "core/FaultManager.h"
@@ -20,42 +20,40 @@ class DebugPrinter {
 public:
   static constexpr char kTag[] = "[Config]";
 
-  // required by reflection for traversal
-  using TraversalResult = Result<OkResult::Tag>;
-  using VisitResult     = Reflection::VisitResult<TraversalResult>;
+  const auto& result() const {
+    return m_result;
+  }
 
   template<typename Parent, typename Member>
-  VisitResult enter(
+  Reflection::VisitDecision enter(
     const Reflection::Field<Parent, Member>& field, Member& value) {
-    m_pathBuilder.enter(field.name);
 
-    return VisitResult::traverse();
+    m_pathBuilder.enter(field.name);
+    return Reflection::VisitDecision::Visit;
   }
 
   template<typename Parent, typename Member>
-  TraversalResult field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  void field(const Reflection::Field<Parent, Member>& field, Member& value) {
     m_pathBuilder.enter(field.name);
 
-    if (auto result = logValue(value, field.unit); !result)
-      return result;
+    logValue(value, field.unit);
+    if (!m_result)
+      return;
 
     m_pathBuilder.leave();
-    return {};
   }
 
   template<typename Parent, typename Member>
-  TraversalResult leave(const Reflection::Field<Parent, Member>& field, Member& value) {
+  void leave(const Reflection::Field<Parent, Member>& field, Member& value) {
+
     m_pathBuilder.leave();
-    return {};
   }
 
   template<typename Type>
-  TraversalResult schema(Type& value) {
-    return {};
-  }
+  void schema(Type& value) {}
 
-  TraversalResult finalize(TraversalResult result) {
-    return {};
+  void finalize() {
+    m_result.setPath(m_pathBuilder.view());
   }
 
 private:
@@ -134,27 +132,27 @@ private:
   }
 
   template<typename T, uint8_t N>
-  TraversalResult logValue(Collection<T, N>& value, std::string_view /*unit*/) {
+  void logValue(Collection<T, N>& value, std::string_view /*unit*/) {
     //  Keep the collection non-const because Reflection::visit() requires
     // mutable elements for traversal. Values are only read when formatting.
 
     if (value.size() == 0) {
       auto emptyColl = EmptyCollection{};
-      return logValue(emptyColl, "");
+      logValue(emptyColl, "");
+      return;
     }
 
     for (size_t i = 0; i < value.size(); ++i) {
       m_pathBuilder.index(i);
-      if (auto result = Reflection::traverse(value[i], *this); !result)
-        return result;
+      Reflection::traverse(value[i], *this);
+      if (!m_result)
+        return;
       m_pathBuilder.leave();
     }
-
-    return {};
   }
 
   template<typename T>
-  TraversalResult logValue(T& value, std::string_view unit) {
+  void logValue(T& value, std::string_view unit) {
 
     char valueBuffer[SchemaLimits::kMaxPathLength + 30];
 
@@ -168,27 +166,28 @@ private:
       valueBuffer,
       static_cast<int>(unit.size()),
       unit.data());
-
-    return {};
   }
 
   Reflection::PathBuilder m_pathBuilder;
+  Result<OkResult::Tag>   m_result;
 };
 
-template<typename T, typename Filter>
+template<typename Type, typename Filter>
 JsonDeserializer::TraversalResult jsonToConfig(
-  const JsonDocument& doc, T& config, const Filter& filter) {
+  JsonDocument& doc, Type& config, const Filter& filter) {
 
   JsonDeserializer deserializer(doc);
-  return Reflection::visit(config, deserializer, filter, false);
+  Reflection::visit(config, deserializer, filter, false);
+  return deserializer.result();
 }
 
-template<typename T, typename Filter>
+template<typename Type, typename Filter>
 JsonSerializer::TraversalResult configToJson(
-  const T& config, JsonDocument& doc, const Filter& filter) {
+  Type& config, JsonDocument& doc, const Filter& filter) {
 
   JsonSerializer serializer(doc);
-  return Reflection::visit(config, serializer, filter, false);
+  Reflection::visit(config, serializer, filter, false);
+  return serializer.result();
 }
 
 }  // namespace
@@ -202,7 +201,7 @@ void ConfigManager::begin() {
   }
 
   // Mount LittleFS
-  if (!LittleFS.begin()) {
+  if (!LittleFS.begin(false, kLittleFsBasePath)) {
     m_faults.set(
       Fault::Component::ConfigManager,
       Fault::Code::LittleFsMountingFailed);
@@ -294,19 +293,20 @@ void ConfigManager::logDebug() {
 
   log_d("Printing config...");
   DebugPrinter printer;
-
-  if (!Reflection::visit(m_config, printer))
+  Reflection::visit(m_config, printer);
+  if (!printer.result())
     log_w("Printing stopped halfway through for no apparent reason!");
 }
 
 ConfigManager::UpdateResult ConfigManager::update(
   std::string_view userSettingsJson) {
-  Config::UserSettings candidate;
+  auto          candidatePtr = std::make_unique<UserSettings>();
+  UserSettings& candidate    = *candidatePtr;
 
-  JsonDocument inputDoc;
+  JsonDocument doc;
 
   DeserializationError error =
-    deserializeJson(inputDoc, userSettingsJson.data(), userSettingsJson.size());
+    deserializeJson(doc, userSettingsJson);
 
   if (error) {
     FixedString<SchemaLimits::kMaxErrorMessageLength> message;
@@ -319,7 +319,7 @@ ConfigManager::UpdateResult ConfigManager::update(
     };
   }
 
-  auto deserializationResult = jsonToConfig(inputDoc, candidate,
+  auto deserializationResult = jsonToConfig(doc, candidate,
                                             Reflection::NoFilter{});
   if (!deserializationResult)
     return {
@@ -328,9 +328,12 @@ ConfigManager::UpdateResult ConfigManager::update(
       .message = deserializationResult.message()
     };
 
-  JsonDocument outputDoc;
+  // Reuse the JSON document for serialization.
+  doc.clear();
 
-  auto serializationResult = configToJson(candidate, outputDoc,
+  // Re-serialize the candidate so optional fields omitted from the
+  // input JSON are included in the persisted JSON with their defaults.
+  auto serializationResult = configToJson(candidate, doc,
                                           Reflection::NoFilter{});
   if (!serializationResult)
     return {
@@ -342,7 +345,7 @@ ConfigManager::UpdateResult ConfigManager::update(
   std::lock_guard lock(m_mutex);
 
   // Persist while holding the lock.
-  if (!saveToFile(outputDoc, kUserSettingsRuntimeFilename))
+  if (!saveToFile(doc, kUserSettingsRuntimeFilename))
     return {
       .error   = UpdateError::SaveFailed,
       .path    = "",
@@ -359,7 +362,9 @@ ConfigManager::UpdateResult ConfigManager::update(
   Config::Schedule& schedule, UpdateScheduleAction action) {
   {
     std::lock_guard lock(m_mutex);
-    Config          candidate = m_config;
+
+    auto    candidatePtr = std::make_unique<Config>();
+    Config& candidate    = *candidatePtr;
 
     switch (action) {
 
@@ -367,7 +372,7 @@ ConfigManager::UpdateResult ConfigManager::update(
         {
           auto result = candidate.schedules.add(schedule);
           switch (result) {
-            case Config::ScheduleCollection::AddResult::Ok:
+            case ScheduleCollection::AddResult::Ok:
               {
                 uint8_t totalSchedules = 0;
                 for (uint8_t i = 0; i < candidate.schedules.size(); i++) {
@@ -383,14 +388,14 @@ ConfigManager::UpdateResult ConfigManager::update(
                   };
                 break;
               }
-            case Config::ScheduleCollection::AddResult::DuplicateId:
+            case ScheduleCollection::AddResult::DuplicateId:
               return {
                 .error   = UpdateError::OperationFailed,
                 .path    = "",
                 .message = "unable to add schedule: an element"
                            " with this ID already exists"
               };
-            case Config::ScheduleCollection::AddResult::Full:
+            case ScheduleCollection::AddResult::Full:
               return {
                 .error   = UpdateError::OperationFailed,
                 .path    = "",
@@ -423,8 +428,8 @@ ConfigManager::UpdateResult ConfigManager::update(
     }
 
     Validation::ValidationVisitor v;
-
-    auto validationResult = Reflection::visit(candidate, v);
+    Reflection::visit(candidate, v);
+    auto validationResult = v.result();
     if (!validationResult)
       return {
         .error   = UpdateError::ValidationFailed,
@@ -432,9 +437,9 @@ ConfigManager::UpdateResult ConfigManager::update(
         .message = validationResult.message()
       };
 
-    JsonDocument outputDoc;
+    JsonDocument doc;
 
-    auto serializationResult = configToJson(candidate, outputDoc,
+    auto serializationResult = configToJson(candidate, doc,
                                             SchedulesOnlyFilter{});
     if (!serializationResult)
       return {
@@ -443,7 +448,7 @@ ConfigManager::UpdateResult ConfigManager::update(
         .message = serializationResult.message()
       };
 
-    if (!saveToFile(outputDoc, kSchedulesRuntimeFilename))
+    if (!saveToFile(doc, kSchedulesRuntimeFilename))
       return {
         .error   = UpdateError::SaveFailed,
         .path    = "",
@@ -477,7 +482,8 @@ bool ConfigManager::loadAll(bool defaults) {
   // Order matters: userSettings should always be loaded
   // before schedules!
 
-  Config candidate;
+  auto    candidatePtr = std::make_unique<Config>();
+  Config& candidate    = *candidatePtr;
 
   JsonDocument doc;
 
@@ -491,6 +497,9 @@ bool ConfigManager::loadAll(bool defaults) {
                     Reflection::NoFilter{}))
     return false;
   log_d("UserSettings JSON parsed");
+
+  // Reuse the JSON document for next file.
+  doc.clear();
 
   if (!loadFromFile(defaults
                       ? kSchedulesDefaultFilename
@@ -531,27 +540,30 @@ bool ConfigManager::saveAll() {
 
   Validation::ValidationVisitor v;
 
-  if (!Reflection::visit(m_config, v)) {
+  Reflection::visit(m_config, v);
+  if (!v.result()) {
     log_d("Current config is not valid");
     return false;
   }
 
-  JsonDocument userSettingsDoc;
-  JsonDocument schedulesDoc;
+  JsonDocument doc;
 
-  if (!configToJson(m_config.userSettings, userSettingsDoc,
+  if (!configToJson(m_config.userSettings, doc,
                     Reflection::NoFilter{}))
     return false;
   log_d("UserSettings JSON created");
-  if (!configToJson(m_config, schedulesDoc,
+  if (!saveToFile(doc, kUserSettingsRuntimeFilename))
+    return false;
+  log_d("UserSettings JSON saved");
+
+  // Reuse the JSON document for next file.
+  doc.clear();
+
+  if (!configToJson(m_config, doc,
                     SchedulesOnlyFilter{}))
     return false;
   log_d("Schedules JSON created");
-
-  if (!saveToFile(userSettingsDoc, kUserSettingsRuntimeFilename))
-    return false;
-  log_d("UserSettings JSON saved");
-  if (!saveToFile(schedulesDoc, kSchedulesRuntimeFilename))
+  if (!saveToFile(doc, kSchedulesRuntimeFilename))
     return false;
   log_d("Schedules JSON saved");
 
@@ -631,10 +643,23 @@ bool ConfigManager::openValidFile(const char* filename, fs::File& file) const {
 }
 
 bool ConfigManager::fileExists(const char* path) {
-  char fullPath[256];
-  snprintf(fullPath, sizeof(fullPath), "/littlefs%s", path);
+  char fullPath[48];
 
-  return access(fullPath, F_OK) == 0;
+  int written = snprintf(fullPath, sizeof(fullPath),
+                         "%s%s", kLittleFsBasePath, path);
+
+  if (written < 0 || written >= sizeof(fullPath)) {
+    log_d("Path too long: %s%s", kLittleFsBasePath, path);
+    return false;
+  }
+
+  FILE* file = fopen(fullPath, "r");
+
+  if (!file)
+    return false;
+
+  fclose(file);
+  return true;
 }
 
 bool ConfigManager::makeTempFilename(

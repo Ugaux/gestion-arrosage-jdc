@@ -153,7 +153,7 @@ public:
       count.min, count.max, value);
   }
 
-  Result validateRange(const int32_t& value) const {
+  Result validateRange(int32_t value) const {
     if (value >= range.min && value <= range.max)
       return {};
 
@@ -223,80 +223,82 @@ Result lengthAdapter(const FieldValidator& validator, const void* self) {
 
 class ValidationVisitor {
 public:
-  // required by reflection for traversal
-  using TraversalResult = Validation::Result;
-  using VisitResult     = Reflection::VisitResult<TraversalResult>;
-
-  template<typename Parent, typename Member>
-  VisitResult enter(const Reflection::Field<Parent, Member>& field, Member&) {
-
-    m_pathBuilder.enter(field.name);
-    return VisitResult::traverse();
+  const auto& result() const {
+    return m_result;
   }
 
   template<typename Parent, typename Member>
-  TraversalResult field(const Reflection::Field<Parent, Member>& field, Member& value) {
+  Reflection::VisitDecision enter(const Reflection::Field<Parent, Member>& field, Member&) {
 
     m_pathBuilder.enter(field.name);
-
-    if (!Reflection::isAbsent(field, value)) {
-      if (auto result = validate(value, field.fieldValidator); !result)
-        return result;
-    }
-
-    m_pathBuilder.leave();
-    return {};
+    return Reflection::VisitDecision::Visit;
   }
 
   template<typename Parent, typename Member>
-  TraversalResult leave(const Reflection::Field<Parent, Member>&, Member&) {
+  void field(const Reflection::Field<Parent, Member>& field, Member& value) {
+
+    m_pathBuilder.enter(field.name);
+
+    if (!Reflection::isAbsent(field, value))
+      validate(value, field.fieldValidator);
+
+    if (!m_result)
+      return;
 
     m_pathBuilder.leave();
-    return {};
+  }
+
+  template<typename Parent, typename Member>
+  void leave(const Reflection::Field<Parent, Member>&, Member&) {
+
+    m_pathBuilder.leave();
   }
 
   template<typename Type>
-  TraversalResult schema(Type& value) {
+  void schema(Type& value) {
 
     const auto* crossAction =
       Reflection::Schema<Type>::crossAction;
 
     if (!crossAction)
-      return {};
+      return;
 
-    return crossAction->cross(value);
+    m_result = crossAction->cross(value);
   }
 
-  TraversalResult finalize(TraversalResult result) {
-    return result.withPath(m_pathBuilder.view());
+  void finalize() {
+    m_result.setPath(m_pathBuilder.view());
   }
 
 private:
   template<typename T, uint8_t N>
-  TraversalResult validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
+  void validate(Collection<T, N>& value, const Validation::FieldValidator* /*fieldValidator*/) {
     //  Keep the collection non-const because Reflection::visit() requires
     // mutable elements for traversal. Values are only read when validating.
 
     for (size_t i = 0; i < value.size(); ++i) {
+
       m_pathBuilder.index(i);
-      if (auto result = Reflection::traverse(value[i], *this); !result)
-        return result;
+
+      Reflection::traverse(value[i], *this);
+      if (!m_result)
+        return;
+
       m_pathBuilder.leave();
     }
-
-    return {};
   }
 
   template<typename T>
-  TraversalResult validate(const T& value, const Validation::FieldValidator* fieldValidator) {
+  void validate(const T& value, const Validation::FieldValidator* fieldValidator) {
 
     if (!fieldValidator)
-      return {};
+      return;
 
-    return fieldValidator->validate(value);
+    m_result = fieldValidator->validate(value);
   }
 
   Reflection::PathBuilder m_pathBuilder;
+  Validation::Result      m_result;
 };
 
 }  // namespace Validation

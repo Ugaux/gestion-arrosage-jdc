@@ -168,98 +168,61 @@ constexpr bool isAbsent(
 }
 
 enum class VisitDecision : uint8_t {
-  Traverse = 0,
-  Handled,
-  Error
-};
-
-template<typename Result>
-struct [[nodiscard]] VisitResult {
-  VisitDecision decision;
-  Result        result;
-
-  static VisitResult traverse() {
-    return { VisitDecision::Traverse, {} };
-  }
-
-  static VisitResult handled() {
-    return { VisitDecision::Handled, {} };
-  }
-
-  static VisitResult error(Result result) {
-    return { VisitDecision::Error, std::move(result) };
-  }
-};
-
-enum class FilterDecision : uint8_t {
-  Visit = 0,
-  Skip
+  Skip = 0,
+  Visit
 };
 
 struct NoFilter {
 
   template<typename Parent, typename Member>
-  constexpr FilterDecision operator()(
+  constexpr VisitDecision operator()(
     const Field<Parent, Member>&) const {
-    return FilterDecision::Visit;  // don't skip
+    return VisitDecision::Visit;  // don't skip
   }
 };
 
 // Forward declaration
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::TraversalResult traverse(
+void traverse(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema);
 
 namespace Detail {
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::TraversalResult visitFieldImpl(
+void visitFieldImpl(
   const Field<Parent, Member>& field, Member& value,
   Visitor& visitor, const Filter& filter, std::true_type) {
 
-  using VisitorResult = typename Visitor::TraversalResult;
+  if (visitor.enter(field, value) != VisitDecision::Visit)
+    return;
 
-  const VisitResult<VisitorResult> visitResult =
-    visitor.enter(field, value);
+  traverse(value, visitor, filter, false);
 
-  switch (visitResult.decision) {
-    case VisitDecision::Handled:
-      // special-case already consumed this field; nothing
-      // happened in enter(), so no leave() needed to balance it
-      return {};
+  if (!visitor.result())
+    return;
 
-    case VisitDecision::Error:
-      return visitResult.result;
-
-    case VisitDecision::Traverse:
-      break;
-  }
-
-  if (VisitorResult result = traverse(value, visitor, filter, false); !result)
-    return result;
-
-  return visitor.leave(field, value);
+  visitor.leave(field, value);
 }
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::TraversalResult visitFieldImpl(
+void visitFieldImpl(
   const Field<Parent, Member>& field, Member& value,
   Visitor& visitor, const Filter&, std::false_type) {
 
-  return visitor.field(field, value);
+  visitor.field(field, value);
 }
 
 template<typename Parent, typename Member, typename Visitor, typename Filter>
-typename Visitor::TraversalResult visitField(
+void visitField(
   Parent& object, const Field<Parent, Member>& field,
   Visitor& visitor, const Filter& filter) {
 
-  if (filter(field) == FilterDecision::Skip)
-    return {};
+  if (filter(field) == VisitDecision::Skip)
+    return;
 
   Member& value = object.*(field.member);
 
-  return visitFieldImpl(
+  visitFieldImpl(
     field, value, visitor, filter,
     std::bool_constant<Schema<Member>::reflected>{});
 }
@@ -267,25 +230,24 @@ typename Visitor::TraversalResult visitField(
 }  // namespace Detail
 
 // `traverse()` continues a traversal without finalizing the result.
-// See the `visit()` overloads for the full visitor and filter requirements.
-//
-// `skipSchema` applies only to the object currently being traversed. It does
-// not propagate to nested objects. This allows a caller to skip the schema
-// callback for a specific object while still processing schemas of its descendants.
+// See the `visit()` overloads for the full visitor, filter,
+// and `skipSchema` requirements.
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::TraversalResult traverse(
+void traverse(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
-
-  typename Visitor::TraversalResult result{};
 
   std::apply(
     [&](auto const&... field) {
       (
         [&] {
-          if (!result)
+          // Check before visiting the field so that, once an error occurs, no
+          // subsequent fields are processed. The return below only exits the
+          // lambda for the current field; it does not stop the surrounding fold
+          // expression from invoking the remaining fields.
+          if (!visitor.result())
             return;
 
-          result = Detail::visitField(
+          Detail::visitField(
             object,
             field,
             visitor,
@@ -295,21 +257,21 @@ typename Visitor::TraversalResult traverse(
     },
     Schema<Type>::fields);
 
-  if (!result)
-    return result;
+  if (!visitor.result())
+    return;
 
   if (skipSchema)
-    return {};
+    return;
 
-  return visitor.schema(object);
+  visitor.schema(object);
 }
 
 // `traverse()` overload using the default `NoFilter`.
 template<typename Type, typename Visitor>
-typename Visitor::TraversalResult traverse(
+void traverse(
   Type& object, Visitor& visitor) {
 
-  return traverse(object, visitor, NoFilter{}, false);
+  traverse(object, visitor, NoFilter{}, false);
 }
 
 // See the `visit()` overload for the traversal explanation and visitor requirements.
@@ -320,18 +282,18 @@ typename Visitor::TraversalResult traverse(
 //
 // ```cpp
 //  template<typename Parent, typename Member>
-//  constexpr Reflection::FilterDecision operator()(
+//  constexpr Reflection::VisitDecision operator()(
 //   const Reflection::Field<Parent, Member>& field) const;
 // ```
 //
-// Returning `FilterDecision::Skip` skips the field and its value.
+// Returning `VisitDecision::Skip` skips the field and its value.
 template<typename Type, typename Visitor, typename Filter>
-typename Visitor::TraversalResult visit(
+void visit(
   Type& object, Visitor& visitor, const Filter& filter, bool skipSchema) {
 
-  typename Visitor::TraversalResult result =
-    traverse(object, visitor, filter, skipSchema);
-  return visitor.finalize(result);
+  traverse(object, visitor, filter, skipSchema);
+
+  visitor.finalize();
 }
 
 // #### Visitor
@@ -339,29 +301,31 @@ typename Visitor::TraversalResult visit(
 // Any type passed as the Visitor argument must provide:
 //
 // ```cpp
-// using TraversalResult = Result<ErrorType>;
-// using VisitResult = Reflection::VisitResult<TraversalResult>;
+// const auto& result() const;
 //
 // template<typename Parent, typename Member>
-// VisitResult enter(
+// Reflection::VisitDecision enter(
 //   const Reflection::Field<Parent, Member>& field,
 //   Member& value);
 //
 // template<typename Parent, typename Member>
-// TraversalResult field(
+// void field(
 //   const Reflection::Field<Parent, Member>& field,
 //   Member& value);
 //
 // template<typename Parent, typename Member>
-// TraversalResult leave(
+// void leave(
 //   const Reflection::Field<Parent, Member>& field,
 //   Member& value);
 //
 // template<typename Type>
-// TraversalResult schema(Type& value);
+// void schema(Type& value);
 //
-// TraversalResult finalize(TraversalResult result);
+// void finalize();
 // ```
+//
+// `result()` must return the visitor-owned result, which must provide an
+// `operator bool()` for checking whether traversal is still successful.
 //
 // `schema()` is called after all fields of the current object have been
 // successfully traversed, unless `skipSchema` is true.
@@ -390,9 +354,9 @@ typename Visitor::TraversalResult visit(
 // When traversal stops with an error, the visitor may leave its traversal state
 // (such as a path) at the point of failure.
 template<typename Type, typename Visitor>
-typename Visitor::TraversalResult visit(Type& object, Visitor& visitor) {
+void visit(Type& object, Visitor& visitor) {
 
-  return visit(object, visitor, NoFilter{}, false);
+  visit(object, visitor, NoFilter{}, false);
 }
 
 // A convenient helper that generates a generic C++ path like `watering.manual.duration.step`.
@@ -412,62 +376,69 @@ typename Visitor::TraversalResult visit(Type& object, Visitor& visitor) {
 class PathBuilder {
 public:
   void enter(std::string_view fieldName) {
-    if (m_depth >= SchemaLimits::kMaxDepth)
-      return;
-
-    m_pathLenAtDepth[m_depth++] = m_pathLen;
-
-    append(
-      "%s%.*s",
-      m_depth > 1 ? "." : "",
-      static_cast<int>(fieldName.size()),
-      fieldName.data());
+    if (m_depth < SchemaLimits::kMaxDepth)
+      m_components[m_depth++] = { fieldName, false, 0 };
   }
 
-  void index(size_t index) {
-    if (m_depth >= SchemaLimits::kMaxDepth)
-      return;
-
-    m_pathLenAtDepth[m_depth++] = m_pathLen;
-
-    append("[%zu]", index);
+  void index(size_t idx) {
+    if (m_depth < SchemaLimits::kMaxDepth)
+      m_components[m_depth++] = { {}, true, idx };
   }
 
   void leave() {
-    if (m_depth == 0)
-      return;
-
-    m_depth--;
-    m_pathLen = m_pathLenAtDepth[m_depth];
+    if (m_depth > 0) --m_depth;
   }
 
-  std::string_view view() const {
+  // Only ever called once, in finalize() - safe to do real work here.
+  std::string_view view() {
+    m_pathLen = 0;
+    for (uint8_t i = 0; i < m_depth; ++i) {
+      const auto& c = m_components[i];
+      if (c.isIndex) {
+        appendChar('[');
+        appendUInt(c.index);
+        appendChar(']');
+      } else {
+        if (i > 0) appendChar('.');
+        appendStr(c.name);
+      }
+    }
     return { m_path.data(), m_pathLen };
   }
 
 private:
-  template<typename... Args>
-  void append(const char* format, Args... args) {
-    if (m_pathLen >= SchemaLimits::kMaxPathLength - 1)
-      return;
+  struct Component {
+    std::string_view name;
+    bool             isIndex = false;
+    size_t           index   = 0;
+  };
 
-    size_t written = snprintf(
-      m_path.data() + m_pathLen,
-      SchemaLimits::kMaxPathLength - m_pathLen,
-      format,
-      args...);
+  void appendChar(char c) {
+    if (m_pathLen < m_path.size() - 1) m_path[m_pathLen++] = c;
+  }
 
-    if (written > 0)
-      m_pathLen = std::min(
-        m_pathLen + written,
-        SchemaLimits::kMaxPathLength - 1);  // clamp: snprintf can report more than it wrote
+  void appendStr(std::string_view s) {
+    size_t n = std::min(s.size(), m_path.size() - 1 - m_pathLen);
+    memcpy(m_path.data() + m_pathLen, s.data(), n);
+    m_pathLen += n;
+  }
+
+  void appendUInt(size_t v) {
+    char buf[20];
+    int  n = 0;
+    if (v == 0) buf[n++] = '0';
+    while (v > 0 && n < (int)sizeof(buf)) {
+      buf[n++] = char('0' + v % 10);
+      v /= 10;
+    }
+    while (n > 0) appendChar(buf[--n]);
   }
 
   std::array<char, SchemaLimits::kMaxPathLength> m_path    = {};
   size_t                                         m_pathLen = 0;
 
-  size_t m_pathLenAtDepth[SchemaLimits::kMaxDepth] = {};
-  size_t m_depth                                   = 0;
+  std::array<Component, SchemaLimits::kMaxDepth> m_components = {};
+  uint8_t                                        m_depth      = 0;
 };
 
 }  // namespace Reflection

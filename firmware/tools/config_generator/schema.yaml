@@ -19,7 +19,7 @@ types: # reusable C++ types
     name:
       type: String
       default: "NoName"
-      length: [3, 15]
+      length: [3, 25]
 
   Line:
     id:
@@ -32,7 +32,7 @@ types: # reusable C++ types
     name:
       type: String
       default: "NoName"
-      length: [3, 15]
+      length: [3, 25]
 
     valves:
       type: Bitset
@@ -55,7 +55,7 @@ types: # reusable C++ types
 
     name:
       type: String
-      length: [3, 15]
+      length: [3, 25]
       optional: true
 
     hour:
@@ -96,7 +96,7 @@ structure: # actual Config layout
         mdns:
           type: String
           default: "jdc-watering"
-          length: [5, 15]
+          length: [5, 20]
 
         useAPMode:
           type: Bool

@@ -40,10 +40,8 @@ public:
     setMessage(messageFormat, args...);
   }
 
-  Result withPath(std::string_view path) const {
-    Result result = *this;
-    result.m_path = path;
-    return result;
+  void setPath(std::string_view path) {
+    m_path = path;
   }
 
   bool ok() const { return m_ok; }

@@ -16,13 +16,13 @@ struct Config {
 
   struct Zone {
     UUID id;
-    FixedString<15> name = "NoName";
+    FixedString<25> name = "NoName";
   };
 
   struct Line {
     UUID id;
     UUID zoneId;
-    FixedString<15> name = "NoName";
+    FixedString<25> name = "NoName";
     using ValveSet = std::bitset<kValveCount>;
     ValveSet valves = 0;
   };
@@ -31,7 +31,7 @@ struct Config {
     UUID id;
     UUID lineId;
     bool enabled = false;
-    FixedString<15> name;
+    FixedString<25> name;
     uint8_t hour = 7;
     uint8_t minute = 30;
     uint8_t duration = 20;  // in minutes
@@ -45,7 +45,7 @@ struct Config {
     struct Params {
 
       struct Wifi {
-        FixedString<15> mdns = "jdc-watering";
+        FixedString<20> mdns = "jdc-watering";
         bool useAPMode = true;
 
         struct Station {
