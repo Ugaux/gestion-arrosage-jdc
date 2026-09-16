@@ -1,30 +1,17 @@
 #pragma once
 
-#include <cstdint>
-#include <functional>
-#include "hardware/RFRemote.h"
+#include <string_view>
+#include "types/FixedString.h"
 
-class SystemMonitor;
-class FaultManager;
+class RFRemote;
 
 class PumpController {
 public:
-  static constexpr unsigned long kUpdateDelayMs    = 500;
-  static constexpr unsigned long kRadioSendDelayMs = 1000;
+  static constexpr unsigned long kUpdateDelayMs = 1000;
 
-  enum class Type : uint8_t {
-    Watering = 0,
-    WaterTank
-  };
-
-  enum class WateringBlockReason : uint8_t {
-    None = 0,
-    TankEmpty
-  };
-
-  PumpController(SystemMonitor &monitor, FaultManager &faults);
-
-  std::function<void(WateringBlockReason)> onWateringBlocked;
+  PumpController(RFRemote        &remote,
+                 std::string_view pumpName,
+                 std::string_view turnOnCommand);
 
   void begin();
   // Must be called periodically while a pump is running to refresh
@@ -32,46 +19,22 @@ public:
   void update(unsigned long now);
 
   // Requests the pump to turn on. Idempotent: does nothing if already requested on.
-  void requestOn(Type type);
+  void turnOn();
   // Requests the pump to turn off. Idempotent: does nothing if already requested off.
-  void requestOff(Type type);
+  void turnOff();
 
-  void allowWatering();
-  void blockWatering(WateringBlockReason reason);
-  bool isWateringBlocked() const { return m_wateringBlocked; }
-
-  bool isPumpOn(Type type) const;
+  bool isOn() const { return m_isOn; };
 
   void testRemote();
 
 private:
-  void sendNextRadioCommand(unsigned long now);
-  void sendRadioCommand(Type type);
-  void updateWateringPumpState();
-  void logWateringBlocked() const;
+  void sendRadioCommand();
 
-  void radioTxComplete(esp_err_t err);
+  RFRemote        &m_remote;
+  std::string_view m_pumpName;
+  std::string_view m_turnOnCommand;
 
-  enum class PumpState : uint8_t {
-    Off = 0,
-    Blocked,
-    On,
-  };
+  unsigned long m_lastUpdateTime = 0;
 
-  RFRemote m_remote;
-
-  SystemMonitor &m_monitor;
-  FaultManager  &m_faults;
-
-  unsigned long       m_lastUpdateTime        = 0;
-  bool                m_wateringRequested     = false;
-  bool                m_wateringBlocked       = false;
-  WateringBlockReason m_wateringBlockedReason = WateringBlockReason::None;
-  PumpState           m_wateringPumpState     = PumpState::Off;
-  PumpState           m_waterTankPumpState    = PumpState::Off;
-
-  bool          m_initialized       = false;
-  Type          m_nextRadioTarget   = Type::Watering;
-  unsigned long m_nextRadioSendTime = 0;
-  unsigned long m_lastRadioSendTime = 0;
+  bool m_isOn = false;
 };
