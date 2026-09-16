@@ -26,10 +26,10 @@ public:
 
   template<typename... Args>
   void format(const char* formatString, Args... args) {
-    const int written = snprintf(m_data.data(),
-                                 m_data.size(),
-                                 formatString,
-                                 args...);
+    const int written = snprintf(
+      m_data.data(),
+      m_data.size(),
+      formatString, args...);
 
     if (written < 0) {
       m_length  = 0;

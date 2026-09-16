@@ -64,8 +64,7 @@ private:
   }
 
   void setMessage(std::string_view message) {
-    const size_t size     = message.size();
-    const size_t copySize = std::min(size, m_msg.size() - 1);
+    const size_t copySize = std::min(message.size(), m_msg.size() - 1);
 
     std::memcpy(m_msg.data(), message.data(), copySize);
     m_msg[copySize] = '\0';
@@ -75,8 +74,6 @@ private:
 
   template<typename... Args>
   void setMessage(const char* messageFormat, Args... args) {
-    m_msg_len = 0;
-
     // Format detailed message
 
     const int written = snprintf(
@@ -84,8 +81,11 @@ private:
       m_msg.size(),
       messageFormat, args...);
 
-    if (written < 0)
+    if (written < 0) {
+      m_msg_len = 0;
+      m_msg[0]  = '\0';
       return;
+    }
 
     const size_t size =
       static_cast<size_t>(written);

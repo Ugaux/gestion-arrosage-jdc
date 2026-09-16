@@ -414,24 +414,33 @@ private:
   };
 
   void appendChar(char c) {
-    if (m_pathLen < m_path.size() - 1) m_path[m_pathLen++] = c;
+    if (m_pathLen < m_path.size() - 1)
+      m_path[m_pathLen++] = c;
   }
 
   void appendStr(std::string_view s) {
-    size_t n = std::min(s.size(), m_path.size() - 1 - m_pathLen);
+    const size_t n = std::min(s.size(), m_path.size() - 1 - m_pathLen);
+
     memcpy(m_path.data() + m_pathLen, s.data(), n);
+    m_path[n] = '\0';
+
     m_pathLen += n;
   }
 
   void appendUInt(size_t v) {
     char buf[20];
     int  n = 0;
-    if (v == 0) buf[n++] = '0';
+
+    if (v == 0)
+      buf[n++] = '0';
+
     while (v > 0 && n < (int)sizeof(buf)) {
       buf[n++] = char('0' + v % 10);
       v /= 10;
     }
-    while (n > 0) appendChar(buf[--n]);
+
+    while (n > 0)
+      appendChar(buf[--n]);
   }
 
   std::array<char, SchemaLimits::kMaxPathLength> m_path    = {};
